@@ -4,6 +4,9 @@ import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import BlackHoleScene from "@/components/canvas/scenes/BlackHoleScene";
 import Effects from "@/components/canvas/effects/Effects";
+import { silenceKnownWarnings } from "@/lib/silenceKnownWarnings";
+
+silenceKnownWarnings();
 
 export default function CanvasRoot() {
   const isMobile =
