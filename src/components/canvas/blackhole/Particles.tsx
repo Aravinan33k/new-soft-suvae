@@ -167,7 +167,7 @@ export default function Particles() {
   return (
     <>
       <Starfield count={isMobile ? 1500 : 3500} />
-      <SpaceDust count={isMobile ? 250 : 700} />
+      <SpaceDust count={isMobile ? 180 : 450} />
     </>
   );
 }

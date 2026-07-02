@@ -54,7 +54,7 @@ export const blackHoleFragment = /* glsl */ `
   float fbm(vec2 p) {
     float v = 0.0;
     float a = 0.55;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
       v += a * vnoise(p);
       p = p * 2.1 + vec2(13.7, 7.3);
       a *= 0.5;
@@ -75,7 +75,7 @@ export const blackHoleFragment = /* glsl */ `
   // Angle-periodic fbm: blends two samples across the seam so streaks tile
   float diskNoise(float r, float ang) {
     float sa = fract((ang + PI) / TWO_PI);
-    const float REP = 9.0;
+    const float REP = 12.0;
     vec2 a = vec2(r * 2.6 - uTime * 0.25, sa * REP);
     vec2 b = vec2(a.x, (sa - 1.0) * REP);
     return mix(fbm(a), fbm(b), smoothstep(0.85, 1.0, sa));
@@ -100,9 +100,9 @@ export const blackHoleFragment = /* glsl */ `
     ));
     vec3 ro = uCamPos + uCamBasis * vec3(uParallax * 0.4, 0.0);
 
-    // World -> hole space: scroll spins the system, fixed tilt sets the
-    // near-edge-on Interstellar framing.
-    mat3 m = rotX(0.24) * rotY(uScroll * TWO_PI);
+    // World -> hole space: scroll spins the system (half a turn across the
+    // page), fixed tilt sets the near-edge-on Interstellar framing.
+    mat3 m = rotX(0.24) * rotY(uScroll * PI);
     ro = m * ro;
     rd = m * rd;
 
@@ -115,14 +115,14 @@ export const blackHoleFragment = /* glsl */ `
     float alpha = 0.0;
     float minR = 1e5;
 
-    for (int i = 0; i < 220; i++) {
+    for (int i = 0; i < 300; i++) {
       if (float(i) >= uSteps) break;
 
       float r = length(pos);
       minR = min(minR, r);
 
       // Adaptive step: coarse far away, fine near the photon sphere
-      float dt = clamp(r * 0.07, 0.045, 0.65);
+      float dt = clamp(r * 0.055, 0.03, 0.5);
 
       vec3 acc = -1.5 * h2 * pos / pow(dot(pos, pos), 2.5);
       vel += acc * dt;
@@ -172,8 +172,9 @@ export const blackHoleFragment = /* glsl */ `
       pos = next;
     }
 
-    // Faint volumetric halo hugging the photon sphere
-    float halo = exp(-(minR - HORIZON) * 1.1) * 0.22;
+    // Faint volumetric halo hugging the photon sphere — kept tight so the
+    // ring and disk edges stay crisp
+    float halo = exp(-(minR - HORIZON) * 1.5) * 0.17;
     color += vec3(0.35, 0.45, 1.0) * halo * uPulse * (1.0 - alpha);
     alpha = clamp(alpha + halo * 0.3, 0.0, 1.0);
 

@@ -67,7 +67,7 @@ const diskFragment = /* glsl */ `
     vec3 violet = vec3(0.55, 0.3, 1.0);
     vec3 col = mix(blue, violet, clamp(vRadial, 0.0, 1.0));
 
-    gl_FragColor = vec4(col, soft * 0.38 * vFade);
+    gl_FragColor = vec4(col, soft * 0.3 * vFade);
   }
 `;
 
@@ -108,8 +108,9 @@ export default function AccretionDisk({ count = 2600 }: { count?: number }) {
       material.current.uniforms.uCamPos.value.copy(camera.position);
     }
     if (group.current) {
-      // Match the raymarcher's hole-space transform (inverse order)
-      group.current.rotation.set(-TILT, -scrollState.progress * TWO_PI, 0, "YXZ");
+      // Match the raymarcher's hole-space transform (inverse order, same
+      // damped progress, same half-turn total)
+      group.current.rotation.set(-TILT, -scrollState.smooth * Math.PI, 0, "YXZ");
     }
   });
 

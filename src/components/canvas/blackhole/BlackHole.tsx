@@ -28,7 +28,7 @@ export default function BlackHole() {
       uTime: { value: 0 },
       uScroll: { value: 0 },
       uPulse: { value: 1 },
-      uSteps: { value: isMobile ? 110 : 200 },
+      uSteps: { value: isMobile ? 130 : 280 },
       uParallax: { value: new THREE.Vector2() },
     }),
     [isMobile]
@@ -51,10 +51,12 @@ export default function BlackHole() {
     mat.uniforms.uTime.value = t;
     mat.uniforms.uPulse.value = 1 + Math.sin(t * 0.55) * 0.08;
 
-    // Extra damping on top of Lenis for buttery scroll-linked rotation
+    // Extra damping on top of Lenis for buttery scroll-linked rotation.
+    // Published to scrollState.smooth so AccretionDisk rotates in lockstep.
     const damp = 1 - Math.exp(-4.5 * delta);
     smoothScroll.current +=
       (scrollState.progress - smoothScroll.current) * damp;
+    scrollState.smooth = smoothScroll.current;
     mat.uniforms.uScroll.value = smoothScroll.current;
 
     mat.uniforms.uParallax.value.lerp(

@@ -6,10 +6,15 @@ import BlackHoleScene from "@/components/canvas/scenes/BlackHoleScene";
 import Effects from "@/components/canvas/effects/Effects";
 
 export default function CanvasRoot() {
+  const isMobile =
+    typeof window !== "undefined" && window.innerWidth < 768;
+
   return (
     <Canvas
       camera={{ fov: 50, near: 0.1, far: 200, position: [0, 0.9, 16] }}
-      dpr={[1, 1.5]}
+      // Desktop floor of 1.5 forces supersampling on 1x displays — the
+      // raymarched disk edges and photon ring stay razor sharp
+      dpr={isMobile ? [1, 1.75] : [1.5, 2.5]}
       gl={{
         antialias: false, // post chain handles smoothing
         powerPreference: "high-performance",
