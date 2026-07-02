@@ -2,23 +2,23 @@
 
 import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import HeroScene from "@/components/canvas/scenes/HeroScene";
-import PostFX from "@/components/canvas/effects/PostFX";
+import BlackHoleScene from "@/components/canvas/scenes/BlackHoleScene";
+import Effects from "@/components/canvas/effects/Effects";
 
 export default function CanvasRoot() {
   return (
     <Canvas
-      camera={{ fov: 42, near: 0.1, far: 60, position: [0, 0.35, 11] }}
-      dpr={[1, 1.75]}
+      camera={{ fov: 50, near: 0.1, far: 200, position: [0, 0.9, 16] }}
+      dpr={[1, 1.5]}
       gl={{
-        antialias: false, // post-processing chain handles smoothing
+        antialias: false, // post chain handles smoothing
         powerPreference: "high-performance",
       }}
-      className="!absolute inset-0"
+      className="absolute! inset-0"
     >
       <Suspense fallback={null}>
-        <HeroScene />
-        <PostFX />
+        <BlackHoleScene />
+        <Effects />
       </Suspense>
     </Canvas>
   );
