@@ -146,13 +146,13 @@ export default function Home() {
 
       {/* ── Navbar ────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-slate-800/60 bg-[#02040a]/80 backdrop-blur-md">
-        <nav className="mx-auto flex h-16 w-full max-w-[88rem] items-center justify-between px-6">
+        <nav className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-6 md:px-10">
           <a
             href="#top"
-            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-slate-100"
+            className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-100 md:text-2xl"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/softsuave-mark.svg" alt="" className="h-6 w-auto" />
+            <img src="/softsuave-mark.svg" alt="" className="h-9 w-auto md:h-10" />
             Soft Suave
           </a>
           <div className="flex items-center gap-6">
@@ -175,7 +175,7 @@ export default function Home() {
         </nav>
       </header>
 
-      <div id="top" className="relative z-10 mx-auto w-full max-w-[88rem] px-6">
+      <div id="top" className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-10">
         {/* ── Hero: headline left, supporting copy right ────────────── */}
         <section className="grid grid-cols-1 gap-12 pt-20 md:grid-cols-12 md:items-center md:pt-28">
           <div className="md:col-span-7">
@@ -219,7 +219,7 @@ export default function Home() {
         <ExperienceStage />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-6xl px-6">
+      <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
         {/* ── Business Problems ─────────────────────────────────────── */}
         <section id="problems" className="pt-24 md:pt-32">
           <SectionHeading

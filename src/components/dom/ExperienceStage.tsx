@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FiPause, FiPlay } from "react-icons/fi";
 import { scrollState } from "@/lib/scrollState";
 
@@ -56,10 +58,16 @@ const SLIDES: Slide[] = [
 const N = SLIDES.length;
 const SLIDE_MS = 5200; // time each chapter is shown before auto-advancing
 
+// Anthropic-style scroll expand: contained rounded card -> true full-bleed
+const CARD_START = { maxWidth: "58rem", height: "80vh", borderRadius: "24px" };
+const CARD_FULL = { maxWidth: "100%", height: "100vh", borderRadius: "0px" };
+
 export default function ExperienceStage() {
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(true);
 
+  const sectionRef = useRef<HTMLElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef(0);
   const playingRef = useRef(true);
   const elapsedRef = useRef(0);
@@ -76,6 +84,37 @@ export default function ExperienceStage() {
     playingRef.current = !playingRef.current;
     setPlaying(playingRef.current);
   };
+
+  // Scroll-driven width expand: the card starts narrower and grows to its
+  // full width as the section scrolls into view. Purely a size animation on
+  // the outer card — everything inside (slider, canvas, chapters) is untouched.
+  useEffect(() => {
+    const section = sectionRef.current;
+    const card = cardRef.current;
+    if (!section || !card) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set(card, CARD_FULL);
+      return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+    const ctx = gsap.context(() => {
+      gsap.fromTo(card, CARD_START, {
+        ...CARD_FULL,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: section,
+          start: "center 70%",
+          end: "center 40%",
+          scrub: 0.8,
+          invalidateOnRefresh: true,
+        },
+      });
+    }, section);
+
+    return () => ctx.revert();
+  }, []);
 
   useEffect(() => {
     let raf = 0;
@@ -121,8 +160,12 @@ export default function ExperienceStage() {
   const slide = SLIDES[active];
 
   return (
-    <section className="relative w-full px-4 py-10 md:px-8">
-      <div className="relative mx-auto flex h-[86vh] min-h-[560px] w-full max-w-[110rem] flex-col overflow-hidden rounded-2xl border border-slate-700/70 bg-[#02040a] shadow-[0_0_80px_-20px_rgba(56,189,248,0.45)]">
+    <section ref={sectionRef} className="relative w-full px-4 py-10 md:px-8">
+      <div
+        ref={cardRef}
+        className="relative mx-auto flex h-[86vh] min-h-[560px] w-full flex-col overflow-hidden rounded-2xl border border-slate-700/70 bg-[#02040a] shadow-[0_0_80px_-20px_rgba(56,189,248,0.45)]"
+        style={{ maxWidth: CARD_START_WIDTH }}
+      >
         {/* Window chrome bar */}
         <div className="flex shrink-0 items-center gap-2 border-b border-slate-800/80 bg-slate-950/80 px-4 py-3">
           <span className="h-3 w-3 rounded-full bg-red-500/70" />
