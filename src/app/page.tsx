@@ -123,14 +123,14 @@ function SectionHeading({
 }) {
   return (
     <div className="mx-auto max-w-3xl text-center">
-      <p className="text-xs font-medium uppercase tracking-[0.3em] text-sky-300/80">
+      <p className="text-xs font-medium uppercase tracking-[0.3em] text-sky-600/90">
         {eyebrow}
       </p>
-      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-50 md:text-4xl">
+      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
         {title}
       </h2>
       {body && (
-        <p className="mt-5 text-base leading-relaxed text-slate-400 md:text-lg">
+        <p className="mt-5 text-base leading-relaxed text-slate-600 md:text-lg">
           {body}
         </p>
       )}
@@ -142,14 +142,14 @@ export default function Home() {
   return (
     <main className="relative min-h-svh">
       {/* Layer 1: hero background gradient across the page */}
-      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(180deg,#04060B_0%,#050913_45%,#04060B_100%)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(180deg,#F4F7FB_0%,#EAF0F8_45%,#F4F7FB_100%)]" />
 
       {/* ── Navbar ────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-[#04060b]">
+      <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-[#f4f7fb]">
         <nav className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-6 md:px-10">
           <a
             href="#top"
-            className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-50 md:text-2xl"
+            className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-900 md:text-2xl"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/softsuave-mark.svg" alt="" className="h-9 w-auto md:h-10" />
@@ -160,14 +160,14 @@ export default function Home() {
               <a
                 key={link.href}
                 href={link.href}
-                className="hidden text-sm text-slate-400 transition-colors hover:text-sky-300 lg:block"
+                className="hidden text-sm text-slate-600 transition-colors hover:text-sky-600 lg:block"
               >
                 {link.label}
               </a>
             ))}
             <a
               href="#contact"
-              className="rounded-full bg-[#1FB6FF] px-4 py-1.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_24px_-6px_rgba(56,189,248,0.8)]"
+              className="rounded-full bg-[#1FB6FF] px-4 py-1.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_24px_-6px_rgba(31,182,255,0.45)]"
             >
               Book AI Strategy Call
             </a>
@@ -180,37 +180,37 @@ export default function Home() {
         <section className="relative grid grid-cols-1 gap-12 pt-20 md:grid-cols-12 md:items-center md:pt-28">
           {/* Layer 2: center spotlight behind the headline */}
           <div className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[radial-gradient(circle_at_center,rgba(0,170,255,0.08)_0%,rgba(0,120,255,0.05)_25%,transparent_70%)]" />
-          <div className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[radial-gradient(circle_at_75%_20%,rgba(118,94,255,0.06),transparent_60%)]" />
+          <div className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[radial-gradient(circle_at_75%_20%,rgba(118,94,255,0.07),transparent_60%)]" />
           {/* Layer 5: left & right fade keeps focus centered */}
-          <div className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[linear-gradient(90deg,rgba(4,6,11,0.95)_0%,transparent_20%,transparent_80%,rgba(4,6,11,0.95)_100%)]" />
+          <div className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[linear-gradient(90deg,rgba(244,247,251,0.95)_0%,transparent_20%,transparent_80%,rgba(244,247,251,0.95)_100%)]" />
           <div className="md:col-span-7">
-            <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-sky-300/80 md:text-sm">
+            <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-sky-600/90 md:text-sm">
               Soft Suave
             </p>
-            <h1 className="max-w-3xl text-4xl font-semibold leading-[1.1] tracking-tight text-white md:text-6xl lg:text-7xl">
+            <h1 className="max-w-3xl text-3xl font-semibold leading-[1.1] tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
               Empowering Businesses with Scalable AI,{" "}
-              <span className="bg-gradient-to-b from-indigo-200 via-indigo-300 to-indigo-400/80 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-b from-indigo-600 via-indigo-500 to-sky-500 bg-clip-text text-transparent">
                 Automation &amp; Integrations
               </span>
             </h1>
-            <div className="mt-12 flex flex-col gap-4 sm:flex-row">
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
               <a
                 href="#contact"
-                className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#1FB6FF] px-7 py-3 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_40px_-8px_rgba(56,189,248,0.8)]"
+                className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#1FB6FF] px-6 py-2.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_40px_-8px_rgba(31,182,255,0.5)]"
               >
                 Book AI Strategy Call
                 <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
               </a>
               <a
                 href="#services"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-700/80 bg-white/[0.03] px-7 py-3 text-sm font-semibold text-slate-200 backdrop-blur transition-colors duration-300 hover:border-sky-400/50 hover:text-sky-200"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors duration-300 hover:border-sky-400/60 hover:text-sky-700"
               >
                 Explore AI Solutions
               </a>
             </div>
           </div>
           <div className="md:col-span-5 md:pl-6 lg:pl-14">
-            <p className="max-w-md font-serif text-lg leading-relaxed text-slate-200 md:text-xl">
+            <p className="max-w-md font-serif text-lg leading-relaxed text-slate-600 md:text-xl">
               Build scalable AI solutions, intelligent automation systems, and
               seamless integrations with AI&#8209;enabled engineering teams
               focused on real business outcomes.
@@ -236,12 +236,12 @@ export default function Home() {
             {PROBLEMS.map((p) => (
               <div
                 key={p.name}
-                className="rounded-2xl border border-white/[0.08] bg-[#101A2C] p-6 transition-colors hover:border-sky-400/40"
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-sky-400/50 hover:shadow-md"
               >
-                <h3 className="text-base font-semibold text-slate-50">
+                <h3 className="text-base font-semibold text-slate-900">
                   {p.name}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-400">
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">
                   {p.body}
                 </p>
               </div>
@@ -260,10 +260,10 @@ export default function Home() {
             {STATS.map((stat) => (
               <div
                 key={stat}
-                className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-[#101A2C] px-5 py-4"
+                className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
               >
-                <FiCheck className="shrink-0 text-sky-400" />
-                <span className="text-sm text-slate-300">{stat}</span>
+                <FiCheck className="shrink-0 text-sky-500" />
+                <span className="text-sm text-slate-700">{stat}</span>
               </div>
             ))}
           </div>
@@ -280,12 +280,12 @@ export default function Home() {
             {SERVICES.map((service) => (
               <div
                 key={service.name}
-                className="rounded-2xl border border-white/[0.08] bg-[#101A2C] p-6 transition-colors hover:border-sky-400/40 hover:bg-[#1FB6FF]/[0.04]"
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-sky-400/50 hover:bg-[#1FB6FF]/[0.04] hover:shadow-md"
               >
-                <h3 className="text-base font-semibold text-slate-50">
+                <h3 className="text-base font-semibold text-slate-900">
                   {service.name}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-400">
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">
                   {service.body}
                 </p>
               </div>
@@ -304,12 +304,12 @@ export default function Home() {
             {INDUSTRIES.map((industry) => (
               <div
                 key={industry.name}
-                className="rounded-2xl border border-white/[0.08] bg-[#101A2C] p-6 transition-colors hover:border-sky-400/40"
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-sky-400/50 hover:shadow-md"
               >
-                <h3 className="text-lg font-semibold text-slate-50">
+                <h3 className="text-lg font-semibold text-slate-900">
                   {industry.name}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-400">
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">
                   {industry.body}
                 </p>
               </div>
@@ -328,16 +328,16 @@ export default function Home() {
             {STACK.map((group) => (
               <div
                 key={group.category}
-                className="rounded-2xl border border-white/[0.08] bg-[#101A2C] p-6"
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
               >
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-sky-300/80">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-sky-600/90">
                   {group.category}
                 </h3>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {group.items.map((item) => (
                     <span
                       key={item}
-                      className="rounded-full border border-white/[0.08] bg-[#101A2C] px-3 py-1 text-xs text-slate-300"
+                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600"
                     >
                       {item}
                     </span>
@@ -355,38 +355,38 @@ export default function Home() {
             title="AI Success Stories Across Key Industries"
             body="Explore how our AI solutions helped businesses automate workflows, reduce effort, improve decisions, and achieve measurable impact across industry projects."
           />
-          <div className="mx-auto mt-10 flex max-w-3xl items-center justify-center rounded-2xl border border-dashed border-slate-700 px-6 py-14 text-sm text-slate-500">
+          <div className="mx-auto mt-10 flex max-w-3xl items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/60 px-6 py-14 text-sm text-slate-500">
             Case studies coming soon.
           </div>
         </section>
 
         {/* ── Final CTA ─────────────────────────────────────────────── */}
         <section id="contact" className="pt-24 md:pt-32">
-          <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(56,189,248,0.14),transparent_70%)] px-6 py-20 text-center">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(31,182,255,0.12),transparent_70%)] px-6 py-20 text-center shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/softsuave-mark.svg"
               alt="Soft Suave"
-              className="mx-auto h-14 w-auto drop-shadow-[0_0_24px_rgba(56,189,248,0.5)]"
+              className="mx-auto h-14 w-auto drop-shadow-[0_0_24px_rgba(31,182,255,0.35)]"
             />
-            <h2 className="mx-auto mt-6 max-w-2xl text-3xl font-semibold tracking-tight text-slate-50 md:text-4xl">
+            <h2 className="mx-auto mt-6 max-w-2xl text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
               Transforming Complexity into Intelligent Digital Solutions
             </h2>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-400">
+            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-600">
               Book a free AI strategy session with our experts and discover
               where AI can create the biggest impact in your organization.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
                 href="mailto:softsuave.ai@gmail.com"
-                className="group inline-flex items-center gap-2 rounded-full bg-[#1FB6FF] px-8 py-3.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_40px_-8px_rgba(56,189,248,0.8)]"
+                className="group inline-flex items-center gap-2 rounded-full bg-[#1FB6FF] px-8 py-3.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_40px_-8px_rgba(31,182,255,0.5)]"
               >
                 Let&apos;s Build Together
                 <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
               </a>
               <a
                 href="mailto:softsuave.ai@gmail.com"
-                className="inline-flex items-center gap-2 rounded-full border border-slate-700/80 bg-white/[0.03] px-8 py-3.5 text-sm font-semibold text-slate-200 transition-colors duration-300 hover:border-sky-400/50 hover:text-sky-200"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-8 py-3.5 text-sm font-semibold text-slate-700 transition-colors duration-300 hover:border-sky-400/60 hover:text-sky-700"
               >
                 Talk With AI Experts
               </a>
@@ -396,16 +396,16 @@ export default function Home() {
       </div>
 
       {/* ── Footer ────────────────────────────────────────────────── */}
-      <footer className="relative z-10 mt-24 border-t border-slate-800/60 py-10 text-center text-sm text-slate-500">
+      <footer className="relative z-10 mt-24 border-t border-slate-200 py-10 text-center text-sm text-slate-500">
         <p>
           <a
             href="mailto:softsuave.ai@gmail.com"
-            className="text-sky-400 hover:text-sky-300"
+            className="text-sky-600 hover:text-sky-500"
           >
             softsuave.ai@gmail.com
           </a>
         </p>
-        <p className="mt-3 text-xs text-slate-600">
+        <p className="mt-3 text-xs text-slate-400">
           © 2026 Soft Suave. All rights reserved.
         </p>
       </footer>
