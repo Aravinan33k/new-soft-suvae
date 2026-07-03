@@ -1,6 +1,7 @@
 import { FiArrowRight, FiCheck } from "react-icons/fi";
 import ExperienceStage from "@/components/dom/ExperienceStage";
 import FragmentCubes from "@/components/dom/FragmentCubes";
+import DisconnectedDevices from "@/components/dom/DisconnectedDevices";
 
 const NAV_LINKS = [
   { label: "How It Works", href: "#connect" },
@@ -176,11 +177,6 @@ export default function Home() {
       <div id="top" className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-10">
         {/* ── Hero: headline left, supporting copy right ────────────── */}
         <section className="relative grid grid-cols-1 gap-12 pt-20 md:grid-cols-12 md:items-center md:pt-28">
-          {/* Layer 2: center spotlight behind the headline */}
-          <div className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[radial-gradient(circle_at_center,rgba(0,170,255,0.08)_0%,rgba(0,120,255,0.05)_25%,transparent_70%)]" />
-          <div className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[radial-gradient(circle_at_75%_20%,rgba(118,94,255,0.07),transparent_60%)]" />
-          {/* Layer 5: left & right fade keeps focus centered */}
-          <div className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[linear-gradient(90deg,rgba(244,247,251,0.95)_0%,transparent_20%,transparent_80%,rgba(244,247,251,0.95)_100%)]" />
           <div className="md:col-span-7">
             <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-sky-600/90 md:text-sm">
               Soft Suave
@@ -231,16 +227,20 @@ export default function Home() {
             body="Data, tools, and teams that were never designed to work together. Complexity piles up — and it quietly slows everything down."
           />
           <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {PROBLEMS.map((p, i) =>
-              i === 0 ? (
-                // Fragmented Data: dark panel with the animated circuit-cube
-                // fragments as its background
+            {PROBLEMS.map((p, i) => {
+              // Animated dark art panels: cube fragments for Fragmented Data,
+              // isolated devices for Disconnected Systems
+              const Art =
+                i === 0 ? FragmentCubes : i === 1 ? DisconnectedDevices : null;
+              const artBg = i === 0 ? "#070D1A" : "#0E1B30";
+              return Art ? (
                 <div
                   key={p.name}
-                  className="relative overflow-hidden rounded-2xl border border-sky-950/50 bg-[#070D1A] p-6 shadow-sm transition-all hover:border-sky-400/50 hover:shadow-md"
+                  className="relative min-h-80 overflow-hidden rounded-2xl border border-sky-950/50 p-7 shadow-sm transition-all hover:border-sky-400/50 hover:shadow-md"
+                  style={{ backgroundColor: artBg }}
                 >
-                  <FragmentCubes className="pointer-events-none absolute inset-0 h-full w-full" />
-                  {/* Scrim so the copy stays readable over the cubes */}
+                  <Art className="pointer-events-none absolute inset-0 h-full w-full" />
+                  {/* Scrim so the copy stays readable over the art */}
                   <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(7,13,26,0.42)_0%,rgba(7,13,26,0.05)_45%,rgba(7,13,26,0.5)_100%)]" />
                   <div className="relative">
                     <h3 className="text-base font-semibold text-white">
@@ -254,7 +254,7 @@ export default function Home() {
               ) : (
                 <div
                   key={p.name}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-sky-400/50 hover:shadow-md"
+                  className="min-h-80 rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition-all hover:border-sky-400/50 hover:shadow-md"
                 >
                   <h3 className="text-base font-semibold text-slate-900">
                     {p.name}
@@ -263,8 +263,8 @@ export default function Home() {
                     {p.body}
                   </p>
                 </div>
-              ),
-            )}
+              );
+            })}
           </div>
         </section>
 
