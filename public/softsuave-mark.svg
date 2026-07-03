@@ -1,0 +1,13 @@
+<svg width="31" height="36" viewBox="0 0 31 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="ss-grad" x1="8" y1="0" x2="20" y2="36" gradientUnits="userSpaceOnUse">
+<stop offset="0" stop-color="#FF9440"/>
+<stop offset="0.5" stop-color="#FB5A38"/>
+<stop offset="1" stop-color="#F92B4E"/>
+</linearGradient>
+</defs>
+<path d="M28.9462 8.28184L15.4679 15.7242L6.22567 10.5576L15.4679 5.39099L20.6667 8.28184L24.7743 6.00607L15.4679 0.839447L0 9.38897V11.6647L13.4141 19.1686V29.4404L4.10766 24.2738V18.5536L0 16.2778V26.5495L15.4679 35.1606L17.5859 33.9919V19.1686L26.8282 14.002V24.2738L21.6936 27.1646V31.7161L31 26.5495V9.38897L28.9462 8.28184Z" fill="url(#ss-grad)"/>
+<path d="M17.8425 16.0318L30.1013 9.266L28.9461 8.58942L16.6873 15.3552L17.8425 16.0318Z" fill="url(#ss-grad)"/>
+<path d="M20.6666 6.6822L21.8218 6.06712L17.8425 3.85286L16.6873 4.52944L20.6666 6.6822Z" fill="url(#ss-grad)"/>
+<path d="M2.63124 25.1347V16.8312L0.320679 15.5396V25.1347L15.4677 33.5612L16.6871 32.9461L2.63124 25.1347Z" fill="url(#ss-grad)"/>
+</svg>

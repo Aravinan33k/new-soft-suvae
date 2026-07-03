@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Applied AI Studio — Intelligence, Engineered",
+  title: "Soft Suave — Scalable AI, Automation & Integrations",
   description:
-    "We design, build, and deploy AI that transforms how your business operates — autonomous agents, enterprise RAG, and generative AI systems.",
+    "Build scalable AI solutions, intelligent automation systems, and seamless integrations with AI-enabled engineering teams focused on real business outcomes.",
 };
 
 export const viewport: Viewport = {

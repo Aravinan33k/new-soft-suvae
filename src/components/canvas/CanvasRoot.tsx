@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import BlackHoleScene from "@/components/canvas/scenes/BlackHoleScene";
+import NeuralScene from "@/components/canvas/scenes/NeuralScene";
 import Effects from "@/components/canvas/effects/Effects";
 import { silenceKnownWarnings } from "@/lib/silenceKnownWarnings";
 
@@ -25,7 +25,7 @@ export default function CanvasRoot() {
       className="absolute! inset-0"
     >
       <Suspense fallback={null}>
-        <BlackHoleScene />
+        <NeuralScene />
         <Effects />
       </Suspense>
     </Canvas>
