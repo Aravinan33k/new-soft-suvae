@@ -14,7 +14,7 @@ export default function NeuralScene() {
 
   return (
     <>
-      <color attach="background" args={["#02040a"]} />
+      <color attach="background" args={["#0b1220"]} />
       <AmbientField count={isMobile ? 400 : 900} />
       <NeuralNetwork />
       <NeuralCore />

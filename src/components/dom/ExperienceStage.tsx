@@ -10,7 +10,7 @@ import { scrollState } from "@/lib/scrollState";
 // Lazy-loaded client-only: three.js never blocks first paint.
 const CanvasRoot = dynamic(() => import("@/components/canvas/CanvasRoot"), {
   ssr: false,
-  loading: () => <div className="absolute inset-0 bg-[#010208]" aria-hidden />,
+  loading: () => <div className="absolute inset-0 bg-[#0B1220]" aria-hidden />,
 });
 
 type Slide = {
@@ -160,14 +160,17 @@ export default function ExperienceStage() {
   const slide = SLIDES[active];
 
   return (
-    <section ref={sectionRef} className="relative w-full px-4 py-10 md:px-8">
+    <section ref={sectionRef} className="relative w-full py-10">
+      {/* Layer 4: soft blue glow under the browser mockup */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto h-48 w-full max-w-5xl bg-[radial-gradient(ellipse,rgba(0,180,255,0.12),transparent_70%)] blur-[50px]" />
+
       <div
         ref={cardRef}
-        className="relative mx-auto flex h-[86vh] min-h-[560px] w-full flex-col overflow-hidden rounded-2xl border border-slate-700/70 bg-[#02040a] shadow-[0_0_80px_-20px_rgba(56,189,248,0.45)]"
-        style={{ maxWidth: CARD_START_WIDTH }}
+        className="relative mx-auto flex min-h-[560px] w-full flex-col overflow-hidden border border-white/[0.08] bg-[#0B1220] shadow-[0_0_80px_-20px_rgba(0,180,255,0.35)]"
+        style={CARD_START}
       >
         {/* Window chrome bar */}
-        <div className="flex shrink-0 items-center gap-2 border-b border-slate-800/80 bg-slate-950/80 px-4 py-3">
+        <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.08] bg-[#111827] px-4 py-3">
           <span className="h-3 w-3 rounded-full bg-red-500/70" />
           <span className="h-3 w-3 rounded-full bg-yellow-500/70" />
           <span className="h-3 w-3 rounded-full bg-green-500/70" />
@@ -206,7 +209,7 @@ export default function ExperienceStage() {
                     <span
                       className={`text-sm font-medium transition-colors ${
                         isActive
-                          ? "text-slate-100"
+                          ? "text-slate-50"
                           : "text-slate-500 group-hover:text-slate-300"
                       }`}
                     >
@@ -218,7 +221,7 @@ export default function ExperienceStage() {
                         ref={(el) => {
                           barsRef.current[i] = el;
                         }}
-                        className="absolute inset-y-0 left-0 block bg-sky-400"
+                        className="absolute inset-y-0 left-0 block bg-[#1FB6FF]"
                         style={{ width: "0%" }}
                       />
                     </span>
@@ -247,7 +250,7 @@ export default function ExperienceStage() {
                   {slide.title}
                 </h2>
               ) : (
-                <h2 className="text-3xl font-semibold tracking-tight text-slate-100 [text-shadow:0_1px_14px_rgba(1,2,8,0.95)] md:text-5xl">
+                <h2 className="text-3xl font-semibold tracking-tight text-slate-50 [text-shadow:0_1px_14px_rgba(1,2,8,0.95)] md:text-5xl">
                   {slide.title}
                 </h2>
               )}
@@ -257,7 +260,7 @@ export default function ExperienceStage() {
               {slide.button && (
                 <a
                   href="#contact"
-                  className="pointer-events-auto mt-10 inline-block rounded-full bg-sky-400 px-8 py-3.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-sky-300 hover:shadow-[0_0_40px_-8px_rgba(56,189,248,0.8)]"
+                  className="pointer-events-auto mt-10 inline-block rounded-full bg-[#1FB6FF] px-8 py-3.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_40px_-8px_rgba(56,189,248,0.8)]"
                 >
                   {slide.button}
                 </a>

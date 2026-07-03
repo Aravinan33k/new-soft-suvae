@@ -126,7 +126,7 @@ function SectionHeading({
       <p className="text-xs font-medium uppercase tracking-[0.3em] text-sky-300/80">
         {eyebrow}
       </p>
-      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-100 md:text-4xl">
+      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-50 md:text-4xl">
         {title}
       </h2>
       {body && (
@@ -141,15 +141,15 @@ function SectionHeading({
 export default function Home() {
   return (
     <main className="relative min-h-svh">
-      {/* Subtle backdrop glow */}
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_-10%,rgba(56,189,248,0.12),transparent_70%)]" />
+      {/* Layer 1: hero background gradient across the page */}
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(180deg,#04060B_0%,#050913_45%,#04060B_100%)]" />
 
       {/* ── Navbar ────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-slate-800/60 bg-[#02040a]/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50">
         <nav className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-6 md:px-10">
           <a
             href="#top"
-            className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-100 md:text-2xl"
+            className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-50 md:text-2xl"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/softsuave-mark.svg" alt="" className="h-9 w-auto md:h-10" />
@@ -167,7 +167,7 @@ export default function Home() {
             ))}
             <a
               href="#contact"
-              className="rounded-full bg-sky-400 px-4 py-1.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-sky-300 hover:shadow-[0_0_24px_-6px_rgba(56,189,248,0.8)]"
+              className="rounded-full bg-[#1FB6FF] px-4 py-1.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_24px_-6px_rgba(56,189,248,0.8)]"
             >
               Book AI Strategy Call
             </a>
@@ -177,7 +177,12 @@ export default function Home() {
 
       <div id="top" className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-10">
         {/* ── Hero: headline left, supporting copy right ────────────── */}
-        <section className="grid grid-cols-1 gap-12 pt-20 md:grid-cols-12 md:items-center md:pt-28">
+        <section className="relative grid grid-cols-1 gap-12 pt-20 md:grid-cols-12 md:items-center md:pt-28">
+          {/* Layer 2: center spotlight behind the headline */}
+          <div className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[radial-gradient(circle_at_center,rgba(0,170,255,0.08)_0%,rgba(0,120,255,0.05)_25%,transparent_70%)]" />
+          <div className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[radial-gradient(circle_at_75%_20%,rgba(118,94,255,0.06),transparent_60%)]" />
+          {/* Layer 5: left & right fade keeps focus centered */}
+          <div className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10 bg-[linear-gradient(90deg,rgba(4,6,11,0.95)_0%,transparent_20%,transparent_80%,rgba(4,6,11,0.95)_100%)]" />
           <div className="md:col-span-7">
             <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-sky-300/80 md:text-sm">
               Soft Suave
@@ -191,7 +196,7 @@ export default function Home() {
             <div className="mt-12 flex flex-col gap-4 sm:flex-row">
               <a
                 href="#contact"
-                className="group inline-flex items-center justify-center gap-2 rounded-full bg-sky-400 px-7 py-3 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-sky-300 hover:shadow-[0_0_40px_-8px_rgba(56,189,248,0.8)]"
+                className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#1FB6FF] px-7 py-3 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_40px_-8px_rgba(56,189,248,0.8)]"
               >
                 Book AI Strategy Call
                 <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
@@ -231,9 +236,9 @@ export default function Home() {
             {PROBLEMS.map((p) => (
               <div
                 key={p.name}
-                className="rounded-2xl border border-slate-800 bg-white/[0.02] p-6 transition-colors hover:border-sky-400/40"
+                className="rounded-2xl border border-white/[0.08] bg-[#101A2C] p-6 transition-colors hover:border-sky-400/40"
               >
-                <h3 className="text-base font-semibold text-slate-100">
+                <h3 className="text-base font-semibold text-slate-50">
                   {p.name}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-slate-400">
@@ -255,7 +260,7 @@ export default function Home() {
             {STATS.map((stat) => (
               <div
                 key={stat}
-                className="flex items-center gap-3 rounded-xl border border-slate-800 bg-white/[0.03] px-5 py-4"
+                className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-[#101A2C] px-5 py-4"
               >
                 <FiCheck className="shrink-0 text-sky-400" />
                 <span className="text-sm text-slate-300">{stat}</span>
@@ -275,9 +280,9 @@ export default function Home() {
             {SERVICES.map((service) => (
               <div
                 key={service.name}
-                className="rounded-2xl border border-slate-800 bg-white/[0.02] p-6 transition-colors hover:border-sky-400/40 hover:bg-sky-400/[0.04]"
+                className="rounded-2xl border border-white/[0.08] bg-[#101A2C] p-6 transition-colors hover:border-sky-400/40 hover:bg-[#1FB6FF]/[0.04]"
               >
-                <h3 className="text-base font-semibold text-slate-100">
+                <h3 className="text-base font-semibold text-slate-50">
                   {service.name}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-slate-400">
@@ -299,9 +304,9 @@ export default function Home() {
             {INDUSTRIES.map((industry) => (
               <div
                 key={industry.name}
-                className="rounded-2xl border border-slate-800 bg-white/[0.02] p-6 transition-colors hover:border-sky-400/40"
+                className="rounded-2xl border border-white/[0.08] bg-[#101A2C] p-6 transition-colors hover:border-sky-400/40"
               >
-                <h3 className="text-lg font-semibold text-slate-100">
+                <h3 className="text-lg font-semibold text-slate-50">
                   {industry.name}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-slate-400">
@@ -323,7 +328,7 @@ export default function Home() {
             {STACK.map((group) => (
               <div
                 key={group.category}
-                className="rounded-2xl border border-slate-800 bg-white/[0.02] p-6"
+                className="rounded-2xl border border-white/[0.08] bg-[#101A2C] p-6"
               >
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-sky-300/80">
                   {group.category}
@@ -332,7 +337,7 @@ export default function Home() {
                   {group.items.map((item) => (
                     <span
                       key={item}
-                      className="rounded-full border border-slate-800 bg-white/[0.03] px-3 py-1 text-xs text-slate-300"
+                      className="rounded-full border border-white/[0.08] bg-[#101A2C] px-3 py-1 text-xs text-slate-300"
                     >
                       {item}
                     </span>
@@ -364,7 +369,7 @@ export default function Home() {
               alt="Soft Suave"
               className="mx-auto h-14 w-auto drop-shadow-[0_0_24px_rgba(56,189,248,0.5)]"
             />
-            <h2 className="mx-auto mt-6 max-w-2xl text-3xl font-semibold tracking-tight text-slate-100 md:text-4xl">
+            <h2 className="mx-auto mt-6 max-w-2xl text-3xl font-semibold tracking-tight text-slate-50 md:text-4xl">
               Transforming Complexity into Intelligent Digital Solutions
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-400">
@@ -374,7 +379,7 @@ export default function Home() {
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
                 href="mailto:softsuave.ai@gmail.com"
-                className="group inline-flex items-center gap-2 rounded-full bg-sky-400 px-8 py-3.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-sky-300 hover:shadow-[0_0_40px_-8px_rgba(56,189,248,0.8)]"
+                className="group inline-flex items-center gap-2 rounded-full bg-[#1FB6FF] px-8 py-3.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_40px_-8px_rgba(56,189,248,0.8)]"
               >
                 Let&apos;s Build Together
                 <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />

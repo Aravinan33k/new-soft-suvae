@@ -1,6 +1,6 @@
 // Single source of truth for scene + UI colors so canvas and DOM stay in sync.
 export const COLORS = {
-  background: "#02040a",
+  background: "#0b1220",
   coreEmissive: "#38bdf8",
   coreDeep: "#0ea5e9",
   glow: "#7dd3fc",
