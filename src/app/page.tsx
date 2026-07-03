@@ -2,14 +2,8 @@ import { FiArrowRight, FiCheck } from "react-icons/fi";
 import ExperienceStage from "@/components/dom/ExperienceStage";
 import FragmentCubes from "@/components/dom/FragmentCubes";
 import DisconnectedDevices from "@/components/dom/DisconnectedDevices";
-
-const NAV_LINKS = [
-  { label: "How It Works", href: "#connect" },
-  { label: "Services", href: "#services" },
-  { label: "Industries", href: "#industries" },
-  { label: "Work", href: "#work" },
-  { label: "Contact", href: "#contact" },
-];
+import ManualWorkflows from "@/components/dom/ManualWorkflows";
+import SlowDecisions from "@/components/dom/SlowDecisions";
 
 const PROBLEMS = [
   {
@@ -145,7 +139,7 @@ export default function Home() {
     <main className="relative min-h-svh bg-[#f4f7fb]">
       {/* ── Navbar ────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 bg-[#f4f7fb]">
-        <nav className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-6 md:px-10">
+        <nav className="mx-auto flex h-20 w-full max-w-7xl items-center px-6 md:px-10">
           <a
             href="#top"
             className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-900 md:text-2xl"
@@ -154,23 +148,6 @@ export default function Home() {
             <img src="/softsuave-mark.svg" alt="" className="h-9 w-auto md:h-10" />
             Soft Suave
           </a>
-          <div className="flex items-center gap-6">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="hidden text-sm text-slate-600 transition-colors hover:text-sky-600 lg:block"
-              >
-                {link.label}
-              </a>
-            ))}
-            <a
-              href="#contact"
-              className="rounded-full bg-[#1FB6FF] px-4 py-1.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_24px_-6px_rgba(31,182,255,0.45)]"
-            >
-              Book AI Strategy Call
-            </a>
-          </div>
         </nav>
       </header>
 
@@ -231,8 +208,8 @@ export default function Home() {
               // Animated dark art panels: cube fragments for Fragmented Data,
               // isolated devices for Disconnected Systems
               const Art =
-                i === 0 ? FragmentCubes : i === 1 ? DisconnectedDevices : null;
-              const artBg = i === 0 ? "#070D1A" : "#0E1B30";
+                [FragmentCubes, DisconnectedDevices, ManualWorkflows, SlowDecisions][i] ?? null;
+              const artBg = ["#070D1A", "#0E1B30", "#0D0B1E", "#040810"][i] ?? "#070D1A";
               return Art ? (
                 <div
                   key={p.name}
