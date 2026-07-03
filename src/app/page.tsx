@@ -145,7 +145,7 @@ export default function Home() {
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(180deg,#04060B_0%,#050913_45%,#04060B_100%)]" />
 
       {/* ── Navbar ────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50">
+      <header className="sticky top-0 z-50 bg-[#04060b]">
         <nav className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-6 md:px-10">
           <a
             href="#top"

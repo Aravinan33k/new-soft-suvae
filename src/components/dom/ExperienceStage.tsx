@@ -105,9 +105,9 @@ export default function ExperienceStage() {
         ease: "power2.out",
         scrollTrigger: {
           trigger: section,
-          start: "center 70%",
-          end: "center 40%",
-          scrub: 0.8,
+          start: "center 72%",
+          end: "center 36%",
+          scrub: 1,
           invalidateOnRefresh: true,
         },
       });
