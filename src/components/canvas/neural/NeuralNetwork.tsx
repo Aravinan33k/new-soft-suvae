@@ -172,7 +172,7 @@ export default function NeuralNetwork() {
   );
   const uniformsPulse = useMemo(
     () => ({
-      uColorA: { value: new THREE.Color("#a5f3fc") },
+      uColorA: { value: new THREE.Color("#ffe0a3") },
       uColorB: { value: new THREE.Color("#ffffff") },
     }),
     []

@@ -19,11 +19,11 @@ function Brain() {
     const positions = new Float32Array(N * 3);
     const colors = new Float32Array(N * 3);
     const base = [
-      new THREE.Color("#2f7bff"),
-      new THREE.Color("#3ec9ff"),
-      new THREE.Color("#8fb7ff"),
+      new THREE.Color("#ff8a3d"),
+      new THREE.Color("#ffb057"),
+      new THREE.Color("#f9723c"),
     ];
-    const hot = [new THREE.Color("#ffb057"), new THREE.Color("#ff5fd0")];
+    const hot = [new THREE.Color("#ffe0a3"), new THREE.Color("#ff5f4d")];
     const pts: THREE.Vector3[] = [];
 
     for (let i = 0; i < N; i++) {
@@ -174,9 +174,9 @@ function Brain() {
           <bufferAttribute attach="attributes-position" args={[data.edges, 3]} />
         </bufferGeometry>
         <lineBasicMaterial
-          color="#4d86ff"
+          color="#ff8a3d"
           transparent
-          opacity={0.28}
+          opacity={0.3}
           depthWrite={false}
         />
       </lineSegments>
@@ -190,7 +190,7 @@ function Brain() {
           ref={blinkA}
           size={0.05}
           sizeAttenuation
-          color="#bfe3ff"
+          color="#ffe0a3"
           transparent
           opacity={0.7}
           depthWrite={false}
@@ -204,7 +204,7 @@ function Brain() {
           ref={blinkB}
           size={0.045}
           sizeAttenuation
-          color="#ffd9a3"
+          color="#ff6a3d"
           transparent
           opacity={0.7}
           depthWrite={false}
@@ -219,7 +219,7 @@ function Brain() {
         <pointsMaterial
           size={0.035}
           sizeAttenuation
-          color="#6fa0e8"
+          color="#e88a5b"
           transparent
           opacity={0.55}
           depthWrite={false}
@@ -230,7 +230,7 @@ function Brain() {
           <bufferAttribute attach="attributes-position" args={[data.haloEdges, 3]} />
         </bufferGeometry>
         <lineBasicMaterial
-          color="#7aa4e0"
+          color="#e0a47a"
           transparent
           opacity={0.16}
           depthWrite={false}

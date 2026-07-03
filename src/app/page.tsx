@@ -1,5 +1,6 @@
 import { FiArrowRight, FiCheck } from "react-icons/fi";
 import ExperienceStage from "@/components/dom/ExperienceStage";
+import FloatingCard from "@/components/dom/FloatingCard";
 import FragmentCubes from "@/components/dom/FragmentCubes";
 import DisconnectedDevices from "@/components/dom/DisconnectedDevices";
 import ManualWorkflows from "@/components/dom/ManualWorkflows";
@@ -120,14 +121,14 @@ function SectionHeading({
 }) {
   return (
     <div className="mx-auto max-w-3xl text-center">
-      <p className="text-xs font-medium uppercase tracking-[0.3em] text-sky-600/90">
+      <p className="text-xs font-medium uppercase tracking-[0.3em] text-[#FF8A3D]">
         {eyebrow}
       </p>
-      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
+      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
         {title}
       </h2>
       {body && (
-        <p className="mt-5 text-base leading-relaxed text-slate-600 md:text-lg">
+        <p className="mt-5 text-base leading-relaxed text-zinc-400 md:text-lg">
           {body}
         </p>
       )}
@@ -137,13 +138,13 @@ function SectionHeading({
 
 export default function Home() {
   return (
-    <main className="relative min-h-svh bg-[#f4f7fb]">
+    <main className="relative min-h-svh bg-[#0a0a0c]">
       {/* ── Navbar ────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-[#f4f7fb]">
+      <header className="sticky top-0 z-50 bg-[#0a0a0c]">
         <nav className="mx-auto flex h-20 w-full max-w-7xl items-center px-6 md:px-10">
           <a
             href="#top"
-            className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-900 md:text-2xl"
+            className="flex items-center gap-3 text-xl font-bold tracking-tight text-white md:text-2xl"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/softsuave-mark.svg" alt="" className="h-9 w-auto md:h-10" />
@@ -161,33 +162,33 @@ export default function Home() {
             <HeroBrain />
           </div>
           <div className="md:col-span-7">
-            <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-sky-600/90 md:text-sm">
+            <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D] md:text-sm">
               Soft Suave
             </p>
-            <h1 className="max-w-3xl text-3xl font-semibold leading-[1.1] tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
+            <h1 className="max-w-3xl text-3xl font-semibold leading-[1.1] tracking-tight text-white md:text-5xl lg:text-6xl">
               Empowering Businesses with Scalable AI,{" "}
-              <span className="bg-gradient-to-b from-indigo-600 via-indigo-500 to-sky-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#FF9440] via-[#FB5A38] to-[#F92B4E] bg-clip-text text-transparent">
                 Automation &amp; Integrations
               </span>
             </h1>
             <div className="mt-10 flex flex-col gap-4 sm:flex-row">
               <a
                 href="#contact"
-                className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#1FB6FF] px-6 py-2.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_40px_-8px_rgba(31,182,255,0.5)]"
+                className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#FF6A3D] px-6 py-2.5 text-sm font-semibold text-[#1a0a04] transition-all duration-300 hover:bg-[#FF8A5C] hover:shadow-[0_0_40px_-8px_rgba(255,106,61,0.6)]"
               >
                 Book AI Strategy Call
                 <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
               </a>
               <a
                 href="#services"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors duration-300 hover:border-sky-400/60 hover:text-sky-700"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-6 py-2.5 text-sm font-semibold text-zinc-200 backdrop-blur transition-colors duration-300 hover:border-[#FF8A3D]/50 hover:text-[#FFB057]"
               >
                 Explore AI Solutions
               </a>
             </div>
           </div>
           <div className="md:col-span-5 md:pl-6 lg:pl-14">
-            <p className="max-w-md font-serif text-lg leading-relaxed text-slate-600 md:text-xl">
+            <p className="max-w-md font-serif text-lg leading-relaxed text-zinc-400 md:text-xl">
               Build scalable AI solutions, intelligent automation systems, and
               seamless integrations with AI&#8209;enabled engineering teams
               focused on real business outcomes.
@@ -209,43 +210,50 @@ export default function Home() {
             title="Every business runs on disconnected systems"
             body="Data, tools, and teams that were never designed to work together. Complexity piles up — and it quietly slows everything down."
           />
-          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid grid-cols-1 gap-5 pb-16 sm:grid-cols-2 lg:grid-cols-4">
             {PROBLEMS.map((p, i) => {
               // Animated dark art panels: cube fragments for Fragmented Data,
               // isolated devices for Disconnected Systems
               const Art =
                 [FragmentCubes, DisconnectedDevices, ManualWorkflows, SlowDecisions][i] ?? null;
               const artBg = ["#070D1A", "#0E1B30", "#0D0B1E", "#040810"][i] ?? "#070D1A";
+              // Each card floats at its own height and bob phase
+              const offset =
+                ["lg:translate-y-6", "lg:translate-y-0", "lg:translate-y-14", "lg:translate-y-4"][i] ?? "";
               return Art ? (
-                <div
+                <FloatingCard
                   key={p.name}
-                  className="relative min-h-80 overflow-hidden rounded-2xl border border-sky-950/50 p-7 shadow-sm transition-all hover:border-sky-400/50 hover:shadow-md"
+                  offsetClass={offset}
+                  floatDelay={i * -1.7}
+                  className="relative min-h-80 overflow-hidden rounded-2xl border border-white/[0.08] p-7 shadow-sm hover:border-[#FF8A3D]/50 hover:shadow-[0_28px_56px_-16px_rgba(0,0,0,0.6),0_0_48px_-8px_rgba(255,138,61,0.35)]"
                   style={{ backgroundColor: artBg }}
                 >
                   <Art className="pointer-events-none absolute inset-0 h-full w-full" />
                   {/* Scrim so the copy stays readable over the art */}
-                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(7,13,26,0.42)_0%,rgba(7,13,26,0.05)_45%,rgba(7,13,26,0.5)_100%)]" />
+                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(10,10,12,0.42)_0%,rgba(10,10,12,0.05)_45%,rgba(10,10,12,0.5)_100%)]" />
                   <div className="relative">
                     <h3 className="text-base font-semibold text-white">
                       {p.name}
                     </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-slate-300 [text-shadow:0_1px_8px_rgba(7,13,26,0.9)]">
+                    <p className="mt-3 text-sm leading-relaxed text-zinc-300 [text-shadow:0_1px_8px_rgba(10,10,12,0.9)]">
                       {p.body}
                     </p>
                   </div>
-                </div>
+                </FloatingCard>
               ) : (
-                <div
+                <FloatingCard
                   key={p.name}
-                  className="min-h-80 rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition-all hover:border-sky-400/50 hover:shadow-md"
+                  offsetClass={offset}
+                  floatDelay={i * -1.7}
+                  className="relative min-h-80 rounded-2xl border border-white/[0.08] bg-[#111113] p-7 shadow-sm hover:border-[#FF8A3D]/50 hover:shadow-[0_28px_56px_-16px_rgba(0,0,0,0.5),0_0_48px_-8px_rgba(255,138,61,0.3)]"
                 >
-                  <h3 className="text-base font-semibold text-slate-900">
+                  <h3 className="text-base font-semibold text-white">
                     {p.name}
                   </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                  <p className="mt-3 text-sm leading-relaxed text-zinc-400">
                     {p.body}
                   </p>
-                </div>
+                </FloatingCard>
               );
             })}
           </div>
@@ -262,10 +270,10 @@ export default function Home() {
             {STATS.map((stat) => (
               <div
                 key={stat}
-                className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm"
+                className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-[#111113] px-5 py-4 shadow-sm"
               >
-                <FiCheck className="shrink-0 text-sky-500" />
-                <span className="text-sm text-slate-700">{stat}</span>
+                <FiCheck className="shrink-0 text-[#FF8A3D]" />
+                <span className="text-sm text-zinc-300">{stat}</span>
               </div>
             ))}
           </div>
@@ -282,12 +290,12 @@ export default function Home() {
             {SERVICES.map((service) => (
               <div
                 key={service.name}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-sky-400/50 hover:bg-[#1FB6FF]/[0.04] hover:shadow-md"
+                className="rounded-2xl border border-white/[0.08] bg-[#111113] p-6 shadow-sm transition-all hover:border-[#FF8A3D]/50 hover:bg-[#FF6A3D]/[0.06] hover:shadow-md"
               >
-                <h3 className="text-base font-semibold text-slate-900">
+                <h3 className="text-base font-semibold text-white">
                   {service.name}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                <p className="mt-3 text-sm leading-relaxed text-zinc-400">
                   {service.body}
                 </p>
               </div>
@@ -306,12 +314,12 @@ export default function Home() {
             {INDUSTRIES.map((industry) => (
               <div
                 key={industry.name}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-sky-400/50 hover:shadow-md"
+                className="rounded-2xl border border-white/[0.08] bg-[#111113] p-6 shadow-sm transition-all hover:border-[#FF8A3D]/50 hover:shadow-md"
               >
-                <h3 className="text-lg font-semibold text-slate-900">
+                <h3 className="text-lg font-semibold text-white">
                   {industry.name}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                <p className="mt-3 text-sm leading-relaxed text-zinc-400">
                   {industry.body}
                 </p>
               </div>
@@ -330,16 +338,16 @@ export default function Home() {
             {STACK.map((group) => (
               <div
                 key={group.category}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                className="rounded-2xl border border-white/[0.08] bg-[#111113] p-6 shadow-sm"
               >
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-sky-600/90">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-[#FF8A3D]">
                   {group.category}
                 </h3>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {group.items.map((item) => (
                     <span
                       key={item}
-                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600"
+                      className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-xs text-zinc-300"
                     >
                       {item}
                     </span>
@@ -357,38 +365,38 @@ export default function Home() {
             title="AI Success Stories Across Key Industries"
             body="Explore how our AI solutions helped businesses automate workflows, reduce effort, improve decisions, and achieve measurable impact across industry projects."
           />
-          <div className="mx-auto mt-10 flex max-w-3xl items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/60 px-6 py-14 text-sm text-slate-500">
+          <div className="mx-auto mt-10 flex max-w-3xl items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/[0.02] px-6 py-14 text-sm text-zinc-500">
             Case studies coming soon.
           </div>
         </section>
 
         {/* ── Final CTA ─────────────────────────────────────────────── */}
         <section id="contact" className="pt-24 md:pt-32">
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(31,182,255,0.12),transparent_70%)] px-6 py-20 text-center shadow-sm">
+          <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#111113] bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(255,106,61,0.14),transparent_70%)] px-6 py-20 text-center shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/softsuave-mark.svg"
               alt="Soft Suave"
-              className="mx-auto h-14 w-auto drop-shadow-[0_0_24px_rgba(31,182,255,0.35)]"
+              className="mx-auto h-14 w-auto drop-shadow-[0_0_24px_rgba(255,106,61,0.4)]"
             />
-            <h2 className="mx-auto mt-6 max-w-2xl text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
+            <h2 className="mx-auto mt-6 max-w-2xl text-3xl font-semibold tracking-tight text-white md:text-4xl">
               Transforming Complexity into Intelligent Digital Solutions
             </h2>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-600">
+            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-zinc-400">
               Book a free AI strategy session with our experts and discover
               where AI can create the biggest impact in your organization.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
                 href="mailto:softsuave.ai@gmail.com"
-                className="group inline-flex items-center gap-2 rounded-full bg-[#1FB6FF] px-8 py-3.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_40px_-8px_rgba(31,182,255,0.5)]"
+                className="group inline-flex items-center gap-2 rounded-full bg-[#FF6A3D] px-8 py-3.5 text-sm font-semibold text-[#1a0a04] transition-all duration-300 hover:bg-[#FF8A5C] hover:shadow-[0_0_40px_-8px_rgba(255,106,61,0.6)]"
               >
                 Let&apos;s Build Together
                 <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
               </a>
               <a
                 href="mailto:softsuave.ai@gmail.com"
-                className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-8 py-3.5 text-sm font-semibold text-slate-700 transition-colors duration-300 hover:border-sky-400/60 hover:text-sky-700"
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-8 py-3.5 text-sm font-semibold text-zinc-200 transition-colors duration-300 hover:border-[#FF8A3D]/50 hover:text-[#FFB057]"
               >
                 Talk With AI Experts
               </a>
@@ -398,16 +406,16 @@ export default function Home() {
       </div>
 
       {/* ── Footer ────────────────────────────────────────────────── */}
-      <footer className="relative z-10 mt-24 border-t border-slate-200 py-10 text-center text-sm text-slate-500">
+      <footer className="relative z-10 mt-24 border-t border-white/[0.08] py-10 text-center text-sm text-zinc-500">
         <p>
           <a
             href="mailto:softsuave.ai@gmail.com"
-            className="text-sky-600 hover:text-sky-500"
+            className="text-[#FF8A3D] hover:text-[#FFB057]"
           >
             softsuave.ai@gmail.com
           </a>
         </p>
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-zinc-600">
           © 2026 Soft Suave. All rights reserved.
         </p>
       </footer>

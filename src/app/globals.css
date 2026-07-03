@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f7fb;
-  --foreground: #0f172a;
+  --background: #0a0a0c;
+  --foreground: #e8e8ea;
 }
 
 @theme inline {
@@ -27,6 +27,75 @@ html {
   }
 }
 
+/* ── Floating glass problem cards ─────────────────────────────── */
+/* Registered so the conic-gradient angle can be animated smoothly */
+@property --spin-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes cardBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+@keyframes borderSpin {
+  to {
+    --spin-angle: 360deg;
+  }
+}
+
+.card-float {
+  animation: cardBob 7s ease-in-out infinite;
+}
+
+.card-tilt {
+  transform: perspective(900px);
+  transform-style: preserve-3d;
+  transition:
+    transform 0.18s ease-out,
+    box-shadow 0.35s ease,
+    border-color 0.3s ease;
+  will-change: transform;
+}
+
+/* Two light beams chasing each other around the card edge; the mask
+   keeps only the 1.5px ring visible */
+.card-border-spin {
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--spin-angle),
+    transparent 0deg,
+    rgba(255, 176, 87, 0.95) 70deg,
+    transparent 140deg,
+    transparent 180deg,
+    rgba(249, 43, 78, 0.7) 250deg,
+    transparent 320deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: borderSpin 3.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-float,
+  .card-border-spin {
+    animation: none;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -35,21 +104,21 @@ body {
 }
 
 ::selection {
-  background: rgba(31, 182, 255, 0.25);
-  color: #0f172a;
+  background: rgba(255, 106, 61, 0.3);
+  color: #fff5ee;
 }
 
-/* Thin light scrollbar to match the theme */
+/* Thin dark scrollbar to match the theme */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #f4f7fb;
+  background: #0a0a0c;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #2a2a2e;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #3f3f46;
 }

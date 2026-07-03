@@ -10,7 +10,7 @@ import { scrollState } from "@/lib/scrollState";
 // Lazy-loaded client-only: three.js never blocks first paint.
 const CanvasRoot = dynamic(() => import("@/components/canvas/CanvasRoot"), {
   ssr: false,
-  loading: () => <div className="absolute inset-0 bg-[#0B1220]" aria-hidden />,
+  loading: () => <div className="absolute inset-0 bg-[#0a0a0c]" aria-hidden />,
 });
 
 type Slide = {
@@ -161,12 +161,12 @@ export default function ExperienceStage() {
 
   return (
     <section ref={sectionRef} className="relative w-full py-10">
-      {/* Layer 4: soft blue glow under the browser mockup */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto h-48 w-full max-w-5xl bg-[radial-gradient(ellipse,rgba(0,180,255,0.12),transparent_70%)] blur-[50px]" />
+      {/* Layer 4: soft warm glow under the browser mockup */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto h-48 w-full max-w-5xl bg-[radial-gradient(ellipse,rgba(255,138,61,0.14),transparent_70%)] blur-[50px]" />
 
       <div
         ref={cardRef}
-        className="relative mx-auto flex min-h-[560px] w-full flex-col overflow-hidden border border-white/[0.08] bg-[#0B1220] shadow-[0_0_80px_-20px_rgba(0,180,255,0.35)]"
+        className="relative mx-auto flex min-h-[560px] w-full flex-col overflow-hidden border border-white/[0.08] bg-[#0a0a0c] shadow-[0_0_80px_-20px_rgba(255,138,61,0.35)]"
         style={CARD_START}
       >
         {/* Window chrome bar */}
@@ -200,7 +200,7 @@ export default function ExperienceStage() {
                 >
                   <span
                     className={`font-mono text-xs tabular-nums transition-colors ${
-                      isActive ? "text-sky-400" : "text-slate-600 group-hover:text-slate-400"
+                      isActive ? "text-[#FF8A3D]" : "text-zinc-600 group-hover:text-zinc-400"
                     }`}
                   >
                     {String(i + 1).padStart(2, "0")}
@@ -209,19 +209,19 @@ export default function ExperienceStage() {
                     <span
                       className={`text-sm font-medium transition-colors ${
                         isActive
-                          ? "text-slate-50"
-                          : "text-slate-500 group-hover:text-slate-300"
+                          ? "text-white"
+                          : "text-zinc-500 group-hover:text-zinc-300"
                       }`}
                     >
                       {s.label}
                     </span>
                     {/* Track + autoplay progress fill */}
-                    <span className="relative block h-px w-16 overflow-hidden bg-slate-700/70 md:w-24">
+                    <span className="relative block h-px w-16 overflow-hidden bg-zinc-700/70 md:w-24">
                       <span
                         ref={(el) => {
                           barsRef.current[i] = el;
                         }}
-                        className="absolute inset-y-0 left-0 block bg-[#1FB6FF]"
+                        className="absolute inset-y-0 left-0 block bg-[#FF6A3D]"
                         style={{ width: "0%" }}
                       />
                     </span>
@@ -236,31 +236,31 @@ export default function ExperienceStage() {
             <div key={active} className="max-w-2xl animate-[fadeUp_0.7s_ease]">
               <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_55%_45%_at_55%_50%,rgba(1,2,8,0.55),transparent_70%)]" />
               {slide.eyebrow && (
-                <p className="mb-5 text-xs font-medium uppercase tracking-[0.35em] text-sky-300/80 md:text-sm">
+                <p className="mb-5 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D]/90 md:text-sm">
                   {slide.eyebrow}
                 </p>
               )}
               {slide.index && (
-                <p className="mb-4 font-mono text-sm text-sky-400/70">
+                <p className="mb-4 font-mono text-sm text-[#FF8A3D]/70">
                   {slide.index}
                 </p>
               )}
               {active === 0 ? (
-                <h2 className="bg-gradient-to-b from-white via-sky-100 to-indigo-300/60 bg-clip-text text-4xl font-semibold leading-[1.05] tracking-tight text-transparent md:text-6xl">
+                <h2 className="bg-gradient-to-r from-[#FF9440] via-[#FB5A38] to-[#F92B4E] bg-clip-text text-4xl font-semibold leading-[1.05] tracking-tight text-transparent md:text-6xl">
                   {slide.title}
                 </h2>
               ) : (
-                <h2 className="text-3xl font-semibold tracking-tight text-slate-50 [text-shadow:0_1px_14px_rgba(1,2,8,0.95)] md:text-5xl">
+                <h2 className="text-3xl font-semibold tracking-tight text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.95)] md:text-5xl">
                   {slide.title}
                 </h2>
               )}
-              <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-300 [text-shadow:0_1px_12px_rgba(1,2,8,0.9)] md:text-lg">
+              <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.9)] md:text-lg">
                 {slide.body}
               </p>
               {slide.button && (
                 <a
                   href="#contact"
-                  className="pointer-events-auto mt-10 inline-block rounded-full bg-[#1FB6FF] px-8 py-3.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-[#53C8FF] hover:shadow-[0_0_40px_-8px_rgba(56,189,248,0.8)]"
+                  className="pointer-events-auto mt-10 inline-block rounded-full bg-[#FF6A3D] px-8 py-3.5 text-sm font-semibold text-[#1a0a04] transition-all duration-300 hover:bg-[#FF8A5C] hover:shadow-[0_0_40px_-8px_rgba(255,106,61,0.8)]"
                 >
                   {slide.button}
                 </a>
@@ -273,7 +273,7 @@ export default function ExperienceStage() {
             type="button"
             onClick={togglePlaying}
             aria-label={playing ? "Pause slideshow" : "Play slideshow"}
-            className="absolute bottom-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-slate-700/70 bg-slate-950/70 text-slate-200 backdrop-blur transition-colors hover:border-sky-400/60 hover:text-sky-300"
+            className="absolute bottom-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700/70 bg-black/50 text-zinc-200 backdrop-blur transition-colors hover:border-[#FF8A3D]/60 hover:text-[#FFB057]"
           >
             {playing ? <FiPause /> : <FiPlay className="translate-x-px" />}
           </button>
