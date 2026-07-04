@@ -313,15 +313,15 @@ export default function Home() {
               {SERVICES.map((service) => (
                 <div
                   key={service.name}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-md transition-all hover:border-[#FF8A3D]/50 hover:bg-white/[0.07] hover:shadow-md"
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-sm transition-all hover:border-[#FF8A3D]/50 hover:bg-white/[0.08] hover:shadow-md"
                 >
                   <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-[#FF8A3D]/25 bg-[#FF6A3D]/10">
                     <service.icon className="h-6 w-6 text-[#FF8A3D]" />
                   </div>
-                  <h3 className="text-base font-semibold text-white">
+                  <h3 className="text-base font-semibold text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.85)]">
                     {service.name}
                   </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-zinc-300">
+                  <p className="mt-3 text-sm leading-relaxed text-zinc-200 [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">
                     {service.body}
                   </p>
                 </div>

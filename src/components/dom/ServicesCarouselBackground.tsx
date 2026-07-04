@@ -47,8 +47,8 @@ export default function ServicesCarouselBackground() {
           }}
         />
       ))}
-      {/* Vignette so the cards/text stay legible over the artwork */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_45%,rgba(10,10,12,0.55)_0%,rgba(10,10,12,0.8)_60%,rgba(10,10,12,0.95)_100%)]" />
+      {/* Light edge darkening only — the artwork itself should read clearly */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_65%_at_50%_45%,rgba(10,10,12,0.1)_0%,rgba(10,10,12,0.28)_65%,rgba(10,10,12,0.5)_100%)]" />
     </div>
   );
 }
