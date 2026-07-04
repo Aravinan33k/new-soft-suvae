@@ -32,6 +32,7 @@ import Navbar from "@/components/dom/Navbar";
 import CountUp from "@/components/dom/CountUp";
 import MouseParallax from "@/components/dom/MouseParallax";
 import SiteAmbientBackground from "@/components/dom/SiteAmbientBackground";
+import SiteFooter from "@/components/dom/SiteFooter";
 import SectionHeading from "@/components/dom/SectionHeading";
 
 const HERO_FEATURES = [
@@ -215,7 +216,7 @@ export default function Home() {
         {/* ── Hero: headline left, supporting copy right ────────────── */}
         <section className="relative grid grid-cols-1 gap-12 pt-20 md:pt-28 lg:grid-cols-12 lg:items-center">
           <HeroAmbientBackground />
-          <div className="lg:col-span-7" data-parallax="2">
+          <div className="lg:col-span-6" data-parallax="2">
             <p
               className="hero-reveal mb-6 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D] md:text-sm"
               style={{ animationDelay: "0.05s" }}
@@ -231,6 +232,14 @@ export default function Home() {
                 Automation &amp; Custom Software
               </span>
             </h1>
+            <p
+              className="hero-reveal mt-6 max-w-xl text-base leading-relaxed text-zinc-400 md:text-lg"
+              style={{ animationDelay: "0.28s" }}
+            >
+              We build AI-powered software, intelligent automation, and
+              seamless integrations that simplify operations, boost
+              productivity, and accelerate business growth.
+            </p>
             <div
               className="hero-reveal mt-10 flex flex-col gap-4 sm:flex-row"
               style={{ animationDelay: "0.36s" }}
@@ -264,29 +273,18 @@ export default function Home() {
               ))}
             </div>
           </div>
-          {/* 3D neural core above, supporting copy below — stacked, not
-              overlapping, so both stay readable */}
-          <div className="flex flex-col items-center lg:col-span-5 lg:pl-6">
+          {/* Large 3D Earth with orbiting service chips — the hero focal
+              point. Bleeds slightly right on wide screens for presence. */}
+          <div className="flex items-center justify-center lg:col-span-6">
             <div
-              className="hero-float pointer-events-none relative hidden aspect-square w-full max-w-md md:block"
+              className="hero-float pointer-events-none relative hidden aspect-square w-full max-w-2xl md:block lg:-mr-10 lg:w-[118%] xl:-mr-16"
               data-parallax="4"
             >
-              <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,138,61,0.2),transparent_70%)] blur-3xl" />
-              <div className="relative h-full w-full opacity-90">
+              <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle,rgba(255,138,61,0.16),transparent_68%)] blur-3xl" />
+              <div className="relative h-full w-full">
                 {/* <HeroBrain /> */}
                 <HeroGlobe />
               </div>
-            </div>
-            <div
-              className="hero-reveal relative z-10 w-full max-w-[540px] text-center md:-mt-14"
-              style={{ animationDelay: "0.44s" }}
-            >
-              <span className="mx-auto block h-px w-24 bg-gradient-to-r from-transparent via-[#FF8A3D]/60 to-transparent" />
-              <p className="mt-5 font-serif text-base leading-relaxed text-zinc-400 [text-shadow:0_1px_10px_rgba(10,10,12,0.95)] md:text-lg">
-                We build AI-powered software, intelligent automation, and
-                seamless integrations that simplify operations, boost
-                productivity, and accelerate business growth.
-              </p>
             </div>
           </div>
           <div
@@ -663,20 +661,8 @@ export default function Home() {
         </section>
       </div>
 
-      {/* ── Footer ────────────────────────────────────────────────── */}
-      <footer className="relative z-10 mt-24 border-t border-white/[0.08] py-10 text-center text-sm text-zinc-500">
-        <p>
-          <a
-            href="mailto:softsuave.ai@gmail.com"
-            className="text-[#FF8A3D] hover:text-[#FFB057]"
-          >
-            softsuave.ai@gmail.com
-          </a>
-        </p>
-        <p className="mt-3 text-xs text-zinc-600">
-          © 2026 Soft Suave. All rights reserved.
-        </p>
-      </footer>
+      {/* ── Footer: the site network collapses into a glowing logo ──── */}
+      <SiteFooter />
     </main>
   );
 }
