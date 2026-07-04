@@ -11,8 +11,9 @@ import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 //    the visible hemisphere shows golden city clusters with a lit
 //    crescent at the terminator (Black-Marble look).
 //  - Warm atmosphere rim + soft volumetric back-glow.
-//  - Network arcs between REAL cities (Chennai HQ glows brightest) with
-//    traveling data pulses and breathing city nodes.
+//  - An external network cage: great-circle arcs between REAL cities bow
+//    well outside the surface (Chennai HQ glows brightest) with traveling
+//    data pulses and breathing city nodes.
 //  - Two faint orbital rings and a handful of tiny drifting sparks —
 //    restrained, so the Earth itself carries the scene.
 //
@@ -125,44 +126,64 @@ const earthFragment = /* glsl */ `
   varying vec2 vUv;
   varying vec3 vNw;
   varying vec3 vNv;
+  // Narkowicz ACES filmic tone-map approximation
+  vec3 aces(vec3 x) {
+    return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+  }
   void main() {
     float sun = dot(normalize(vNw), normalize(uSunDir));
 
-    // BROAD daylight: most of the camera-facing hemisphere shows the day
-    // albedo so real continents are visible, falling to darkness only near
-    // the limb/terminator — the reference is a full, lit planet, not a
-    // thin crescent.
-    float dayMix = smoothstep(-0.32, 0.4, sun);
+    // BLACK-MARBLE night globe: the camera-facing hemisphere is night; only
+    // a thin warm crescent where the sunlit limb (upper-left) catches light.
+    float dayMix = smoothstep(0.05, 0.55, sun);
 
-    // Day albedo, warm cinematic grade: deep navy oceans, warm tan land,
-    // brightening toward the sub-solar point but never blown out.
     vec3 albedo = texture2D(uDay, vUv).rgb;
-    // darken oceans (blue-dominant) so land reads; warm the whole thing
-    float ocean = smoothstep(0.35, 0.55, albedo.b - albedo.r);
-    vec3 warm = albedo * vec3(1.18, 0.94, 0.62);
-    warm = mix(warm, warm * 0.35, ocean);
-    float lit = clamp(sun * 0.5 + 0.5, 0.0, 1.0);
-    vec3 day = warm * mix(0.05, 1.05, lit * lit);
+    // land vs ocean from the day map (land is red-dominant, ocean blue)
+    float land = smoothstep(0.03, 0.16, albedo.r - albedo.b);
 
-    // City lights: golden pinpoints. Brightest on the darker regions but
-    // still glowing over daylit land near the terminator (Black-Marble look
-    // composited onto the day globe).
+    // Night base (reference palette): near-black deep-navy oceans (#0A1521)
+    // and warm charcoal-brown land (#2C2318) — the warm continents are what
+    // give the reference its photoreal, cinematic tone.
+    vec3 nightBase = mix(vec3(0.039, 0.082, 0.129), vec3(0.173, 0.137, 0.094), land);
+
+    // Warm sunlit albedo, shown only on the thin lit crescent.
+    vec3 dayLit = albedo * vec3(1.15, 0.9, 0.58) * 1.1;
+
+    vec3 base = mix(nightBase, dayLit, dayMix);
+
+    // City lights trace the continents — warm-gold (#F5C35B) glow with an
+    // orange (#FF8A2B) main-glow underlay, dialed to read cinematic.
     vec3 nl = texture2D(uNight, vUv).rgb;
     float lum = dot(nl, vec3(0.299, 0.587, 0.114));
-    vec3 city = vec3(1.0, 0.64, 0.3) * pow(lum, 1.3) * 5.5;
-    city += vec3(1.0, 0.92, 0.72) * pow(lum, 3.0) * 2.2;
-    float cityVis = 1.0 - dayMix * 0.55;
+    // reference city palette: main glow #F5811E, gold hubs #FFC24D, white-gold cores #FFE6BC
+    vec3 city = vec3(0.961, 0.506, 0.118) * pow(lum, 1.2) * 5.0;
+    city += vec3(1.0, 0.761, 0.302) * pow(lum, 2.8) * 2.2;
+    // hottest cores bloom toward warm white-gold so dense hubs read as
+    // heat sources rather than flat orange
+    city += vec3(1.0, 0.902, 0.737) * pow(lum, 4.5) * 1.4;
+    // only fade cities inside the brightest part of the lit crescent
+    float cityVis = 1.0 - dayMix * 0.6;
 
-    vec3 col = day + city * cityVis;
+    vec3 col = base + city * cityVis;
 
-    // soft light band sweeping pole-to-pole, wrapping every 7s
-    float sweepY = mod(uTime, 7.0) / 7.0 * 2.6 - 1.3;
-    float band = 1.0 - smoothstep(0.0, 0.05, abs(normalize(vNw).y - sweepY));
-    col += vec3(1.0, 0.92, 0.75) * band * 0.22;
+    // faint warm scan sweeping pole-to-pole — keeps the dark globe alive
+    float sweepY = mod(uTime, 9.0) / 9.0 * 2.6 - 1.3;
+    float band = 1.0 - smoothstep(0.0, 0.06, abs(normalize(vNw).y - sweepY));
+    col += vec3(1.0, 0.965, 0.898) * band * 0.08;
 
-    // warm atmosphere rim around the lit limb
-    float fres = pow(1.0 - abs(dot(normalize(vNv), vec3(0.0, 0.0, 1.0))), 3.2);
-    col += vec3(1.0, 0.55, 0.28) * fres * 0.35;
+    // warm crescent rim — two-stop edge gradient (hot orange #FF7A1A at the
+    // limb softening to amber #FFC56D inward) plus a sunrise grade across the
+    // terminator (orange -> gold -> warm white toward the lit side)
+    float fres = pow(1.0 - abs(dot(normalize(vNv), vec3(0.0, 0.0, 1.0))), 3.0);
+    float limbLit = smoothstep(-0.05, 0.6, sun);
+    vec3 rimCol = mix(vec3(1.0, 0.718, 0.376), vec3(1.0, 0.478, 0.102), fres);
+    rimCol = mix(rimCol, vec3(1.0, 0.94, 0.82), smoothstep(0.3, 0.65, sun));
+    col += rimCol * fres * limbLit * 0.5;
+
+    // #2 filmic tone mapping (ACES) — rolls the additive highlights off
+    // gracefully so oranges deepen and hot cores bloom to warm white instead
+    // of clipping to flat neon
+    col = aces(col * 1.12);
 
     gl_FragColor = vec4(col, 1.0);
   }
@@ -212,7 +233,8 @@ const atmoFragment = /* glsl */ `
   varying vec3 vNormal;
   void main() {
     float intensity = pow(0.66 - dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 3.6);
-    gl_FragColor = vec4(vec3(1.0, 0.5, 0.24), max(intensity, 0.0) * 0.4);
+    // outer halo — transparent orange rgba(255,130,45,...)
+    gl_FragColor = vec4(vec3(1.0, 0.510, 0.176), max(intensity, 0.0) * 0.4);
   }
 `;
 
@@ -230,20 +252,21 @@ const volumeFragment = /* glsl */ `
   void main() {
     float d = length(vUv - 0.5) * 2.0;
     float fall = smoothstep(1.0, 0.0, d);
-    gl_FragColor = vec4(vec3(1.0, 0.44, 0.2), fall * fall * 0.06);
+    // volumetric back-glow — outer-halo orange
+    gl_FragColor = vec4(vec3(1.0, 0.510, 0.176), fall * fall * 0.06);
   }
 `;
 
 // ---------------------------------------------------------------------
 
 const ARC_SEG = 36;
-const PULSE_COLORS = ["#ff6a3d", "#ffffff", "#ffd37a"];
+// connection orange, bright-node soft white, hot-spot golden yellow
+const PULSE_COLORS = ["#F57C22", "#FFF6E5", "#FFD56A"];
 const FLASH_DUR = 1.1; // seconds a hub node takes to flash orange -> white -> orange
-// Sun sits roughly toward the camera (slightly upper-left) so the whole
-// visible hemisphere is daylit — real continents show, with the limb and
-// far-left edge falling into golden-city-light night. Matches the reference
-// full, lit globe.
-const SUN_DIR = new THREE.Vector3(-0.28, 0.22, 0.93).normalize();
+// Sun sits behind the planet's upper-left shoulder, so the camera-facing
+// hemisphere stays in night (golden city lights) with a thin warm crescent
+// on the upper-left limb — the Black-Marble reference composition.
+const SUN_DIR = new THREE.Vector3(-0.5, 0.35, -0.62).normalize();
 
 function Earth({ animate }: { animate: boolean }) {
   const group = useRef<THREE.Group>(null);
@@ -252,7 +275,7 @@ function Earth({ animate }: { animate: boolean }) {
 
   const [dayMap, nightMap] = useLoader(THREE.TextureLoader, [
     "/textures/earth_day.jpg",
-    "/textures/earth_lights.png",
+    "/textures/earth_lights.jpg",
   ]);
   useMemo(() => {
     for (const t of [dayMap, nightMap]) {
@@ -270,12 +293,14 @@ function Earth({ animate }: { animate: boolean }) {
     const arcs: Float32Array[] = [];
     const linePos: number[] = [];
     const lineCol: number[] = [];
-    const lineColor = new THREE.Color("#ff8a3d");
+    const lineColor = new THREE.Color("#F57C22"); // connection lines
     for (const [i, j] of LINKS) {
       const a = hubs[i];
       const b = hubs[j];
       const angle = a.angleTo(b);
-      const lift = 0.04 + angle * 0.075;
+      // Bow the arcs well outside the surface so they orbit the globe as an
+      // external network cage (reaching toward the chips), not hugging it.
+      const lift = 0.1 + angle * 0.15;
       const pts = new Float32Array((ARC_SEG + 1) * 3);
       const tmp = new THREE.Vector3();
       for (let s = 0; s <= ARC_SEG; s++) {
@@ -327,7 +352,8 @@ function Earth({ animate }: { animate: boolean }) {
     const hubFlashAt = new Float32Array(hubs.length);
     hubs.forEach((h, i) => {
       hubPos.set([h.x * R * 1.008, h.y * R * 1.008, h.z * R * 1.008], i * 3);
-      tmpColor.set(i === 0 ? "#ffe0a3" : Math.random() < 0.3 ? "#ffd37a" : "#ff8a3d");
+      // HQ = bright soft-white node, others = hot-spot gold or main-glow orange
+      tmpColor.set(i === 0 ? "#FFF6E5" : Math.random() < 0.3 ? "#FFD56A" : "#FF8A2B");
       hubColor.set([tmpColor.r, tmpColor.g, tmpColor.b], i * 3);
       hubSize[i] = i === 0 ? 3.4 : 1.7 + Math.random() * 0.9;
       hubPhase[i] = Math.random() * 10;
@@ -367,8 +393,9 @@ function Earth({ animate }: { animate: boolean }) {
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (group.current) {
-      // starts over India (HQ) then spins — one revolution every 120s
-      group.current.rotation.y = 3.32 + (animate ? t * SPIN : 0);
+      // frames the Americas toward the camera (Atlantic/Europe toward the
+      // right limb) then spins slowly — one revolution every 120s
+      group.current.rotation.y = -0.3 + (animate ? t * SPIN : 0);
       group.current.rotation.x = -0.18;
       // gentle breathing zoom: 100% -> 102% -> 100% every 8s
       const zoom = animate ? 1 + 0.01 * (1 - Math.cos((t / 8) * Math.PI * 2)) : 1;
@@ -451,9 +478,9 @@ function Earth({ animate }: { animate: boolean }) {
           <bufferAttribute attach="attributes-position" args={[graticule, 3]} />
         </bufferGeometry>
         <lineBasicMaterial
-          color="#ff9a45"
+          color="#FF8A2B"
           transparent
-          opacity={0.07}
+          opacity={0.04}
           blending={THREE.AdditiveBlending}
         />
       </lineSegments>
@@ -542,7 +569,7 @@ function OrbitalRing({
       const a = (i / n) * Math.PI * 2 + Math.random() * 0.3;
       pos.set([Math.cos(a) * def.r, Math.sin(a) * def.r, 0], i * 3);
       const comet = i === 0;
-      tmp.set(comet ? "#ffffff" : "#ffb35c");
+      tmp.set(comet ? "#FFF6E5" : "#FFB347"); // bright node / amber particle
       col.set([tmp.r, tmp.g, tmp.b], i * 3);
       size[i] = comet ? 1.6 : 0.4 + Math.random() * 0.4;
       brightArr[i] = comet ? 1.3 : 0.6 + Math.random() * 0.4;
@@ -562,7 +589,7 @@ function OrbitalRing({
             <bufferAttribute attach="attributes-position" args={[geo.circle, 3]} />
           </bufferGeometry>
           <lineBasicMaterial
-            color="#ffab5c"
+            color="#FFB347"
             transparent
             opacity={def.opacity}
             depthWrite={false}
@@ -606,7 +633,7 @@ function FloatingSparks({ animate }: { animate: boolean }) {
       const rad = R * (1.18 + Math.random() * 0.14);
       const y = (Math.random() - 0.5) * R * 1.7;
       pos.set([Math.cos(th) * rad, y, Math.sin(th) * rad], i * 3);
-      tmp.set(Math.random() < 0.25 ? "#ffd37a" : "#ff8a3d");
+      tmp.set(Math.random() < 0.25 ? "#FFD56A" : "#FFB347"); // hot-spot gold / amber
       col.set([tmp.r, tmp.g, tmp.b], i * 3);
       size[i] = 0.08 + Math.random() * 0.16;
       brightArr[i] = 0.3 + Math.random() * 0.4;
@@ -703,6 +730,95 @@ function CameraDolly({ enabled }: { enabled: boolean }) {
   return null;
 }
 
+// User rotation: click-drag adds yaw/pitch, page scroll adds yaw. Layers on
+// top of the slow idle spin and eases toward the target so it feels weighty.
+function GlobeControls({
+  children,
+  enabled,
+}: {
+  children: React.ReactNode;
+  enabled: boolean;
+}) {
+  const grp = useRef<THREE.Group>(null);
+  const gl = useThree((s) => s.gl);
+  const invalidate = useThree((s) => s.invalidate);
+  const s = useRef({
+    yaw: 0,
+    pitch: 0,
+    tYaw: 0,
+    tPitch: 0,
+    scrollYaw: 0,
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
+  });
+
+  useEffect(() => {
+    if (!enabled) return;
+    const el = gl.domElement;
+    const st = s.current;
+
+    const onDown = (e: PointerEvent) => {
+      st.dragging = true;
+      st.lastX = e.clientX;
+      st.lastY = e.clientY;
+      el.setPointerCapture?.(e.pointerId);
+      el.style.cursor = "grabbing";
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!st.dragging) return;
+      st.tYaw += (e.clientX - st.lastX) * 0.006;
+      st.tPitch += (e.clientY - st.lastY) * 0.006;
+      st.tPitch = Math.max(-0.6, Math.min(0.6, st.tPitch)); // clamp tilt
+      st.lastX = e.clientX;
+      st.lastY = e.clientY;
+      invalidate();
+    };
+    const onUp = (e: PointerEvent) => {
+      st.dragging = false;
+      try {
+        el.releasePointerCapture?.(e.pointerId);
+      } catch {
+        /* pointer already released */
+      }
+      el.style.cursor = "grab";
+    };
+    const onScroll = () => {
+      st.scrollYaw = window.scrollY * 0.0025;
+      invalidate();
+    };
+
+    el.style.cursor = "grab";
+    el.style.touchAction = "pan-y"; // let vertical page scroll through on touch
+    el.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerup", onUp, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("scroll", onScroll);
+      el.style.cursor = "";
+    };
+  }, [gl, invalidate, enabled]);
+
+  useFrame(() => {
+    const st = s.current;
+    const targetYaw = st.tYaw + st.scrollYaw;
+    st.yaw += (targetYaw - st.yaw) * 0.12;
+    st.pitch += (st.tPitch - st.pitch) * 0.12;
+    if (grp.current) {
+      grp.current.rotation.y = st.yaw;
+      grp.current.rotation.x = st.pitch;
+    }
+  });
+
+  return <group ref={grp}>{children}</group>;
+}
+
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
@@ -735,11 +851,11 @@ export default function GlobeScene() {
   const frameloop = reduced ? "demand" : inView ? "always" : "never";
 
   return (
-    <div ref={wrap} className="h-full w-full">
+    <div ref={wrap} className="pointer-events-auto h-full w-full">
       <Canvas
         frameloop={frameloop}
         camera={{ fov: 45, near: 0.1, far: 50, position: [0, 0.1, 3.8] }}
-        dpr={[1, 1.75]}
+        dpr={[1, 2]}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         style={{ background: "transparent" }}
       >
@@ -756,11 +872,14 @@ export default function GlobeScene() {
                 blending={THREE.AdditiveBlending}
               />
             </mesh>
-            <Earth animate={animate} />
-            {RING_DEFS.map((def, i) => (
-              <OrbitalRing key={i} def={def} animate={animate} />
-            ))}
-            <FloatingSparks animate={animate} />
+            {/* Drag to rotate + page-scroll to rotate the whole globe */}
+            <GlobeControls enabled={animate}>
+              <Earth animate={animate} />
+              {RING_DEFS.map((def, i) => (
+                <OrbitalRing key={i} def={def} animate={animate} />
+              ))}
+              <FloatingSparks animate={animate} />
+            </GlobeControls>
           </ParallaxRig>
         </Suspense>
       </Canvas>

@@ -266,24 +266,26 @@ export default function ExperienceStage() {
             })}
           </nav>
 
-          {/* Chapter copy (offset right of the slider) */}
-          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6 pl-32 text-center md:pl-56">
-            <div
-              key={displayed}
-              className={`max-w-2xl transition-all duration-300 ease-in ${
-                leaving
-                  ? "-translate-y-3 opacity-0"
-                  : "animate-[fadeUp_0.55s_cubic-bezier(0.22,1,0.36,1)]"
-              }`}
-            >
-              <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_55%_45%_at_55%_50%,rgba(1,2,8,0.55),transparent_70%)]" />
+          {/* Chapter copy: heading pinned top-left, supporting line + CTA
+              pinned bottom-right — kept clear of the glowing core at center */}
+          <div
+            key={displayed}
+            className={`pointer-events-none absolute inset-0 z-10 flex flex-col justify-center gap-8 px-6 pl-24 md:gap-12 md:pl-44 transition-all duration-300 ease-in ${
+              leaving
+                ? "-translate-y-3 opacity-0"
+                : "animate-[fadeUp_0.55s_cubic-bezier(0.22,1,0.36,1)]"
+            }`}
+          >
+            {/* Heading — upper left */}
+            <div className="relative max-w-xl -translate-y-10 translate-x-8 text-left md:-translate-y-16 md:translate-x-20">
+              <div className="pointer-events-none absolute -inset-x-8 -inset-y-6 -z-10 bg-[radial-gradient(ellipse_at_left,rgba(1,2,8,0.6),transparent_72%)]" />
               {slide.eyebrow && (
-                <p className="mb-5 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D]/90 md:text-sm">
+                <p className="mb-4 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D]/90 md:text-sm">
                   {slide.eyebrow}
                 </p>
               )}
               {slide.index && (
-                <p className="mb-4 font-mono text-sm text-[#FF8A3D]/70">
+                <p className="mb-3 font-mono text-sm text-[#FF8A3D]/70">
                   {slide.index}
                 </p>
               )}
@@ -292,17 +294,22 @@ export default function ExperienceStage() {
                   {slide.title}
                 </h2>
               ) : (
-                <h2 className="text-3xl font-semibold tracking-tight text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.95)] md:text-5xl">
+                <h2 className="text-3xl font-semibold leading-[1.05] tracking-tight text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.95)] md:text-5xl">
                   {slide.title}
                 </h2>
               )}
-              <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.9)] md:text-lg">
+            </div>
+
+            {/* Supporting copy + CTA — lower right */}
+            <div className="relative max-w-md -translate-x-8 translate-y-10 self-end text-right md:-translate-x-20 md:translate-y-16">
+              <div className="pointer-events-none absolute -inset-x-8 -inset-y-6 -z-10 bg-[radial-gradient(ellipse_at_right,rgba(1,2,8,0.6),transparent_72%)]" />
+              <p className="ml-auto max-w-md text-base leading-relaxed text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.95)] md:text-lg">
                 {slide.body}
               </p>
               {slide.button && (
                 <a
                   href="#contact"
-                  className="btn-primary pointer-events-auto mt-10 inline-block rounded-full px-8 py-3.5 text-sm font-semibold text-[#1a0a04]"
+                  className="btn-primary pointer-events-auto mt-8 inline-block rounded-full px-8 py-3.5 text-sm font-semibold text-[#1a0a04]"
                 >
                   {slide.button}
                 </a>
