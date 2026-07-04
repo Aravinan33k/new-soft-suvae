@@ -6,6 +6,7 @@ import DisconnectedDevices from "@/components/dom/DisconnectedDevices";
 import ManualWorkflows from "@/components/dom/ManualWorkflows";
 import SlowDecisions from "@/components/dom/SlowDecisions";
 import HeroBrain from "@/components/dom/HeroBrain";
+import ServicesBackground from "@/components/dom/ServicesBackground";
 
 const PROBLEMS = [
   {
@@ -156,8 +157,8 @@ export default function Home() {
       <div id="top" className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-10">
         {/* ── Hero: headline left, supporting copy right ────────────── */}
         <section className="relative grid grid-cols-1 gap-12 pt-20 md:grid-cols-12 md:items-center md:pt-28">
-          {/* 3D neural brain layered into the hero background; page scroll
-              spins it a full 360° */}
+          {/* Glowing human-head profile with a 3D neural brain rotating
+              inside the cranium; idle spin + page scroll drive the rotation */}
           <div className="pointer-events-none absolute -right-16 top-1/2 -z-10 hidden aspect-square w-[46%] -translate-y-1/2 opacity-90 md:block lg:-right-8">
             <HeroBrain />
           </div>
@@ -279,23 +280,24 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Services ──────────────────────────────────────────────── */}
-        <section id="services" className="pt-24 md:pt-32">
+        {/* ── Services: mecha-clash animation shared behind every card ── */}
+        <section id="services" className="relative -mx-6 px-6 py-16 md:-mx-10 md:px-10 md:py-20">
+          <ServicesBackground />
           <SectionHeading
             eyebrow="Our Services"
             title="AI & Software Services Built for Businesses of All Sizes"
             body="Whether you are a startup, SMB, or enterprise, Soft Suave helps you build AI solutions, develop software, automate workflows, and scale digital products with confidence."
           />
-          <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+          <div className="relative mt-12 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
             {SERVICES.map((service) => (
               <div
                 key={service.name}
-                className="rounded-2xl border border-white/[0.08] bg-[#111113] p-6 shadow-sm transition-all hover:border-[#FF8A3D]/50 hover:bg-[#FF6A3D]/[0.06] hover:shadow-md"
+                className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-md transition-all hover:border-[#FF8A3D]/50 hover:bg-white/[0.07] hover:shadow-md"
               >
                 <h3 className="text-base font-semibold text-white">
                   {service.name}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+                <p className="mt-3 text-sm leading-relaxed text-zinc-300">
                   {service.body}
                 </p>
               </div>

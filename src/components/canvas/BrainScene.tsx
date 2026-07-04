@@ -19,6 +19,11 @@ import { Canvas, useFrame } from "@react-three/fiber";
 //     randomized direction/phase, three warm colors.
 //  5. Processing hotspots: a few fixed regions (front/center/back) breathe
 //     with independent random-period glow cycles.
+//  6. The brain sits inside a glowing human-head profile traced from the
+//     reference art. The silhouette is inflated into a 3D point-cloud shell
+//     (pillow inflation: half-thickness grows with distance from the
+//     outline, capped at T), so the whole head + brain rig can turn in 3D
+//     together without the head vanishing edge-on.
 
 const isMobileDevice = () =>
   typeof window !== "undefined" && window.innerWidth < 768;
@@ -106,7 +111,7 @@ const dustVertex = /* glsl */ `
     // Back points render larger — combined with a wide soft falloff in the
     // fragment shader this reads as blur without a real depth-of-field pass.
     float depthSize = mix(1.5, 1.0, aDepth);
-    gl_PointSize = clamp(aSizeMul * depthSize * (9.0 / -mv.z), 1.4, 11.0);
+    gl_PointSize = clamp(aSizeMul * depthSize * (7.5 / -mv.z), 1.2, 9.0);
     gl_Position = projectionMatrix * mv;
   }
 `;
@@ -208,10 +213,19 @@ function Brain() {
         1 +
         0.07 * Math.sin(x * 9 + z * 7) * Math.sin(y * 8) +
         0.05 * Math.sin(z * 12 + x * 4);
-      x *= 1.0 * wr;
-      y *= 0.82 * wr;
-      z *= 1.28 * wr;
-      x += Math.sign(x) * 0.05; // longitudinal fissure
+      if (i < N * 0.93) {
+        // Cerebrum
+        x *= 1.0 * wr;
+        y *= 0.82 * wr;
+        z *= 1.28 * wr;
+        if (y < 0) y *= 0.8; // flat underside like a real brain
+        x += Math.sign(x) * 0.05; // longitudinal fissure
+      } else {
+        // Cerebellum tucked under the back of the cerebrum
+        x = x * 0.5 * wr;
+        y = -0.52 + y * 0.28 * wr;
+        z = -0.92 + z * 0.4 * wr;
+      }
       const p = new THREE.Vector3(x, y, z);
       pts.push(p);
       positions.set([x, y, z], i * 3);
@@ -260,7 +274,7 @@ function Brain() {
     const pulsePhase = new Float32Array(PULSES);
     const pulseSpeed = new Float32Array(PULSES);
     const pulseColor = new Float32Array(PULSES * 3);
-    const pulseSize = new Float32Array(PULSES).fill(2.6);
+    const pulseSize = new Float32Array(PULSES).fill(0.15);
     const tmpColor = new THREE.Color();
     for (let p = 0; p < PULSES; p++) {
       const e = Math.floor(Math.random() * edgeCount);
@@ -292,7 +306,7 @@ function Brain() {
       hotspotPos.set([x, y, z], i * 3);
       hotspotPeriod[i] = 3 + Math.random() * 3.2;
       hotspotOffset[i] = Math.random() * 10;
-      hotspotSize[i] = 60 + Math.random() * 26;
+      hotspotSize[i] = 3.4 + Math.random() * 1.4;
     });
 
     return {
@@ -329,11 +343,8 @@ function Brain() {
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
-    const scroll = typeof window !== "undefined" ? window.scrollY : 0;
     if (group.current) {
-      // Idle spin + full 360° driven by page scroll
-      group.current.rotation.y = t * 0.12 + scroll * 0.0035;
-      group.current.rotation.x = -0.12 + Math.sin(t * 0.3) * 0.05;
+      // Rotation lives on the head rig; the brain only breathes
       const breathe = 1 + Math.sin(t * 0.8) * 0.012;
       group.current.scale.setScalar(breathe);
     }
@@ -439,7 +450,7 @@ function Brain() {
         </bufferGeometry>
         <pointsMaterial
           ref={blinkA}
-          size={0.05}
+          size={0.028}
           sizeAttenuation
           color="#ffe0a3"
           transparent
@@ -453,7 +464,7 @@ function Brain() {
         </bufferGeometry>
         <pointsMaterial
           ref={blinkB}
-          size={0.045}
+          size={0.024}
           sizeAttenuation
           color="#ff6a3d"
           transparent
@@ -475,7 +486,7 @@ const hotspotVertex = /* glsl */ `
   void main() {
     vBright = aBright;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = clamp(aSize * (60.0 / -mv.z), 1.0, 140.0);
+    gl_PointSize = clamp(aSize * (60.0 / -mv.z), 1.0, 110.0);
     gl_Position = projectionMatrix * mv;
   }
 `;
@@ -505,6 +516,265 @@ function HotspotMaterial() {
   );
 }
 
+// ---------------------------------------------------------------------
+// Human head profile (facing right) the brain sits inside — control
+// points traced from the reference artwork's silhouette, smoothed with a
+// centripetal Catmull-Rom spline.
+const PROFILE: [number, number][] = [
+  [0.17, -1.23], // throat base (bottom right)
+  [0.13, -0.88], // throat
+  [0.11, -0.59], // throat top
+  [0.25, -0.49], // jaw
+  [0.47, -0.41], // chin bottom
+  [0.61, -0.27], // chin front
+  [0.67, -0.1], // lower lip
+  [0.62, -0.03], // mouth line
+  [0.66, 0.04], // upper lip
+  [0.6, 0.12], // under nose
+  [0.72, 0.22], // nose tip
+  [0.53, 0.43], // nose bridge dip
+  [0.58, 0.52], // brow
+  [0.45, 0.78], // forehead
+  [0.17, 1.02], // front crown
+  [-0.18, 1.12], // crown top
+  [-0.38, 1.04], // crown back
+  [-0.57, 0.92], // back crown
+  [-0.73, 0.63], // upper occipital
+  [-0.76, 0.25], // occipital (rearmost)
+  [-0.65, -0.1], // lower occipital
+  [-0.53, -0.37], // skull base
+  [-0.51, -0.72], // neck back
+  [-0.47, -1.23], // nape base
+];
+
+const HEAD_HALF_THICKNESS = 0.48;
+
+function segDist(
+  px: number,
+  py: number,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const t = Math.max(
+    0,
+    Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)),
+  );
+  const qx = ax + t * dx - px;
+  const qy = ay + t * dy - py;
+  return Math.sqrt(qx * qx + qy * qy);
+}
+
+// Translucent inner glow: brightest along the face edge, fading toward
+// the back of the skull and dissolving at the neck like the reference art.
+const headFillVertex = /* glsl */ `
+  varying vec2 vXY;
+  void main() {
+    vXY = position.xy;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+const headFillFragment = /* glsl */ `
+  precision highp float;
+  varying vec2 vXY;
+  void main() {
+    float face = smoothstep(-0.85, 0.7, vXY.x);
+    float neckFade = smoothstep(-1.26, -0.7, vXY.y);
+    vec3 col = mix(vec3(0.30, 0.07, 0.03), vec3(1.0, 0.44, 0.18), face);
+    float a = (0.07 + 0.26 * face * face) * neckFade;
+    gl_FragColor = vec4(col, a);
+  }
+`;
+
+function HeadShell() {
+  const mobile = isMobileDevice();
+  const SHELL_N = mobile ? 1000 : 1900;
+
+  const data = useMemo(() => {
+    const ctrl = PROFILE.map(([x, y]) => new THREE.Vector3(x, y, 0));
+    const curve = new THREE.CatmullRomCurve3(ctrl, true, "centripetal");
+    const outline = curve.getSpacedPoints(720);
+    const shape = new THREE.Shape(
+      outline.map((p) => new THREE.Vector2(p.x, p.y)),
+    );
+
+    const ember = new THREE.Color("#b23514");
+    const amber = new THREE.Color("#ffc07a");
+    const tmp = new THREE.Color();
+
+    // Outline rendered as dense glow points -> a continuous neon rim
+    const M = outline.length;
+    const positions = new Float32Array(M * 3);
+    const colors = new Float32Array(M * 3);
+    const bright = new Float32Array(M);
+    const size = new Float32Array(M);
+    outline.forEach((p, i) => {
+      positions.set([p.x, p.y, 0], i * 3);
+      const face = THREE.MathUtils.smoothstep(p.x, -0.85, 0.7);
+      const neckFade = THREE.MathUtils.smoothstep(p.y, -1.26, -0.75);
+      tmp.copy(ember).lerp(amber, face);
+      colors.set([tmp.r, tmp.g, tmp.b], i * 3);
+      bright[i] = (0.35 + 0.85 * face) * neckFade;
+      size[i] = 0.05 + 0.055 * face;
+    });
+
+    // 3D shell: inflate the silhouette into a rounded volume so the head
+    // keeps its form while the rig rotates. Half-thickness follows a
+    // quarter-round from the outline, capped at HEAD_HALF_THICKNESS.
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (const p of outline) {
+      minX = Math.min(minX, p.x);
+      maxX = Math.max(maxX, p.x);
+      minY = Math.min(minY, p.y);
+      maxY = Math.max(maxY, p.y);
+    }
+    const inside = (px: number, py: number) => {
+      let inPoly = false;
+      for (let i = 0, j = M - 1; i < M; j = i++) {
+        const a = outline[i];
+        const b = outline[j];
+        if (
+          a.y > py !== b.y > py &&
+          px < ((b.x - a.x) * (py - a.y)) / (b.y - a.y) + a.x
+        )
+          inPoly = !inPoly;
+      }
+      return inPoly;
+    };
+    const edgeDist = (px: number, py: number) => {
+      let d = Infinity;
+      for (let i = 0, j = M - 1; i < M; j = i++) {
+        const a = outline[i];
+        const b = outline[j];
+        d = Math.min(d, segDist(px, py, a.x, a.y, b.x, b.y));
+      }
+      return d;
+    };
+
+    const T = HEAD_HALF_THICKNESS;
+    const shellPos = new Float32Array(SHELL_N * 3);
+    const shellCol = new Float32Array(SHELL_N * 3);
+    const shellBright = new Float32Array(SHELL_N);
+    const shellSize = new Float32Array(SHELL_N);
+    let placed = 0;
+    while (placed < SHELL_N) {
+      const x = minX + Math.random() * (maxX - minX);
+      const y = minY + Math.random() * (maxY - minY);
+      if (!inside(x, y)) continue;
+      const d = edgeDist(x, y);
+      const R = d >= T ? T : Math.sqrt(d * (2 * T - d));
+      const z = (Math.random() < 0.5 ? -1 : 1) * R + (Math.random() - 0.5) * 0.024;
+      shellPos.set([x, y, z], placed * 3);
+      const face = THREE.MathUtils.smoothstep(x, -0.85, 0.7);
+      const neckFade = THREE.MathUtils.smoothstep(y, -1.26, -0.7);
+      tmp.copy(ember).lerp(amber, face * (0.7 + Math.random() * 0.3));
+      shellCol.set([tmp.r, tmp.g, tmp.b], placed * 3);
+      shellBright[placed] =
+        (0.15 + 0.45 * face) * neckFade * (0.55 + 0.45 * Math.random());
+      shellSize[placed] = 0.028 + 0.028 * Math.random();
+      placed++;
+    }
+
+    return {
+      shape,
+      positions,
+      colors,
+      bright,
+      size,
+      shellPos,
+      shellCol,
+      shellBright,
+      shellSize,
+    };
+  }, [SHELL_N]);
+
+  return (
+    <group>
+      <mesh renderOrder={0}>
+        <shapeGeometry args={[data.shape]} />
+        <shaderMaterial
+          vertexShader={headFillVertex}
+          fragmentShader={headFillFragment}
+          transparent
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+      {/* Volumetric hologram shell */}
+      <points renderOrder={1} frustumCulled={false}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[data.shellPos, 3]} />
+          <bufferAttribute attach="attributes-aColor" args={[data.shellCol, 3]} />
+          <bufferAttribute attach="attributes-aBright" args={[data.shellBright, 1]} />
+          <bufferAttribute attach="attributes-aSize" args={[data.shellSize, 1]} />
+        </bufferGeometry>
+        <shaderMaterial
+          vertexShader={glowVertex}
+          fragmentShader={glowFragment}
+          transparent
+          depthTest={false}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+      {/* Neon rim along the profile cross-section */}
+      <points renderOrder={5} frustumCulled={false}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[data.positions, 3]} />
+          <bufferAttribute attach="attributes-aColor" args={[data.colors, 3]} />
+          <bufferAttribute attach="attributes-aBright" args={[data.bright, 1]} />
+          <bufferAttribute attach="attributes-aSize" args={[data.size, 1]} />
+        </bufferGeometry>
+        <shaderMaterial
+          vertexShader={glowVertex}
+          fragmentShader={glowFragment}
+          transparent
+          depthTest={false}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+    </group>
+  );
+}
+
+// Head shell + brain in one rig, turning together in 3D: idle spin plus a
+// full 360° driven by page scroll, with a gentle sway on the tilt axis.
+function NeuralHead() {
+  const rig = useRef<THREE.Group>(null);
+
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime();
+    const scroll = typeof window !== "undefined" ? window.scrollY : 0;
+    if (rig.current) {
+      rig.current.rotation.y = t * 0.12 + scroll * 0.0035;
+      rig.current.rotation.x = -0.08 + Math.sin(t * 0.3) * 0.04;
+    }
+  });
+
+  return (
+    <group scale={1.08} position={[0, 0.04, 0]}>
+      <group ref={rig}>
+        <HeadShell />
+        {/* Long axis of the brain runs front-to-back inside the skull */}
+        <group
+          position={[-0.1, 0.55, 0]}
+          rotation={[0, Math.PI / 2, 0]}
+          scale={0.42}
+        >
+          <Brain />
+        </group>
+      </group>
+    </group>
+  );
+}
+
 export default function BrainScene() {
   return (
     <Canvas
@@ -513,7 +783,7 @@ export default function BrainScene() {
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       style={{ background: "transparent" }}
     >
-      <Brain />
+      <NeuralHead />
     </Canvas>
   );
 }
