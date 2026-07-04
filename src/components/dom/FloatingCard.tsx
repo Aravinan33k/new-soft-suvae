@@ -19,12 +19,14 @@ export default function FloatingCard({
   className = "",
   offsetClass = "",
   floatDelay = 0,
+  float = true,
   style,
 }: {
   children: ReactNode;
   className?: string;
   offsetClass?: string;
   floatDelay?: number;
+  float?: boolean;
   style?: CSSProperties;
 }) {
   // Rect is measured on the outer wrapper (its transform never changes),
@@ -58,8 +60,8 @@ export default function FloatingCard({
       onMouseLeave={settle}
     >
       <div
-        className="card-float h-full group-hover:[animation-play-state:paused]"
-        style={{ animationDelay: `${floatDelay}s` }}
+        className={float ? "card-float h-full group-hover:[animation-play-state:paused]" : "h-full"}
+        style={float ? { animationDelay: `${floatDelay}s` } : undefined}
       >
         <div ref={cardRef} className={`card-tilt h-full ${className}`} style={style}>
           {children}

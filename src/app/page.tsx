@@ -16,7 +16,7 @@ import DisconnectedDevices from "@/components/dom/DisconnectedDevices";
 import ManualWorkflows from "@/components/dom/ManualWorkflows";
 import SlowDecisions from "@/components/dom/SlowDecisions";
 import HeroBrain from "@/components/dom/HeroBrain";
-import ServicesCarouselBackground from "@/components/dom/ServicesCarouselBackground";
+import ServicesNeuralBackground from "@/components/dom/ServicesNeuralBackground";
 
 const PROBLEMS = [
   {
@@ -47,43 +47,75 @@ const STATS = [
 const SERVICES = [
   {
     name: "Custom AI Solutions",
-    body: "Build industry-ready AI solutions with LLMs, RAG, agents, and predictive models to automate workflows and improve decisions faster at scale.",
+    category: "AI Systems",
+    color: "#FF8A3D",
+    body: "Production-ready AI systems built on LLMs, RAG, agents, and predictive models — engineered to automate decisions at scale.",
+    tags: ["LLM", "RAG", "Agents"],
     icon: TbCpu,
+    wide: true,
   },
   {
     name: "AI Integrations & Workflow Automation",
-    body: "Integrate AI into business tools and automate workflows to reduce manual work, improve accuracy, and speed up daily operations.",
+    category: "Automation",
+    color: "#34D399",
+    body: "Wire AI into the tools you already use and automate the busywork that slows your team down.",
+    tags: ["Workflows", "Integrations", "Ops"],
     icon: TbSettingsAutomation,
+    wide: false,
   },
   {
     name: "AI Chatbots & AI Agents",
-    body: "Deploy AI chatbots and agents for customer support, HR, finance, sales, healthcare, internal operations, and employee assistance.",
+    category: "AI Systems",
+    color: "#FF8A3D",
+    body: "Conversational agents for support, sales, HR, and internal ops — always on, always learning.",
+    tags: ["Chatbots", "Support", "NLP"],
     icon: TbMessageChatbot,
+    wide: false,
   },
   {
     name: "Custom Software Development",
-    body: "Build secure, scalable, high-performance solutions with our AI-enabled custom software development service to improve operations and support smarter business growth.",
+    category: "Development",
+    color: "#4EA8FF",
+    body: "Secure, scalable software engineered with AI-assisted development for faster delivery.",
+    tags: ["Full-Stack", "APIs", "Scale"],
     icon: TbCode,
+    wide: false,
   },
   {
     name: "Mobile App Development",
-    body: "Create AI-enabled mobile apps across Android, iOS, and cross-platform environments with intuitive design, smarter features, and experiences tailored to your business goals.",
+    category: "Mobile",
+    color: "#FFD166",
+    body: "Native-quality iOS and Android apps with intuitive design and AI-enhanced features.",
+    tags: ["iOS", "Android", "Cross-Platform"],
     icon: TbDeviceMobile,
+    wide: false,
   },
   {
     name: "Web App Development",
-    body: "Power your digital ideas with AI-enabled web apps that simplify workflows, engage users, and support faster business growth online.",
+    category: "Development",
+    color: "#4EA8FF",
+    body: "Fast, AI-enabled web apps that simplify workflows and turn visitors into customers.",
+    tags: ["Web Apps", "UX", "Performance"],
     icon: TbWorld,
+    wide: true,
   },
   {
     name: "Enterprise Modernization",
-    body: "Modernize legacy systems with cloud, automation, and AI to improve agility, performance, resilience, security, and long-term business growth across operations.",
+    category: "Cloud & Infra",
+    color: "#B388FF",
+    body: "Modernize legacy systems with cloud, automation, and AI — without disrupting the business.",
+    tags: ["Cloud", "Legacy", "Security"],
     icon: TbCloudComputing,
+    wide: true,
   },
   {
     name: "Global Capability Center (GCC)",
-    body: "Scale your GCC with AI-powered teams, smarter workflows, automation, and analytics that improve productivity, decision-making, and operational efficiency.",
+    category: "Cloud & Infra",
+    color: "#B388FF",
+    body: "Stand up an AI-powered GCC with smarter workflows, analytics, and teams built to scale.",
+    tags: ["Teams", "Analytics", "Scale"],
     icon: TbUsersGroup,
+    wide: true,
   },
 ];
 
@@ -133,17 +165,31 @@ function SectionHeading({
   eyebrow,
   title,
   body,
+  decorated = false,
 }: {
   eyebrow: string;
   title: string;
   body?: string;
+  decorated?: boolean;
 }) {
   return (
     <div className="mx-auto max-w-3xl text-center">
-      <p className="text-xs font-medium uppercase tracking-[0.3em] text-[#FF8A3D]">
-        {eyebrow}
-      </p>
-      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
+      {decorated ? (
+        <div className="mb-4 flex items-center justify-center gap-4">
+          <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#FF8A3D]/60" />
+          <p className="text-xs font-medium uppercase tracking-[0.3em] text-[#FF8A3D]">
+            {eyebrow}
+          </p>
+          <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#FF8A3D]/60" />
+        </div>
+      ) : (
+        <p className="text-xs font-medium uppercase tracking-[0.3em] text-[#FF8A3D]">
+          {eyebrow}
+        </p>
+      )}
+      <h2
+        className={`${decorated ? "" : "mt-4"} text-3xl font-semibold tracking-tight text-white md:text-4xl`}
+      >
         {title}
       </h2>
       {body && (
@@ -175,7 +221,7 @@ export default function Home() {
       <div id="top" className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-10">
         {/* ── Hero: headline left, supporting copy right ────────────── */}
         <section className="relative grid grid-cols-1 gap-12 pt-20 md:grid-cols-12 md:items-center md:pt-28">
-          {/* 3D Ultron AI Core layered into the hero background; page scroll
+          {/* 3D neural brain layered into the hero background; page scroll
               spins it a full 360° */}
           <div className="pointer-events-none absolute -right-16 top-1/2 -z-10 hidden aspect-square w-[46%] -translate-y-1/2 opacity-90 md:block lg:-right-8">
             <HeroBrain />
@@ -298,33 +344,101 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Services: one artwork spans the grid, visible through gaps ── */}
+        {/* ── Services: glass cards over a living neural mesh ─────────── */}
         <section id="services" className="pt-24 md:pt-32">
           <SectionHeading
-            eyebrow="Our Services"
+            eyebrow="AI-First Engineering"
+            decorated
             title="AI & Software Services Built for Businesses of All Sizes"
             body="Whether you are a startup, SMB, or enterprise, Soft Suave helps you build AI solutions, develop software, automate workflows, and scale digital products with confidence."
           />
-          {/* Clipped exactly to the grid's bounds — background stays inside
-              this box only; page background shows everywhere outside it */}
-          <div className="relative mt-12 overflow-hidden rounded-3xl">
-            <ServicesCarouselBackground />
-            <div className="relative grid grid-cols-1 gap-5 p-5 md:grid-cols-2 lg:grid-cols-4">
-              {SERVICES.map((service) => (
-                <div
+          <div className="relative mt-12 overflow-hidden rounded-3xl border border-white/[0.06]">
+            <ServicesNeuralBackground />
+            <div className="relative grid grid-cols-1 gap-6 p-6 md:grid-cols-2 md:p-8 lg:grid-cols-4">
+              {SERVICES.map((service, i) => (
+                <FloatingCard
                   key={service.name}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-sm transition-all hover:border-[#FF8A3D]/50 hover:bg-white/[0.08] hover:shadow-md"
+                  float={false}
+                  offsetClass={service.wide ? "md:col-span-2" : ""}
+                  className="relative flex flex-col overflow-hidden rounded-2xl border border-[#FF8A3D]/[0.12] bg-white/[0.03] p-7 shadow-[inset_0_1px_24px_rgba(255,138,61,0.05)] backdrop-blur-md transition-all duration-500 hover:border-[#FF8A3D]/30 hover:bg-white/[0.06] md:p-8"
                 >
-                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-[#FF8A3D]/25 bg-[#FF6A3D]/10">
-                    <service.icon className="h-6 w-6 text-[#FF8A3D]" />
+                  {/* hover light spread from the icon corner */}
+                  <div
+                    className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+                    style={{
+                      background: `radial-gradient(circle, ${service.color}30, transparent 70%)`,
+                    }}
+                  />
+                  {/* periodic scanning light sweep */}
+                  <span
+                    aria-hidden
+                    className="sweep-bar pointer-events-none absolute inset-0"
+                    style={{ animationDelay: `${i * 1.1}s` }}
+                  />
+
+                  <span className="absolute right-7 top-7 text-3xl font-bold text-white/[0.06] transition-transform duration-500 group-hover:rotate-6">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+
+                  <div className="relative mb-5 h-[60px] w-[60px]">
+                    <span
+                      className="pulse-ring absolute inset-0 rounded-full border"
+                      style={{
+                        borderColor: `${service.color}40`,
+                        animationDelay: `${i * 0.4}s`,
+                      }}
+                    />
+                    <div
+                      className="relative flex h-[60px] w-[60px] items-center justify-center rounded-full border backdrop-blur-sm transition-transform duration-500 group-hover:rotate-[10deg]"
+                      style={{
+                        borderColor: `${service.color}40`,
+                        backgroundColor: `${service.color}1A`,
+                      }}
+                    >
+                      <service.icon
+                        className="h-6 w-6"
+                        style={{ color: service.color }}
+                      />
+                    </div>
                   </div>
-                  <h3 className="text-base font-semibold text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.85)]">
+
+                  <p
+                    className="text-[11px] font-semibold uppercase tracking-[0.2em]"
+                    style={{ color: service.color }}
+                  >
+                    {service.category}
+                  </p>
+                  <h3 className="mt-2 text-base font-semibold text-white">
                     {service.name}
                   </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-zinc-200 [text-shadow:0_1px_6px_rgba(0,0,0,0.9)]">
+                  <p className="mt-3 text-sm leading-[1.7] text-zinc-400">
                     {service.body}
                   </p>
-                </div>
+
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {service.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full border px-2.5 py-1 text-[11px] text-zinc-300"
+                        style={{
+                          borderColor: `${service.color}33`,
+                          backgroundColor: `${service.color}12`,
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="flex-1" />
+
+                  <div className="mt-6 flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors duration-300 group-hover:text-white">
+                    <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[70px] group-hover:opacity-100">
+                      Explore
+                    </span>
+                    <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
+                  </div>
+                </FloatingCard>
               ))}
             </div>
           </div>
