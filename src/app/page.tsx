@@ -198,12 +198,28 @@ function SectionHeading({
   title,
   body,
   decorated = false,
+  highlight,
 }: {
   eyebrow: string;
   title: string;
   body?: string;
   decorated?: boolean;
+  /** substring of `title` to render with the brand gradient */
+  highlight?: string;
 }) {
+  let titleNode: React.ReactNode = title;
+  if (highlight && title.includes(highlight)) {
+    const [before, after] = title.split(highlight);
+    titleNode = (
+      <>
+        {before}
+        <span className="bg-gradient-to-r from-[#FF8A3D] via-[#FFB868] to-white bg-clip-text text-transparent">
+          {highlight}
+        </span>
+        {after}
+      </>
+    );
+  }
   return (
     <div className="mx-auto max-w-3xl text-center">
       {decorated ? (
@@ -222,7 +238,7 @@ function SectionHeading({
       <h2
         className={`${decorated ? "" : "mt-4"} text-3xl font-semibold tracking-tight text-white md:text-4xl`}
       >
-        {title}
+        {titleNode}
       </h2>
       {body && (
         <p className="mt-5 text-base leading-relaxed text-zinc-400 md:text-lg">
@@ -254,19 +270,7 @@ export default function Home() {
         {/* ── Hero: headline left, supporting copy right ────────────── */}
         <section className="relative grid grid-cols-1 gap-12 pt-20 md:pt-28 lg:grid-cols-12 lg:items-center">
           <HeroAmbientBackground />
-          {/* 3D neural brain layered into the hero background; page scroll
-              spins it a full 360°. Toned down (size, opacity) and given a
-              slow float + soft glow so it reads as ambient, not a wall of
-              noise behind the copy on the right. */}
-          <div className="pointer-events-none absolute -right-16 top-1/2 -z-10 hidden aspect-square w-[41%] -translate-y-1/2 md:block lg:-right-8">
-            <div className="hero-float relative h-full w-full">
-              <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,138,61,0.22),transparent_70%)] blur-3xl" />
-              <div className="relative h-full w-full opacity-40">
-                <HeroBrain />
-              </div>
-            </div>
-          </div>
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-7">
             <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D] md:text-sm">
               AI-Powered Digital Solutions
             </p>
@@ -303,9 +307,18 @@ export default function Home() {
               ))}
             </div>
           </div>
-          <div className="lg:col-span-4 lg:pl-10">
-            <div className="rounded-2xl border border-white/[0.08] bg-[#0d0d10]/60 p-6 shadow-sm backdrop-blur-md">
-              <p className="text-base leading-relaxed text-zinc-300">
+          {/* 3D neural core above, supporting copy below — stacked, not
+              overlapping, so both stay readable */}
+          <div className="flex flex-col items-center lg:col-span-5 lg:pl-6">
+            <div className="hero-float pointer-events-none relative hidden aspect-square w-full max-w-md md:block">
+              <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,138,61,0.2),transparent_70%)] blur-3xl" />
+              <div className="relative h-full w-full opacity-90">
+                <HeroBrain />
+              </div>
+            </div>
+            <div className="w-full max-w-[540px] text-center md:-mt-14">
+              <span className="mx-auto block h-px w-24 bg-gradient-to-r from-transparent via-[#FF8A3D]/60 to-transparent" />
+              <p className="mt-5 font-serif text-base leading-relaxed text-zinc-400 md:text-lg">
                 We build AI-powered software, intelligent automation, and
                 seamless integrations that simplify operations, boost
                 productivity, and accelerate business growth.
@@ -391,11 +404,18 @@ export default function Home() {
         <EcosystemSection />
 
         {/* ── Services: glass cards over a living neural mesh ─────────── */}
-        <section id="services" className="pt-24 md:pt-32">
+        <section id="services" className="relative pt-24 md:pt-32">
+          {/* Ambient depth to match the Industries section: soft orange glow
+              behind the heading + a faint dot grid */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <div className="absolute left-1/2 top-16 h-[420px] w-[760px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,138,61,0.10),transparent_70%)] blur-2xl" />
+            <div className="absolute inset-0 opacity-[0.035] [background-image:radial-gradient(circle,#FF8A3D_1px,transparent_1px)] [background-size:26px_26px]" />
+          </div>
           <SectionHeading
             eyebrow="AI-First Engineering"
             decorated
             title="AI & Software Services Built for Businesses of All Sizes"
+            highlight="AI & Software Services"
             body="Whether you are a startup, SMB, or enterprise, Soft Suave helps you build AI solutions, develop software, automate workflows, and scale digital products with confidence."
           />
           <div className="relative mt-12 overflow-hidden rounded-3xl border border-white/[0.06]">
