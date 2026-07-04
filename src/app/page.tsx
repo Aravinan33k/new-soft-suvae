@@ -17,14 +17,22 @@ import {
 } from "react-icons/tb";
 import ExperienceStage from "@/components/dom/ExperienceStage";
 import FloatingCard from "@/components/dom/FloatingCard";
+import Reveal from "@/components/dom/Reveal";
 import FragmentCubes from "@/components/dom/FragmentCubes";
 import DisconnectedDevices from "@/components/dom/DisconnectedDevices";
 import ManualWorkflows from "@/components/dom/ManualWorkflows";
 import SlowDecisions from "@/components/dom/SlowDecisions";
-import HeroBrain from "@/components/dom/HeroBrain";
+// To revert to the neural brain, swap HeroGlobe back to HeroBrain below.
+// import HeroBrain from "@/components/dom/HeroBrain";
+import HeroGlobe from "@/components/dom/HeroGlobe";
 import HeroAmbientBackground from "@/components/dom/HeroAmbientBackground";
 import ServicesNeuralBackground from "@/components/dom/ServicesNeuralBackground";
 import EcosystemSection from "@/components/dom/EcosystemSection";
+import Navbar from "@/components/dom/Navbar";
+import CountUp from "@/components/dom/CountUp";
+import MouseParallax from "@/components/dom/MouseParallax";
+import SiteAmbientBackground from "@/components/dom/SiteAmbientBackground";
+import SectionHeading from "@/components/dom/SectionHeading";
 
 const HERO_FEATURES = [
   "AI Agents",
@@ -193,109 +201,58 @@ const STACK = [
   },
 ];
 
-function SectionHeading({
-  eyebrow,
-  title,
-  body,
-  decorated = false,
-  highlight,
-}: {
-  eyebrow: string;
-  title: string;
-  body?: string;
-  decorated?: boolean;
-  /** substring of `title` to render with the brand gradient */
-  highlight?: string;
-}) {
-  let titleNode: React.ReactNode = title;
-  if (highlight && title.includes(highlight)) {
-    const [before, after] = title.split(highlight);
-    titleNode = (
-      <>
-        {before}
-        <span className="bg-gradient-to-r from-[#FF8A3D] via-[#FFB868] to-white bg-clip-text text-transparent">
-          {highlight}
-        </span>
-        {after}
-      </>
-    );
-  }
-  return (
-    <div className="mx-auto max-w-3xl text-center">
-      {decorated ? (
-        <div className="mb-4 flex items-center justify-center gap-4">
-          <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#FF8A3D]/60" />
-          <p className="text-xs font-medium uppercase tracking-[0.3em] text-[#FF8A3D]">
-            {eyebrow}
-          </p>
-          <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#FF8A3D]/60" />
-        </div>
-      ) : (
-        <p className="text-xs font-medium uppercase tracking-[0.3em] text-[#FF8A3D]">
-          {eyebrow}
-        </p>
-      )}
-      <h2
-        className={`${decorated ? "" : "mt-4"} text-3xl font-semibold tracking-tight text-white md:text-4xl`}
-      >
-        {titleNode}
-      </h2>
-      {body && (
-        <p className="mt-5 text-base leading-relaxed text-zinc-400 md:text-lg">
-          {body}
-        </p>
-      )}
-    </div>
-  );
-}
 
 export default function Home() {
   return (
-    <main className="relative min-h-svh bg-[#0a0a0c]">
-      {/* ── Navbar ────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-[#0a0a0c]">
-        <nav className="mx-auto flex h-20 w-full max-w-7xl items-center px-6 md:px-10">
-          <a
-            href="#top"
-            className="flex items-center gap-3 text-xl font-bold tracking-tight text-white md:text-2xl"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/softsuave-mark.svg" alt="" className="h-9 w-auto md:h-10" />
-            Soft Suave
-          </a>
-        </nav>
-      </header>
+    <main className="relative min-h-svh">
+      <SiteAmbientBackground />
+      {/* Subtle cursor parallax for everything tagged data-parallax */}
+      <MouseParallax />
+      {/* ── Navbar: glass, condenses to a floating pill on scroll ──── */}
+      <Navbar />
 
       <div id="top" className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-10">
         {/* ── Hero: headline left, supporting copy right ────────────── */}
         <section className="relative grid grid-cols-1 gap-12 pt-20 md:pt-28 lg:grid-cols-12 lg:items-center">
           <HeroAmbientBackground />
-          <div className="lg:col-span-7">
-            <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D] md:text-sm">
+          <div className="lg:col-span-7" data-parallax="2">
+            <p
+              className="hero-reveal mb-6 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D] md:text-sm"
+              style={{ animationDelay: "0.05s" }}
+            >
               AI-Powered Digital Solutions
             </p>
-            <h1 className="max-w-4xl text-3xl font-semibold leading-[1.1] tracking-tight text-white md:text-5xl lg:text-6xl">
+            <h1
+              className="hero-reveal max-w-4xl text-3xl font-semibold leading-[1.1] tracking-tight text-white md:text-5xl lg:text-6xl"
+              style={{ animationDelay: "0.18s" }}
+            >
               Transform Your Business with AI,{" "}
               <span className="bg-gradient-to-r from-[#FF9440] via-[#FB5A38] to-[#F92B4E] bg-clip-text text-transparent">
                 Automation &amp; Custom Software
               </span>
             </h1>
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+            <div
+              className="hero-reveal mt-10 flex flex-col gap-4 sm:flex-row"
+              style={{ animationDelay: "0.36s" }}
+            >
               <a
                 href="#contact"
-                className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#FF6A3D] px-6 py-2.5 text-sm font-semibold text-[#1a0a04] transition-all duration-300 hover:bg-[#FF8A5C] hover:shadow-[0_0_40px_-8px_rgba(255,106,61,0.6)]"
+                className="btn-primary group inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold text-[#1a0a04]"
               >
                 Schedule a Free Consultation
-                <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
+                <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-0.5" />
               </a>
               <a
                 href="#services"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-6 py-2.5 text-sm font-semibold text-zinc-200 backdrop-blur transition-colors duration-300 hover:border-[#FF8A3D]/50 hover:text-[#FFB057]"
+                className="btn-secondary inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-6 py-2.5 text-sm font-semibold text-zinc-200 backdrop-blur hover:border-[#FF8A3D]/50 hover:text-[#FFB057]"
               >
                 Explore Our Solutions
               </a>
             </div>
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3">
+            <div
+              className="hero-reveal mt-8 flex flex-wrap gap-x-6 gap-y-3"
+              style={{ animationDelay: "0.52s" }}
+            >
               {HERO_FEATURES.map((feature) => (
                 <span
                   key={feature}
@@ -310,26 +267,36 @@ export default function Home() {
           {/* 3D neural core above, supporting copy below — stacked, not
               overlapping, so both stay readable */}
           <div className="flex flex-col items-center lg:col-span-5 lg:pl-6">
-            <div className="hero-float pointer-events-none relative hidden aspect-square w-full max-w-md md:block">
+            <div
+              className="hero-float pointer-events-none relative hidden aspect-square w-full max-w-md md:block"
+              data-parallax="4"
+            >
               <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,138,61,0.2),transparent_70%)] blur-3xl" />
               <div className="relative h-full w-full opacity-90">
-                <HeroBrain />
+                {/* <HeroBrain /> */}
+                <HeroGlobe />
               </div>
             </div>
-            <div className="w-full max-w-[540px] text-center md:-mt-14">
+            <div
+              className="hero-reveal relative z-10 w-full max-w-[540px] text-center md:-mt-14"
+              style={{ animationDelay: "0.44s" }}
+            >
               <span className="mx-auto block h-px w-24 bg-gradient-to-r from-transparent via-[#FF8A3D]/60 to-transparent" />
-              <p className="mt-5 font-serif text-base leading-relaxed text-zinc-400 md:text-lg">
+              <p className="mt-5 font-serif text-base leading-relaxed text-zinc-400 [text-shadow:0_1px_10px_rgba(10,10,12,0.95)] md:text-lg">
                 We build AI-powered software, intelligent automation, and
                 seamless integrations that simplify operations, boost
                 productivity, and accelerate business growth.
               </p>
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-8 border-t border-white/[0.08] pt-8 sm:grid-cols-4 lg:col-span-12">
+          <div
+            className="hero-reveal mt-4 grid grid-cols-2 gap-8 border-t border-white/[0.08] pt-8 sm:grid-cols-4 lg:col-span-12"
+            style={{ animationDelay: "0.66s" }}
+          >
             {HERO_METRICS.map((metric) => (
               <div key={metric.label}>
                 <p className="text-2xl font-bold text-white md:text-3xl">
-                  {metric.value}
+                  <CountUp value={metric.value} />
                 </p>
                 <p className="mt-1 text-xs text-zinc-500">{metric.label}</p>
               </div>
@@ -351,7 +318,10 @@ export default function Home() {
             title="Every business runs on disconnected systems"
             body="Data, tools, and teams that were never designed to work together. Complexity piles up — and it quietly slows everything down."
           />
-          <div className="mt-12 grid grid-cols-1 gap-5 pb-16 sm:grid-cols-2 lg:grid-cols-4">
+          <div
+            className="mt-12 grid grid-cols-1 gap-5 pb-16 sm:grid-cols-2 lg:grid-cols-4"
+            data-parallax="3"
+          >
             {PROBLEMS.map((p, i) => {
               // Animated dark art panels: cube fragments for Fragmented Data,
               // isolated devices for Disconnected Systems
@@ -407,7 +377,11 @@ export default function Home() {
         <section id="services" className="relative pt-24 md:pt-32">
           {/* Ambient depth to match the Industries section: soft orange glow
               behind the heading + a faint dot grid */}
-          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+            data-parallax="-5"
+          >
             <div className="absolute left-1/2 top-16 h-[420px] w-[760px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,138,61,0.10),transparent_70%)] blur-2xl" />
             <div className="absolute inset-0 opacity-[0.035] [background-image:radial-gradient(circle,#FF8A3D_1px,transparent_1px)] [background-size:26px_26px]" />
           </div>
@@ -418,15 +392,22 @@ export default function Home() {
             highlight="AI & Software Services"
             body="Whether you are a startup, SMB, or enterprise, Soft Suave helps you build AI solutions, develop software, automate workflows, and scale digital products with confidence."
           />
-          <div className="relative mt-12 overflow-hidden rounded-3xl border border-white/[0.06]">
+          <div
+            className="relative mt-12 overflow-hidden rounded-3xl border border-white/[0.06]"
+            data-parallax="2"
+          >
             <ServicesNeuralBackground />
             <div className="relative grid grid-cols-1 gap-6 p-6 md:grid-cols-2 md:p-8 lg:grid-cols-4">
               {SERVICES.map((service, i) => (
-                <FloatingCard
+                <Reveal
                   key={service.name}
+                  delay={i * 80}
+                  className={`h-full ${service.wide ? "md:col-span-2" : ""}`}
+                >
+                <FloatingCard
                   float={false}
-                  offsetClass={service.wide ? "md:col-span-2" : ""}
-                  className="relative flex flex-col overflow-hidden rounded-2xl border border-[#FF8A3D]/[0.12] bg-white/[0.03] p-7 shadow-[inset_0_1px_24px_rgba(255,138,61,0.05)] backdrop-blur-md transition-all duration-500 hover:border-[#FF8A3D]/30 hover:bg-white/[0.06] md:p-8"
+                  lift={8}
+                  className="relative flex flex-col overflow-hidden rounded-2xl border border-[#FF8A3D]/[0.12] bg-white/[0.03] p-7 shadow-[inset_0_1px_24px_rgba(255,138,61,0.05)] backdrop-blur-md transition-all duration-500 hover:border-[#FF8A3D]/50 hover:bg-white/[0.06] hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.6),0_0_44px_-10px_rgba(255,138,61,0.4)] md:p-8"
                 >
                   {/* hover light spread from the icon corner */}
                   <div
@@ -455,7 +436,7 @@ export default function Home() {
                       }}
                     />
                     <div
-                      className="relative flex h-[60px] w-[60px] items-center justify-center rounded-full border backdrop-blur-sm transition-transform duration-500 group-hover:rotate-[10deg]"
+                      className="relative flex h-[60px] w-[60px] items-center justify-center rounded-full border backdrop-blur-sm transition-transform duration-500 group-hover:rotate-[5deg]"
                       style={{
                         borderColor: `${service.color}40`,
                         backgroundColor: `${service.color}1A`,
@@ -502,9 +483,10 @@ export default function Home() {
                     <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 group-hover:max-w-[70px] group-hover:opacity-100">
                       Explore
                     </span>
-                    <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
+                    <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-0.5" />
                   </div>
                 </FloatingCard>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -514,7 +496,11 @@ export default function Home() {
         <section id="industries" className="relative pt-24 md:pt-32">
           {/* Subtle ambient depth: soft orange glow behind the heading + a
               faint dot grid across the section */}
-          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+            data-parallax="-5"
+          >
             <div className="absolute left-1/2 top-16 h-[420px] w-[760px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,138,61,0.10),transparent_70%)] blur-2xl" />
             <div className="absolute inset-0 opacity-[0.035] [background-image:radial-gradient(circle,#FF8A3D_1px,transparent_1px)] [background-size:26px_26px]" />
           </div>
@@ -533,7 +519,7 @@ export default function Home() {
                 <div key={stat.label} className="text-center">
                   <p className="text-3xl font-bold md:text-4xl">
                     <span className="bg-gradient-to-r from-[#FF9440] to-[#F92B4E] bg-clip-text text-transparent">
-                      {stat.value}
+                      <CountUp value={stat.value} />
                     </span>
                   </p>
                   <p className="mt-1 text-xs uppercase tracking-wider text-zinc-500">
@@ -544,7 +530,10 @@ export default function Home() {
             </div>
 
             {/* 3 × 2 equal grid */}
-            <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div
+              className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              data-parallax="3"
+            >
               {INDUSTRIES.map((industry) => (
                 <div
                   key={industry.name}
@@ -581,7 +570,7 @@ export default function Home() {
                       <span className="border-b border-transparent pb-0.5 transition-colors duration-300 group-hover:border-[#FF8A3D]/50">
                         Learn More
                       </span>
-                      <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
+                      <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-0.5" />
                     </a>
                   </div>
                 </div>
@@ -597,7 +586,10 @@ export default function Home() {
             title="Modern Tech Stack for AI and Software Solutions"
             body="We use modern AI, software, cloud, mobile, and web technologies to create smarter, scalable, future-ready solutions for business growth."
           />
-          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div
+            className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
+            data-parallax="2"
+          >
             {STACK.map((group) => (
               <div
                 key={group.category}
@@ -635,7 +627,10 @@ export default function Home() {
 
         {/* ── Final CTA ─────────────────────────────────────────────── */}
         <section id="contact" className="pt-24 md:pt-32">
-          <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#111113] bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(255,106,61,0.14),transparent_70%)] px-6 py-20 text-center shadow-sm">
+          <div
+            className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#111113] bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(255,106,61,0.14),transparent_70%)] px-6 py-20 text-center shadow-sm"
+            data-parallax="3"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/softsuave-mark.svg"
@@ -652,14 +647,14 @@ export default function Home() {
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
                 href="mailto:softsuave.ai@gmail.com"
-                className="group inline-flex items-center gap-2 rounded-full bg-[#FF6A3D] px-8 py-3.5 text-sm font-semibold text-[#1a0a04] transition-all duration-300 hover:bg-[#FF8A5C] hover:shadow-[0_0_40px_-8px_rgba(255,106,61,0.6)]"
+                className="btn-primary group inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm font-semibold text-[#1a0a04]"
               >
                 Let&apos;s Build Together
-                <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
+                <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-0.5" />
               </a>
               <a
                 href="mailto:softsuave.ai@gmail.com"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-8 py-3.5 text-sm font-semibold text-zinc-200 transition-colors duration-300 hover:border-[#FF8A3D]/50 hover:text-[#FFB057]"
+                className="btn-secondary inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-8 py-3.5 text-sm font-semibold text-zinc-200 hover:border-[#FF8A3D]/50 hover:text-[#FFB057]"
               >
                 Talk With AI Experts
               </a>

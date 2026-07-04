@@ -89,6 +89,62 @@ html {
   animation: borderSpin 3.2s linear infinite;
 }
 
+/* ── Hero entrance: staggered reveal (rise + de-blur) ─────────── */
+@keyframes heroReveal {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+    filter: blur(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.hero-reveal {
+  animation: heroReveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Very slow drifting warm gradient behind the hero (Apple-keynote calm) */
+@keyframes heroGradientDrift {
+  0%,
+  100% {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(4%, 3%, 0) scale(1.12);
+    opacity: 1;
+  }
+}
+
+.hero-gradient-drift {
+  animation: heroGradientDrift 22s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ── Scroll-in reveal for cards (Services) ───────────────────── */
+/* Toggled by the <Reveal> wrapper when it enters the viewport;
+   transition-delay is set inline per-card to stagger the cascade. */
+.reveal-card {
+  opacity: 0;
+  transform: translateY(40px) scale(0.96);
+  filter: blur(10px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform, filter;
+}
+
+.reveal-card.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
 /* ── Hero: slow up/down drift for the neural brain ────────────── */
 @keyframes heroFloat {
   0%,
@@ -102,6 +158,54 @@ html {
 
 .hero-float {
   animation: heroFloat 8s ease-in-out infinite;
+}
+
+/* Floating service chips orbiting the hero Earth */
+@keyframes chipFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.chip-float {
+  animation: chipFloat 6s ease-in-out infinite;
+}
+
+/* ── Site-wide ambient background: gradient/glow drift + aurora ──── */
+@keyframes siteWash {
+  0%,
+  100% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0) scale(1.08);
+  }
+}
+
+.site-wash {
+  animation: siteWash 34s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes siteAurora {
+  0%,
+  100% {
+    transform: translateX(-4%) translateY(0) rotate(-4deg);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translateX(4%) translateY(-3%) rotate(-1deg);
+    opacity: 1;
+  }
+}
+
+.site-aurora {
+  animation: siteAurora 28s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 /* ── Services: glass cards over a living neural mesh ─────────── */
@@ -159,14 +263,220 @@ html {
   will-change: transform;
 }
 
+/* Every icon breathes: a very subtle 1 → 1.03 → 1 scale over 6s.
+   Animates the standalone `scale` property (not `transform`) so it
+   composes with the hover rotate/translate utilities icons already use */
+@keyframes iconBreathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.03;
+  }
+}
+
+main svg {
+  animation: iconBreathe 6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card-float,
   .card-border-spin,
   .neural-wash,
   .pulse-ring,
   .sweep-bar,
-  .hero-float {
+  .hero-float,
+  .chip-float,
+  .hero-reveal,
+  .hero-gradient-drift,
+  .site-wash,
+  .site-aurora,
+  main svg {
     animation: none;
+  }
+  .reveal-card {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+}
+
+/* ── Buttons: animated gradient, growing shadow, press-scale ──── */
+.btn-primary {
+  background-image: linear-gradient(
+    110deg,
+    #ff9440 0%,
+    #ff6a3d 28%,
+    #f92b4e 52%,
+    #ff6a3d 76%,
+    #ff9440 100%
+  );
+  background-size: 220% 100%;
+  background-position: 0% 50%;
+  box-shadow: 0 10px 24px -10px rgba(255, 106, 61, 0.55);
+  transition:
+    background-position 0.6s ease,
+    box-shadow 0.35s ease,
+    transform 0.12s ease;
+}
+.btn-primary:hover {
+  background-position: 100% 50%;
+  box-shadow: 0 18px 44px -10px rgba(255, 106, 61, 0.8);
+}
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  transition:
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.35s ease,
+    transform 0.12s ease;
+}
+.btn-secondary:hover {
+  box-shadow: 0 12px 30px -12px rgba(255, 138, 61, 0.4);
+}
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* ── Premium page preloader: logo → network → globe → reveal ──── */
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.75rem;
+  background: radial-gradient(ellipse 60% 50% at 50% 45%, #14110e 0%, #0a0a0c 70%);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease,
+    visibility 0.6s;
+}
+.preloader--done {
+  opacity: 0;
+  transform: scale(1.06);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.pl-stage {
+  position: relative;
+  width: 220px;
+  height: 220px;
+}
+
+.pl-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46px;
+  height: 46px;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+  animation: plMarkIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+  filter: drop-shadow(0 0 16px rgba(255, 138, 61, 0.7));
+  z-index: 3;
+}
+@keyframes plMarkIn {
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* SVG stroke draw-on (uses pathLength=1 so every shape normalizes to 1) */
+.pl-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: plDraw 0.6s ease forwards;
+}
+@keyframes plDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Nodes / city dots pop in */
+.pl-pop {
+  opacity: 0;
+  transform: scale(0);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: plPop 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes plPop {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Slow rotation of the network layer */
+.pl-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: plSpin 16s linear infinite;
+}
+@keyframes plSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pl-word {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: plWordIn 0.6s ease 1.3s forwards;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff;
+  font-size: 1.25rem;
+}
+@keyframes plWordIn {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pl-bar {
+  width: 150px;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.pl-bar > span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, #ff9440, #f92b4e);
+  animation: plBar 1.9s ease forwards;
+}
+@keyframes plBar {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preloader *,
+  .preloader *::before,
+  .preloader *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
   }
 }
 
