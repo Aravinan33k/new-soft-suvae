@@ -298,31 +298,35 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Services: mecha/brain artwork crossfades behind every card ── */}
-        <section id="services" className="relative -mx-6 px-6 py-16 md:-mx-10 md:px-10 md:py-20">
-          <ServicesCarouselBackground />
+        {/* ── Services: one artwork spans the grid, visible through gaps ── */}
+        <section id="services" className="pt-24 md:pt-32">
           <SectionHeading
             eyebrow="Our Services"
             title="AI & Software Services Built for Businesses of All Sizes"
             body="Whether you are a startup, SMB, or enterprise, Soft Suave helps you build AI solutions, develop software, automate workflows, and scale digital products with confidence."
           />
-          <div className="relative mt-12 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-            {SERVICES.map((service) => (
-              <div
-                key={service.name}
-                className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-md transition-all hover:border-[#FF8A3D]/50 hover:bg-white/[0.07] hover:shadow-md"
-              >
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-[#FF8A3D]/25 bg-[#FF6A3D]/10">
-                  <service.icon className="h-6 w-6 text-[#FF8A3D]" />
+          {/* Clipped exactly to the grid's bounds — background stays inside
+              this box only; page background shows everywhere outside it */}
+          <div className="relative mt-12 overflow-hidden rounded-3xl">
+            <ServicesCarouselBackground />
+            <div className="relative grid grid-cols-1 gap-5 p-5 md:grid-cols-2 lg:grid-cols-4">
+              {SERVICES.map((service) => (
+                <div
+                  key={service.name}
+                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-md transition-all hover:border-[#FF8A3D]/50 hover:bg-white/[0.07] hover:shadow-md"
+                >
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-[#FF8A3D]/25 bg-[#FF6A3D]/10">
+                    <service.icon className="h-6 w-6 text-[#FF8A3D]" />
+                  </div>
+                  <h3 className="text-base font-semibold text-white">
+                    {service.name}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-zinc-300">
+                    {service.body}
+                  </p>
                 </div>
-                <h3 className="text-base font-semibold text-white">
-                  {service.name}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-300">
-                  {service.body}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
 
