@@ -1,4 +1,14 @@
 import { FiArrowRight, FiCheck } from "react-icons/fi";
+import {
+  TbCpu,
+  TbSettingsAutomation,
+  TbMessageChatbot,
+  TbCode,
+  TbDeviceMobile,
+  TbWorld,
+  TbCloudComputing,
+  TbUsersGroup,
+} from "react-icons/tb";
 import ExperienceStage from "@/components/dom/ExperienceStage";
 import FloatingCard from "@/components/dom/FloatingCard";
 import FragmentCubes from "@/components/dom/FragmentCubes";
@@ -38,34 +48,42 @@ const SERVICES = [
   {
     name: "Custom AI Solutions",
     body: "Build industry-ready AI solutions with LLMs, RAG, agents, and predictive models to automate workflows and improve decisions faster at scale.",
+    icon: TbCpu,
   },
   {
     name: "AI Integrations & Workflow Automation",
     body: "Integrate AI into business tools and automate workflows to reduce manual work, improve accuracy, and speed up daily operations.",
+    icon: TbSettingsAutomation,
   },
   {
     name: "AI Chatbots & AI Agents",
     body: "Deploy AI chatbots and agents for customer support, HR, finance, sales, healthcare, internal operations, and employee assistance.",
+    icon: TbMessageChatbot,
   },
   {
     name: "Custom Software Development",
     body: "Build secure, scalable, high-performance solutions with our AI-enabled custom software development service to improve operations and support smarter business growth.",
+    icon: TbCode,
   },
   {
     name: "Mobile App Development",
     body: "Create AI-enabled mobile apps across Android, iOS, and cross-platform environments with intuitive design, smarter features, and experiences tailored to your business goals.",
+    icon: TbDeviceMobile,
   },
   {
     name: "Web App Development",
     body: "Power your digital ideas with AI-enabled web apps that simplify workflows, engage users, and support faster business growth online.",
+    icon: TbWorld,
   },
   {
     name: "Enterprise Modernization",
     body: "Modernize legacy systems with cloud, automation, and AI to improve agility, performance, resilience, security, and long-term business growth across operations.",
+    icon: TbCloudComputing,
   },
   {
     name: "Global Capability Center (GCC)",
     body: "Scale your GCC with AI-powered teams, smarter workflows, automation, and analytics that improve productivity, decision-making, and operational efficiency.",
+    icon: TbUsersGroup,
   },
 ];
 
@@ -157,7 +175,7 @@ export default function Home() {
       <div id="top" className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-10">
         {/* ── Hero: headline left, supporting copy right ────────────── */}
         <section className="relative grid grid-cols-1 gap-12 pt-20 md:grid-cols-12 md:items-center md:pt-28">
-          {/* 3D neural brain layered into the hero background; page scroll
+          {/* 3D Ultron AI Core layered into the hero background; page scroll
               spins it a full 360° */}
           <div className="pointer-events-none absolute -right-16 top-1/2 -z-10 hidden aspect-square w-[46%] -translate-y-1/2 opacity-90 md:block lg:-right-8">
             <HeroBrain />
@@ -294,6 +312,9 @@ export default function Home() {
                 key={service.name}
                 className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-sm backdrop-blur-md transition-all hover:border-[#FF8A3D]/50 hover:bg-white/[0.07] hover:shadow-md"
               >
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-[#FF8A3D]/25 bg-[#FF6A3D]/10">
+                  <service.icon className="h-6 w-6 text-[#FF8A3D]" />
+                </div>
                 <h3 className="text-base font-semibold text-white">
                   {service.name}
                 </h3>
