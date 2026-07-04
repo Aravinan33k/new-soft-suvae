@@ -8,6 +8,12 @@ import {
   TbWorld,
   TbCloudComputing,
   TbUsersGroup,
+  TbShoppingCart,
+  TbStethoscope,
+  TbTruck,
+  TbSchool,
+  TbBuildingBank,
+  TbBuildingFactory2,
 } from "react-icons/tb";
 import ExperienceStage from "@/components/dom/ExperienceStage";
 import FloatingCard from "@/components/dom/FloatingCard";
@@ -16,7 +22,24 @@ import DisconnectedDevices from "@/components/dom/DisconnectedDevices";
 import ManualWorkflows from "@/components/dom/ManualWorkflows";
 import SlowDecisions from "@/components/dom/SlowDecisions";
 import HeroBrain from "@/components/dom/HeroBrain";
+import HeroAmbientBackground from "@/components/dom/HeroAmbientBackground";
 import ServicesNeuralBackground from "@/components/dom/ServicesNeuralBackground";
+import EcosystemSection from "@/components/dom/EcosystemSection";
+
+const HERO_FEATURES = [
+  "AI Agents",
+  "Workflow Automation",
+  "Custom Software",
+  "Mobile Apps",
+  "Enterprise AI",
+];
+
+const HERO_METRICS = [
+  { value: "50+", label: "Projects Delivered" },
+  { value: "15+", label: "AI Solutions" },
+  { value: "99.9%", label: "Uptime" },
+  { value: "24/7", label: "Support" },
+];
 
 const PROBLEMS = [
   {
@@ -35,13 +58,6 @@ const PROBLEMS = [
     name: "Slow Decisions",
     body: "Insights buried in scattered dashboards, so the answers arrive long after they're needed.",
   },
-];
-
-const STATS = [
-  "400+ AI & Engineering Specialists",
-  "13+ Years of Experience",
-  "150+ Global Clients",
-  "21+ Countries",
 ];
 
 const SERVICES = [
@@ -122,24 +138,40 @@ const SERVICES = [
 const INDUSTRIES = [
   {
     name: "Ecommerce",
-    body: "Transforming e-commerce with AI-driven solutions for smarter selling, faster operations, and better customer experiences. From personalized recommendations to inventory automation and real-time analytics, we help businesses grow efficiently.",
+    body: "AI-powered personalization, inventory optimization, and demand forecasting to accelerate online business growth.",
+    icon: TbShoppingCart,
   },
   {
     name: "HealthTech",
-    body: "Elevate healthcare with next-gen advanced AI solutions that refine patient outcomes, optimize clinical workflows, and streamline operations. We deliver intelligent automation and data-driven insights for transformative health tech innovation.",
+    body: "Intelligent automation and data-driven insights that improve patient outcomes and streamline clinical workflows.",
+    icon: TbStethoscope,
   },
   {
     name: "Logistics",
-    body: "Optimizing logistics with AI-powered solutions for smarter supply chains, real-time tracking, and operational efficiency. From demand forecasting to automated route optimization, we drive seamless and cost-effective logistics management.",
+    body: "Smarter supply chains with demand forecasting, real-time tracking, and automated route optimization.",
+    icon: TbTruck,
   },
   {
     name: "EdTech",
-    body: "Reimagining education with next-gen AI solutions, creating personalized learning experiences, and smart content curation. From adaptive learning support to insightful analytics, we're pioneering the evolution of education.",
+    body: "Personalized learning experiences, smart content curation, and analytics that adapt to every learner.",
+    icon: TbSchool,
   },
   {
     name: "FinTech",
-    body: "Redefining FinTech with AI-powered intelligence by enhancing security, automating decisions, and unlocking new financial possibilities. From real-time fraud detection to hyper-personalized banking, we drive the future of digital finance.",
+    body: "Real-time fraud detection, automated decisions, and hyper-personalized banking built on secure AI.",
+    icon: TbBuildingBank,
   },
+  {
+    name: "Manufacturing",
+    body: "Predictive maintenance, quality automation, and smart-factory analytics that cut downtime and waste.",
+    icon: TbBuildingFactory2,
+  },
+];
+
+const INDUSTRY_STATS = [
+  { value: "20+", label: "Industries Served" },
+  { value: "100+", label: "Projects Delivered" },
+  { value: "98%", label: "Client Satisfaction" },
 ];
 
 const STACK = [
@@ -220,20 +252,28 @@ export default function Home() {
 
       <div id="top" className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-10">
         {/* ── Hero: headline left, supporting copy right ────────────── */}
-        <section className="relative grid grid-cols-1 gap-12 pt-20 md:grid-cols-12 md:items-center md:pt-28">
+        <section className="relative grid grid-cols-1 gap-12 pt-20 md:pt-28 lg:grid-cols-12 lg:items-center">
+          <HeroAmbientBackground />
           {/* 3D neural brain layered into the hero background; page scroll
-              spins it a full 360° */}
-          <div className="pointer-events-none absolute -right-16 top-1/2 -z-10 hidden aspect-square w-[46%] -translate-y-1/2 opacity-90 md:block lg:-right-8">
-            <HeroBrain />
+              spins it a full 360°. Toned down (size, opacity) and given a
+              slow float + soft glow so it reads as ambient, not a wall of
+              noise behind the copy on the right. */}
+          <div className="pointer-events-none absolute -right-16 top-1/2 -z-10 hidden aspect-square w-[41%] -translate-y-1/2 md:block lg:-right-8">
+            <div className="hero-float relative h-full w-full">
+              <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,138,61,0.22),transparent_70%)] blur-3xl" />
+              <div className="relative h-full w-full opacity-40">
+                <HeroBrain />
+              </div>
+            </div>
           </div>
-          <div className="md:col-span-7">
+          <div className="lg:col-span-8">
             <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D] md:text-sm">
-              Soft Suave
+              AI-Powered Digital Solutions
             </p>
-            <h1 className="max-w-3xl text-3xl font-semibold leading-[1.1] tracking-tight text-white md:text-5xl lg:text-6xl">
-              Empowering Businesses with Scalable AI,{" "}
+            <h1 className="max-w-4xl text-3xl font-semibold leading-[1.1] tracking-tight text-white md:text-5xl lg:text-6xl">
+              Transform Your Business with AI,{" "}
               <span className="bg-gradient-to-r from-[#FF9440] via-[#FB5A38] to-[#F92B4E] bg-clip-text text-transparent">
-                Automation &amp; Integrations
+                Automation &amp; Custom Software
               </span>
             </h1>
             <div className="mt-10 flex flex-col gap-4 sm:flex-row">
@@ -241,23 +281,46 @@ export default function Home() {
                 href="#contact"
                 className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#FF6A3D] px-6 py-2.5 text-sm font-semibold text-[#1a0a04] transition-all duration-300 hover:bg-[#FF8A5C] hover:shadow-[0_0_40px_-8px_rgba(255,106,61,0.6)]"
               >
-                Book AI Strategy Call
+                Schedule a Free Consultation
                 <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
               </a>
               <a
                 href="#services"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-6 py-2.5 text-sm font-semibold text-zinc-200 backdrop-blur transition-colors duration-300 hover:border-[#FF8A3D]/50 hover:text-[#FFB057]"
               >
-                Explore AI Solutions
+                Explore Our Solutions
               </a>
             </div>
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3">
+              {HERO_FEATURES.map((feature) => (
+                <span
+                  key={feature}
+                  className="inline-flex items-center gap-1.5 text-sm text-zinc-400"
+                >
+                  <FiCheck className="shrink-0 text-[#FF8A3D]" />
+                  {feature}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="md:col-span-5 md:pl-6 lg:pl-14">
-            <p className="max-w-md font-serif text-lg leading-relaxed text-zinc-400 md:text-xl">
-              Build scalable AI solutions, intelligent automation systems, and
-              seamless integrations with AI&#8209;enabled engineering teams
-              focused on real business outcomes.
-            </p>
+          <div className="lg:col-span-4 lg:pl-10">
+            <div className="rounded-2xl border border-white/[0.08] bg-[#0d0d10]/60 p-6 shadow-sm backdrop-blur-md">
+              <p className="text-base leading-relaxed text-zinc-300">
+                We build AI-powered software, intelligent automation, and
+                seamless integrations that simplify operations, boost
+                productivity, and accelerate business growth.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-8 border-t border-white/[0.08] pt-8 sm:grid-cols-4 lg:col-span-12">
+            {HERO_METRICS.map((metric) => (
+              <div key={metric.label}>
+                <p className="text-2xl font-bold text-white md:text-3xl">
+                  {metric.value}
+                </p>
+                <p className="mt-1 text-xs text-zinc-500">{metric.label}</p>
+              </div>
+            ))}
           </div>
         </section>
       </div>
@@ -325,24 +388,7 @@ export default function Home() {
         </section>
 
         {/* ── How AI Connects Everything ────────────────────────────── */}
-        <section id="connect" className="pt-24 md:pt-32">
-          <SectionHeading
-            eyebrow="How It Works"
-            title="We connect it all into one intelligent ecosystem"
-            body="Soft Suave links your data, systems, and workflows through AI — turning fragmented operations into a single, living network that learns, automates, and scales."
-          />
-          <div className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {STATS.map((stat) => (
-              <div
-                key={stat}
-                className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-[#111113] px-5 py-4 shadow-sm"
-              >
-                <FiCheck className="shrink-0 text-[#FF8A3D]" />
-                <span className="text-sm text-zinc-300">{stat}</span>
-              </div>
-            ))}
-          </div>
-        </section>
+        <EcosystemSection />
 
         {/* ── Services: glass cards over a living neural mesh ─────────── */}
         <section id="services" className="pt-24 md:pt-32">
@@ -445,26 +491,82 @@ export default function Home() {
         </section>
 
         {/* ── Industries ────────────────────────────────────────────── */}
-        <section id="industries" className="pt-24 md:pt-32">
-          <SectionHeading
-            eyebrow="Industries"
-            title="AI-Driven Efficiency and Growth Across Industries"
-            body="Our AI-driven solutions help industries improve efficiency, scale operations, and accelerate transformation — modernizing faster and staying competitive in a digital-first world."
-          />
-          <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {INDUSTRIES.map((industry) => (
-              <div
-                key={industry.name}
-                className="rounded-2xl border border-white/[0.08] bg-[#111113] p-6 shadow-sm transition-all hover:border-[#FF8A3D]/50 hover:shadow-md"
-              >
-                <h3 className="text-lg font-semibold text-white">
-                  {industry.name}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-                  {industry.body}
-                </p>
-              </div>
-            ))}
+        <section id="industries" className="relative pt-24 md:pt-32">
+          {/* Subtle ambient depth: soft orange glow behind the heading + a
+              faint dot grid across the section */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <div className="absolute left-1/2 top-16 h-[420px] w-[760px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,138,61,0.10),transparent_70%)] blur-2xl" />
+            <div className="absolute inset-0 opacity-[0.035] [background-image:radial-gradient(circle,#FF8A3D_1px,transparent_1px)] [background-size:26px_26px]" />
+          </div>
+
+          <div className="relative">
+            <SectionHeading
+              eyebrow="Industries"
+              decorated
+              title="Transforming Industries with AI Innovation"
+              body="From healthcare and finance to logistics and retail, we build AI-powered solutions that automate operations, improve decision-making, and help businesses scale with confidence."
+            />
+
+            {/* Credibility stats */}
+            <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-x-14 gap-y-6">
+              {INDUSTRY_STATS.map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <p className="text-3xl font-bold md:text-4xl">
+                    <span className="bg-gradient-to-r from-[#FF9440] to-[#F92B4E] bg-clip-text text-transparent">
+                      {stat.value}
+                    </span>
+                  </p>
+                  <p className="mt-1 text-xs uppercase tracking-wider text-zinc-500">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* 3 × 2 equal grid */}
+            <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {INDUSTRIES.map((industry) => (
+                <div
+                  key={industry.name}
+                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111113] p-8 transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:border-[#FF8A3D]/50 hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.6),0_0_40px_-8px_rgba(255,138,61,0.35)]"
+                >
+                  {/* Oversized watermark icon fades in on hover (premium touch) */}
+                  <industry.icon className="pointer-events-none absolute -bottom-8 -right-6 h-44 w-44 text-[#FF8A3D] opacity-0 transition-opacity duration-500 group-hover:opacity-[0.06]" />
+                  {/* Warm radial tint on hover */}
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,138,61,0.08),transparent_60%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+                  <div className="relative flex flex-1 flex-col">
+                    {/* Icon tile — rotates slightly on hover */}
+                    <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-[#FF8A3D]/25 bg-[#FF8A3D]/[0.08] text-[#FF8A3D] transition-transform duration-300 group-hover:rotate-6">
+                      <industry.icon className="h-6 w-6" />
+                    </div>
+
+                    {/* Accent line above the title → grows on hover */}
+                    <span className="mb-3 block h-0.5 w-8 rounded-full bg-gradient-to-r from-[#FF9440] to-[#F92B4E] transition-all duration-300 group-hover:w-12" />
+
+                    <h3 className="text-lg font-semibold text-white">
+                      {industry.name}
+                    </h3>
+                    <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+                      {industry.body}
+                    </p>
+
+                    <div className="flex-1" />
+
+                    {/* CTA */}
+                    <a
+                      href="#contact"
+                      className="mt-7 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors duration-300 group-hover:text-[#FF8A3D]"
+                    >
+                      <span className="border-b border-transparent pb-0.5 transition-colors duration-300 group-hover:border-[#FF8A3D]/50">
+                        Learn More
+                      </span>
+                      <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
