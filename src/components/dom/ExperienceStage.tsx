@@ -65,6 +65,10 @@ const CARD_FULL = { maxWidth: "100%", height: "100vh", borderRadius: "0px" };
 export default function ExperienceStage() {
   const [active, setActive] = useState(0);
   const [playing, setPlaying] = useState(true);
+  // Two-phase copy transition: the shown chapter lags `active` while the
+  // old text fades out, then the new text slides in
+  const [displayed, setDisplayed] = useState(0);
+  const [leaving, setLeaving] = useState(false);
 
   const sectionRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -73,10 +77,15 @@ export default function ExperienceStage() {
   const elapsedRef = useRef(0);
   const neuralRef = useRef(0);
   const barsRef = useRef<(HTMLSpanElement | null)[]>([]);
+  // displayed fill fraction per chapter, eased so a deselected item's
+  // line retracts smoothly instead of snapping to zero
+  const barShownRef = useRef<number[]>(Array(N).fill(0));
 
   const select = (i: number) => {
+    if (i === activeRef.current) return;
     activeRef.current = i;
     elapsedRef.current = 0;
+    scrollState.transition = 1; // kick the camera: rotate + zoom dip
     setActive(i);
   };
 
@@ -131,21 +140,31 @@ export default function ExperienceStage() {
           elapsedRef.current = 0;
           const next = (activeRef.current + 1) % N;
           activeRef.current = next;
+          scrollState.transition = 1; // kick the camera: rotate + zoom dip
           setActive(next);
         }
       }
 
-      // Per-chapter progress bar (updated via DOM to avoid 60fps re-renders)
+      // Per-chapter timeline line (updated via DOM to avoid 60fps re-renders):
+      // the active item's orange line grows DOWNWARD with autoplay progress;
+      // a deselected item's line eases back up smoothly.
       const frac = playingRef.current ? elapsedRef.current / SLIDE_MS : 0;
+      const ease = 1 - Math.exp((-8 * dt) / 1000);
+      const shown = barShownRef.current;
       for (let i = 0; i < N; i++) {
+        shown[i] =
+          i === activeRef.current ? frac : shown[i] + (0 - shown[i]) * ease;
         const bar = barsRef.current[i];
-        if (bar) bar.style.width = i === activeRef.current ? `${frac * 100}%` : "0%";
+        if (bar) bar.style.height = `${shown[i] * 100}%`;
       }
 
       // Ease the neural assembly toward the active chapter's target
       const target = activeRef.current / (N - 1);
       neuralRef.current += (target - neuralRef.current) * (1 - Math.exp(-3 * dt / 1000));
       scrollState.progress = neuralRef.current;
+
+      // Transition pulse decays 1 → 0 over ~800ms; the camera reads it
+      scrollState.transition = Math.max(0, scrollState.transition - dt / 800);
 
       raf = requestAnimationFrame(loop);
     };
@@ -154,10 +173,24 @@ export default function ExperienceStage() {
     return () => {
       cancelAnimationFrame(raf);
       scrollState.progress = 0;
+      scrollState.transition = 0;
     };
   }, []);
 
-  const slide = SLIDES[active];
+  // Copy transition sequencing: fade the old text out (300ms), then mount
+  // the new text which slides in (500ms) — ~800ms total, in sync with the
+  // camera's transition pulse.
+  useEffect(() => {
+    if (active === displayed) return;
+    setLeaving(true);
+    const t = setTimeout(() => {
+      setDisplayed(active);
+      setLeaving(false);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [active, displayed]);
+
+  const slide = SLIDES[displayed];
 
   return (
     <section ref={sectionRef} className="relative w-full py-10">
@@ -186,8 +219,10 @@ export default function ExperienceStage() {
             <CanvasRoot />
           </div>
 
-          {/* Left slider / chapter navigation */}
-          <nav className="absolute left-0 top-0 z-20 flex h-full flex-col justify-center gap-2 pl-5 md:pl-10">
+          {/* Left timeline / chapter navigation: a vertical rail where the
+              active item's orange line grows downward, its number scales up
+              and its label slides + glows */}
+          <nav className="absolute left-0 top-0 z-20 flex h-full flex-col justify-center pl-5 md:pl-10">
             {SLIDES.map((s, i) => {
               const isActive = i === active;
               return (
@@ -196,35 +231,35 @@ export default function ExperienceStage() {
                   type="button"
                   onClick={() => select(i)}
                   aria-current={isActive}
-                  className="group flex items-center gap-3 py-1.5 text-left"
+                  className="group relative flex items-center gap-3 py-2.5 pl-4 text-left"
                 >
+                  {/* rail track */}
+                  <span className="absolute left-0 top-0 h-full w-px bg-zinc-700/60" />
+                  {/* orange line growing downward on the active chapter */}
                   <span
-                    className={`font-mono text-xs tabular-nums transition-colors ${
-                      isActive ? "text-[#FF8A3D]" : "text-zinc-600 group-hover:text-zinc-400"
+                    ref={(el) => {
+                      barsRef.current[i] = el;
+                    }}
+                    className="absolute left-[-0.5px] top-0 w-[2px] rounded-full bg-gradient-to-b from-[#FFB057] to-[#FF6A3D] shadow-[0_0_10px_rgba(255,138,61,0.9)]"
+                    style={{ height: "0%" }}
+                  />
+                  <span
+                    className={`inline-block origin-left font-mono text-xs tabular-nums transition-all duration-300 ease-out ${
+                      isActive
+                        ? "scale-[1.2] text-[#FF8A3D]"
+                        : "scale-100 text-zinc-600 group-hover:text-zinc-400"
                     }`}
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="flex flex-col gap-1.5">
-                    <span
-                      className={`text-sm font-medium transition-colors ${
-                        isActive
-                          ? "text-white"
-                          : "text-zinc-500 group-hover:text-zinc-300"
-                      }`}
-                    >
-                      {s.label}
-                    </span>
-                    {/* Track + autoplay progress fill */}
-                    <span className="relative block h-px w-16 overflow-hidden bg-zinc-700/70 md:w-24">
-                      <span
-                        ref={(el) => {
-                          barsRef.current[i] = el;
-                        }}
-                        className="absolute inset-y-0 left-0 block bg-[#FF6A3D]"
-                        style={{ width: "0%" }}
-                      />
-                    </span>
+                  <span
+                    className={`inline-block text-sm font-medium transition-all duration-300 ease-out ${
+                      isActive
+                        ? "translate-x-[5px] text-white [text-shadow:0_0_14px_rgba(255,138,61,0.55)]"
+                        : "translate-x-0 text-zinc-500 group-hover:text-zinc-300"
+                    }`}
+                  >
+                    {s.label}
                   </span>
                 </button>
               );
@@ -233,7 +268,14 @@ export default function ExperienceStage() {
 
           {/* Chapter copy (offset right of the slider) */}
           <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6 pl-32 text-center md:pl-56">
-            <div key={active} className="max-w-2xl animate-[fadeUp_0.7s_ease]">
+            <div
+              key={displayed}
+              className={`max-w-2xl transition-all duration-300 ease-in ${
+                leaving
+                  ? "-translate-y-3 opacity-0"
+                  : "animate-[fadeUp_0.55s_cubic-bezier(0.22,1,0.36,1)]"
+              }`}
+            >
               <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_55%_45%_at_55%_50%,rgba(1,2,8,0.55),transparent_70%)]" />
               {slide.eyebrow && (
                 <p className="mb-5 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D]/90 md:text-sm">
@@ -260,7 +302,7 @@ export default function ExperienceStage() {
               {slide.button && (
                 <a
                   href="#contact"
-                  className="pointer-events-auto mt-10 inline-block rounded-full bg-[#FF6A3D] px-8 py-3.5 text-sm font-semibold text-[#1a0a04] transition-all duration-300 hover:bg-[#FF8A5C] hover:shadow-[0_0_40px_-8px_rgba(255,106,61,0.8)]"
+                  className="btn-primary pointer-events-auto mt-10 inline-block rounded-full px-8 py-3.5 text-sm font-semibold text-[#1a0a04]"
                 >
                   {slide.button}
                 </a>

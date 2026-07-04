@@ -39,6 +39,37 @@ function latLonToVec3(lat: number, lon: number, r = 1): THREE.Vector3 {
   ).multiplyScalar(r);
 }
 
+// Glowing lat/long wireframe (the "cage") sitting just off the surface —
+// meridians + parallels as line segments. Sits at r slightly > R so the
+// front reads as a wireframe hugging the globe while the globe's depth
+// occludes the back half.
+function buildGraticule(radius: number): Float32Array {
+  const pos: number[] = [];
+  const STEP = 4; // degrees between sampled points along each line
+  const push = (v: THREE.Vector3, p: THREE.Vector3 | null) => {
+    if (p) pos.push(p.x, p.y, p.z, v.x, v.y, v.z);
+  };
+  // meridians every 15°
+  for (let lon = -180; lon < 180; lon += 15) {
+    let prev: THREE.Vector3 | null = null;
+    for (let lat = -90; lat <= 90; lat += STEP) {
+      const v = latLonToVec3(lat, lon, radius);
+      push(v, prev);
+      prev = v;
+    }
+  }
+  // parallels every 15°
+  for (let lat = -75; lat <= 75; lat += 15) {
+    let prev: THREE.Vector3 | null = null;
+    for (let lon = -180; lon <= 180; lon += STEP) {
+      const v = latLonToVec3(lat, lon, radius);
+      push(v, prev);
+      prev = v;
+    }
+  }
+  return new Float32Array(pos);
+}
+
 // Real network cities — index 0 is Soft Suave HQ (Chennai), kept brightest
 const CITIES: [number, number][] = [
   [13.08, 80.27], // Chennai (HQ)
@@ -62,6 +93,10 @@ const LINKS: [number, number][] = [
   [1, 2], [2, 6], [2, 12], [3, 4], [3, 5],
   [4, 13], [4, 9], [6, 7], [6, 8], [8, 9],
   [8, 10], [8, 11], [9, 14], [11, 12],
+  // extra links to densify the cage
+  [0, 5], [1, 3], [2, 7], [3, 13], [5, 11],
+  [6, 11], [7, 8], [7, 12], [9, 11], [10, 14],
+  [8, 14], [4, 5], [1, 12], [6, 10], [0, 7],
 ];
 
 // ---------------------------------------------------------------------
@@ -92,28 +127,42 @@ const earthFragment = /* glsl */ `
   varying vec3 vNv;
   void main() {
     float sun = dot(normalize(vNw), normalize(uSunDir));
-    float dayMix = smoothstep(-0.08, 0.35, sun);
 
-    // day side: real albedo, dimmed and cooled in shadow, warmed in light
-    vec3 day = texture2D(uDay, vUv).rgb;
-    day *= mix(vec3(0.16, 0.18, 0.24), vec3(0.85, 0.8, 0.72), clamp(sun, 0.0, 1.0));
+    // BROAD daylight: most of the camera-facing hemisphere shows the day
+    // albedo so real continents are visible, falling to darkness only near
+    // the limb/terminator — the reference is a full, lit planet, not a
+    // thin crescent.
+    float dayMix = smoothstep(-0.32, 0.4, sun);
 
-    // night side: golden city lights over a near-black planet
+    // Day albedo, warm cinematic grade: deep navy oceans, warm tan land,
+    // brightening toward the sub-solar point but never blown out.
+    vec3 albedo = texture2D(uDay, vUv).rgb;
+    // darken oceans (blue-dominant) so land reads; warm the whole thing
+    float ocean = smoothstep(0.35, 0.55, albedo.b - albedo.r);
+    vec3 warm = albedo * vec3(1.18, 0.94, 0.62);
+    warm = mix(warm, warm * 0.35, ocean);
+    float lit = clamp(sun * 0.5 + 0.5, 0.0, 1.0);
+    vec3 day = warm * mix(0.05, 1.05, lit * lit);
+
+    // City lights: golden pinpoints. Brightest on the darker regions but
+    // still glowing over daylit land near the terminator (Black-Marble look
+    // composited onto the day globe).
     vec3 nl = texture2D(uNight, vUv).rgb;
     float lum = dot(nl, vec3(0.299, 0.587, 0.114));
-    vec3 city = vec3(1.0, 0.6, 0.25) * pow(lum, 0.8) * 3.2;
-    vec3 night = vec3(0.016, 0.018, 0.028) + city;
+    vec3 city = vec3(1.0, 0.64, 0.3) * pow(lum, 1.3) * 5.5;
+    city += vec3(1.0, 0.92, 0.72) * pow(lum, 3.0) * 2.2;
+    float cityVis = 1.0 - dayMix * 0.55;
 
-    vec3 col = mix(night, day, dayMix);
+    vec3 col = day + city * cityVis;
 
     // soft light band sweeping pole-to-pole, wrapping every 7s
     float sweepY = mod(uTime, 7.0) / 7.0 * 2.6 - 1.3;
     float band = 1.0 - smoothstep(0.0, 0.05, abs(normalize(vNw).y - sweepY));
-    col += vec3(1.0, 0.92, 0.75) * band * 0.45;
+    col += vec3(1.0, 0.92, 0.75) * band * 0.22;
 
-    // warm atmosphere rim
-    float fres = pow(1.0 - abs(dot(normalize(vNv), vec3(0.0, 0.0, 1.0))), 2.8);
-    col += vec3(1.0, 0.5, 0.24) * fres * 0.28;
+    // warm atmosphere rim around the lit limb
+    float fres = pow(1.0 - abs(dot(normalize(vNv), vec3(0.0, 0.0, 1.0))), 3.2);
+    col += vec3(1.0, 0.55, 0.28) * fres * 0.35;
 
     gl_FragColor = vec4(col, 1.0);
   }
@@ -162,8 +211,8 @@ const atmoFragment = /* glsl */ `
   precision highp float;
   varying vec3 vNormal;
   void main() {
-    float intensity = pow(0.6 - dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 3.4);
-    gl_FragColor = vec4(vec3(1.0, 0.45, 0.2), max(intensity, 0.0) * 0.55);
+    float intensity = pow(0.66 - dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 3.6);
+    gl_FragColor = vec4(vec3(1.0, 0.5, 0.24), max(intensity, 0.0) * 0.4);
   }
 `;
 
@@ -181,7 +230,7 @@ const volumeFragment = /* glsl */ `
   void main() {
     float d = length(vUv - 0.5) * 2.0;
     float fall = smoothstep(1.0, 0.0, d);
-    gl_FragColor = vec4(vec3(1.0, 0.42, 0.18), fall * fall * 0.16);
+    gl_FragColor = vec4(vec3(1.0, 0.44, 0.2), fall * fall * 0.06);
   }
 `;
 
@@ -190,10 +239,11 @@ const volumeFragment = /* glsl */ `
 const ARC_SEG = 36;
 const PULSE_COLORS = ["#ff6a3d", "#ffffff", "#ffd37a"];
 const FLASH_DUR = 1.1; // seconds a hub node takes to flash orange -> white -> orange
-// Sun sits behind the planet's upper-right shoulder: the hemisphere facing
-// the camera stays in night (golden city lights) with a lit crescent at
-// the top-right limb — the reference "Black Marble" composition.
-const SUN_DIR = new THREE.Vector3(0.55, 0.5, -0.65).normalize();
+// Sun sits roughly toward the camera (slightly upper-left) so the whole
+// visible hemisphere is daylit — real continents show, with the limb and
+// far-left edge falling into golden-city-light night. Matches the reference
+// full, lit globe.
+const SUN_DIR = new THREE.Vector3(-0.28, 0.22, 0.93).normalize();
 
 function Earth({ animate }: { animate: boolean }) {
   const group = useRef<THREE.Group>(null);
@@ -206,10 +256,12 @@ function Earth({ animate }: { animate: boolean }) {
   ]);
   useMemo(() => {
     for (const t of [dayMap, nightMap]) {
-      t.anisotropy = 8;
+      t.anisotropy = 16;
       t.wrapS = THREE.RepeatWrapping;
     }
   }, [dayMap, nightMap]);
+
+  const graticule = useMemo(() => buildGraticule(R * 1.012), []);
 
   const data = useMemo(() => {
     const hubs = CITIES.map(([lat, lon]) => latLonToVec3(lat, lon));
@@ -380,7 +432,7 @@ function Earth({ animate }: { animate: boolean }) {
       </mesh>
 
       {/* atmosphere halo */}
-      <mesh renderOrder={0} scale={1.16}>
+      <mesh renderOrder={0} scale={1.13}>
         <sphereGeometry args={[R, 48, 48]} />
         <shaderMaterial
           vertexShader={normalVertex}
@@ -392,6 +444,20 @@ function Earth({ animate }: { animate: boolean }) {
         />
       </mesh>
 
+      {/* glowing lat/long wireframe cage — front hemisphere only (globe
+          depth hides the back), the structured "engineered planet" look */}
+      <lineSegments renderOrder={1}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[graticule, 3]} />
+        </bufferGeometry>
+        <lineBasicMaterial
+          color="#ff9a45"
+          transparent
+          opacity={0.07}
+          blending={THREE.AdditiveBlending}
+        />
+      </lineSegments>
+
       {/* network arcs between real cities */}
       <lineSegments renderOrder={2}>
         <bufferGeometry>
@@ -401,7 +467,7 @@ function Earth({ animate }: { animate: boolean }) {
         <lineBasicMaterial
           vertexColors
           transparent
-          opacity={0.38}
+          opacity={0.5}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
@@ -446,8 +512,8 @@ function Earth({ animate }: { animate: boolean }) {
 
 // Two faint orbital rings with a few small lights
 const RING_DEFS = [
-  { r: R * 1.22, tiltX: 1.18, tiltZ: 0.22, speed: 0.12, particles: 7, opacity: 0.12 },
-  { r: R * 1.32, tiltX: 1.42, tiltZ: -0.12, speed: -0.07, particles: 9, opacity: 0.09 },
+  { r: R * 1.2, tiltX: 1.18, tiltZ: 0.22, speed: 0.12, particles: 7, opacity: 0.4 },
+  { r: R * 1.32, tiltX: 1.42, tiltZ: -0.12, speed: -0.07, particles: 9, opacity: 0.3 },
 ];
 
 function OrbitalRing({

@@ -1,6 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FiArrowRight } from "react-icons/fi";
+
+const NAV_LINKS = [
+  { label: "Solutions", href: "#services" },
+  { label: "Services", href: "#services" },
+  { label: "Industries", href: "#industries" },
+  { label: "About Us", href: "#experience" },
+  { label: "Resources", href: "#stack" },
+];
 
 // Glassmorphic navbar. At the top it spans the full container; once the
 // page scrolls it condenses into a Vercel-style floating pill — 95% width,
@@ -38,6 +47,27 @@ export default function Navbar() {
               className="h-9 w-auto transition-all duration-300 group-hover:rotate-[5deg] group-hover:drop-shadow-[0_0_14px_rgba(255,106,61,0.8)] md:h-10"
             />
             Soft Suave
+          </a>
+
+          {/* Primary menu — hidden on small screens */}
+          <nav className="ml-auto hidden items-center gap-8 lg:flex">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className="text-sm font-medium text-zinc-300 transition-colors hover:text-white"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          <a
+            href="#contact"
+            className="btn-primary group ml-auto inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-[#1a0a04] lg:ml-8"
+          >
+            Contact Us
+            <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-0.5" />
           </a>
         </div>
       </nav>

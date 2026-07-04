@@ -43,9 +43,15 @@ export default function NeuralCamera() {
     const s = smooth.current;
     const time = clock.getElapsedTime();
 
-    const r = sample(s, "r");
+    // Chapter-change pulse (1 → 0 over ~800ms, set by ExperienceStage):
+    // swings the orbit angle (scene appears to rotate) and dips the radius
+    // (camera zooms in and settles) in sync with the DOM text transition.
+    const p = scrollState.transition;
+    const kick = Math.sin(Math.min(1, p) * Math.PI);
+
+    const r = sample(s, "r") * (1 - 0.2 * kick);
     const h = sample(s, "h");
-    const angle = s * Math.PI * 1.4 + time * 0.05;
+    const angle = s * Math.PI * 1.4 + time * 0.05 + p * p * 0.55;
 
     // Global pointer (works under the layered HTML content) for gentle sway
     const px = scrollState.pointer.x;

@@ -4,99 +4,414 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 
-// 3D "Ultron AI Core" for the hero — a holographic AI energy core built
-// entirely from CIRCULAR geometry (no polygon cage): concentric rings and
-// segmented arcs, a bright multi-ring nucleus, organically branching energy
-// veins with streams of light flowing along them, orbiting circuit
-// fragments, and independently-rotating gyroscope layers. All additive
-// orange glow on transparent bg, spinning 360°.
+// Holographic AI core ("Ultron / Arc Reactor" style) for the hero.
 //
-// Layer map (each its own independently-rotating group):
-//   nucleus  – bright pulsing core + bloom, brightest element
-//   inner    – dense fast-spinning rings/arcs + core circuitry (near center)
-//   mid      – counter-rotating processing rings + HUD radial slices
-//   outer    – slow orbital rings + radial tick marks
-//   gyro     – 3 orthogonal-plane rings (the gyroscope cage)
-//   frags    – rectangular circuit panels orbiting outside the core
-//   veins    – branching curved neural pathways (static) with light streams
-//   wave     – an expanding energy shockwave that repeats
+// Designed to read like the reference: a blazing white-hot nucleus, fine
+// filigree circuitry (thin arcs + PCB elbow traces) rather than chunky
+// blocks, dashed radial data spokes, thousands of tiny glowing node dots
+// wherever a line ends or bends, a dark ember-colored rim with a blocky
+// castellated edge, and a few floating holographic panels. Everything
+// stays inside a spherical boundary of radius R.
+//
+// Layer map (each group rotates independently, in-plane around Z):
+//   core    – nucleus rings + burst spokes + layered bloom, fast
+//   layerA  – inner circuitry band (holds the feature panels), counter
+//   layerB  – middle processing band
+//   layerC  – outer shell band with castellated rim, slow
+//   spokes  – dashed radial data highways, very slow
+//   tilt    – a few gently-tilted rings for volume
+//   plates  – three drifting groups of small holographic panels
+//   halo    – dim orbiting particles
+//   pulses  – energy dots flowing around ring paths
+//   wave    – repeating expanding ring
 
 const isMobileDevice = () =>
   typeof window !== "undefined" && window.innerWidth < 768;
 
-const R = 1.45; // outer core radius
+const R = 1.45; // spherical boundary — nothing is generated beyond this
 
-// --- geometry helpers ------------------------------------------------
-function randUnit(): THREE.Vector3 {
-  const u = Math.random() * 2 - 1;
-  const th = Math.random() * Math.PI * 2;
-  const s = Math.sqrt(Math.max(0, 1 - u * u));
-  return new THREE.Vector3(s * Math.cos(th), u, s * Math.sin(th));
+const C_GOLD = new THREE.Color("#ffdf94");
+const C_AMBER = new THREE.Color("#ff9636");
+const C_ORANGE = new THREE.Color("#e85f06");
+const C_EMBER = new THREE.Color("#a84a05");
+
+// gold near the core -> amber -> deep ember at the rim
+function radialColor(r: number, out: THREE.Color) {
+  const t = THREE.MathUtils.clamp((r - 0.12) / (R - 0.12), 0, 1);
+  if (t < 0.45) out.copy(C_GOLD).lerp(C_AMBER, t / 0.45);
+  else if (t < 0.8) out.copy(C_AMBER).lerp(C_ORANGE, (t - 0.45) / 0.35);
+  else out.copy(C_ORANGE).lerp(C_EMBER, (t - 0.8) / 0.2);
+  return out;
 }
 
-// Orthonormal basis for a ring whose axis (normal) is n.
-function basisFromAxis(n: THREE.Vector3) {
-  const up =
-    Math.abs(n.y) > 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
-  const U = new THREE.Vector3().crossVectors(n, up).normalize();
-  const V = new THREE.Vector3().crossVectors(n, U).normalize();
-  return { U, V };
-}
+// --- geometry builder --------------------------------------------------
+// Accumulates thin line segments, translucent quad fills and glowing node
+// dots into flat arrays; one builder per rotation layer.
+class LayerBuilder {
+  line: number[] = [];
+  lineCol: number[] = [];
+  fill: number[] = [];
+  fillCol: number[] = [];
+  nodePos: number[] = [];
+  nodeCol: number[] = [];
+  nodeSize: number[] = [];
+  nodeBright: number[] = [];
+  private tmp = new THREE.Color();
 
-// Append arc [a0,a1] (radians) of a circle to a flat segment-pair list.
-function pushArc(
-  out: number[],
-  radius: number,
-  U: THREE.Vector3,
-  V: THREE.Vector3,
-  c: THREE.Vector3,
-  segs: number,
-  a0 = 0,
-  a1 = Math.PI * 2,
-) {
-  let px = 0;
-  let py = 0;
-  let pz = 0;
-  for (let i = 0; i <= segs; i++) {
-    const th = a0 + (a1 - a0) * (i / segs);
-    const co = Math.cos(th) * radius;
-    const si = Math.sin(th) * radius;
-    const x = c.x + U.x * co + V.x * si;
-    const y = c.y + U.y * co + V.y * si;
-    const z = c.z + U.z * co + V.z * si;
-    if (i > 0) out.push(px, py, pz, x, y, z);
-    px = x;
-    py = y;
-    pz = z;
+  seg(
+    x1: number, y1: number, z1: number,
+    x2: number, y2: number, z2: number,
+    c: THREE.Color, b: number,
+  ) {
+    this.line.push(x1, y1, z1, x2, y2, z2);
+    this.lineCol.push(c.r * b, c.g * b, c.b * b, c.r * b, c.g * b, c.b * b);
   }
-}
 
-// Radial tick marks / HUD slices around a ring plane.
-function pushTicks(
-  out: number[],
-  rIn: number,
-  rOut: number,
-  U: THREE.Vector3,
-  V: THREE.Vector3,
-  c: THREE.Vector3,
-  count: number,
-) {
-  for (let k = 0; k < count; k++) {
-    const th = (k / count) * Math.PI * 2;
-    const ca = Math.cos(th);
-    const sa = Math.sin(th);
-    out.push(
-      c.x + (U.x * ca + V.x * sa) * rIn,
-      c.y + (U.y * ca + V.y * sa) * rIn,
-      c.z + (U.z * ca + V.z * sa) * rIn,
-      c.x + (U.x * ca + V.x * sa) * rOut,
-      c.y + (U.y * ca + V.y * sa) * rOut,
-      c.z + (U.z * ca + V.z * sa) * rOut,
+  // glowing dot — the sparkle the reference is full of
+  node(x: number, y: number, z: number, bright: number, size: number, c?: THREE.Color) {
+    const col = c ?? radialColor(Math.hypot(x, y), this.tmp);
+    this.nodePos.push(x, y, z);
+    this.nodeCol.push(col.r, col.g, col.b);
+    this.nodeSize.push(size);
+    this.nodeBright.push(bright);
+  }
+
+  // arc in the XY plane at height z; a1 < a0 is allowed
+  arc(r: number, z: number, a0: number, a1: number, c: THREE.Color, b: number) {
+    const span = Math.abs(a1 - a0);
+    const segs = Math.max(3, Math.ceil((span / (Math.PI * 2)) * (40 + r * 90)));
+    let px = 0, py = 0;
+    for (let i = 0; i <= segs; i++) {
+      const th = a0 + (a1 - a0) * (i / segs);
+      const x = Math.cos(th) * r;
+      const y = Math.sin(th) * r;
+      if (i > 0) this.seg(px, py, z, x, y, z, c, b);
+      px = x;
+      py = y;
+    }
+  }
+
+  // segmented ring: 3-9 thin arc blocks with gaps; block tips get nodes
+  ring(r: number, z: number, bright: number) {
+    const c = radialColor(r, this.tmp);
+    const roll = Math.random();
+    if (roll < 0.15) {
+      this.arc(r, z, 0, Math.PI * 2, c, bright * 0.8);
+      return;
+    }
+    const blocks = 3 + Math.floor(Math.random() * 7);
+    let th = Math.random() * Math.PI * 2;
+    for (let k = 0; k < blocks; k++) {
+      const len = (0.25 + Math.random() * 1.1) * ((Math.PI * 2) / blocks);
+      const gap = (0.08 + Math.random() * 0.5) * ((Math.PI * 2) / blocks) * 0.45;
+      const b = bright * (0.45 + Math.random() * 0.65);
+      this.arc(r, z, th, th + len, c, b);
+      // bright dots at the segment tips — key reference detail
+      if (Math.random() < 0.65)
+        this.node(Math.cos(th) * r, Math.sin(th) * r, z, 0.8 + Math.random() * 0.5, 0.12 + Math.random() * 0.1);
+      if (Math.random() < 0.65)
+        this.node(Math.cos(th + len) * r, Math.sin(th + len) * r, z, 0.8 + Math.random() * 0.5, 0.12 + Math.random() * 0.1);
+      th += len + gap;
+    }
+  }
+
+  // radial connection bridges between two ring radii, over a partial span
+  ticks(r0: number, r1: number, z: number, count: number, bright: number) {
+    const a0 = Math.random() * Math.PI * 2;
+    const span = Math.PI * (0.4 + Math.random() * 1.6);
+    for (let k = 0; k < count; k++) {
+      const th = a0 + (k / count) * span;
+      const ca = Math.cos(th), sa = Math.sin(th);
+      const c = radialColor((r0 + r1) / 2, this.tmp);
+      this.seg(ca * r0, sa * r0, z, ca * r1, sa * r1, z, c, bright * (0.4 + Math.random() * 0.5));
+    }
+  }
+
+  // small rectangular circuit module tangent to its ring (kept SMALL —
+  // the reference reads as filigree, not confetti)
+  module(r: number, th: number, z: number, bright: number) {
+    const ca = Math.cos(th), sa = Math.sin(th);
+    const tx = -sa, ty = ca; // tangent
+    const w = 0.016 + Math.random() * 0.04; // along tangent
+    const h = 0.008 + Math.random() * 0.022; // along radial
+    const cx = ca * r, cy = sa * r;
+    const px: number[] = [], py: number[] = [];
+    for (const [su, sv] of [[1, 1], [-1, 1], [-1, -1], [1, -1]] as const) {
+      px.push(cx + tx * w * su + ca * h * sv);
+      py.push(cy + ty * w * su + sa * h * sv);
+    }
+    const c = radialColor(r, this.tmp);
+    for (let k = 0; k < 4; k++) {
+      const n = (k + 1) % 4;
+      this.seg(px[k], py[k], z, px[n], py[n], z, c, bright);
+    }
+    const fb = bright * 0.22;
+    this.fill.push(
+      px[0], py[0], z, px[1], py[1], z, px[2], py[2], z,
+      px[0], py[0], z, px[2], py[2], z, px[3], py[3], z,
     );
+    for (let k = 0; k < 6; k++) this.fillCol.push(c.r * fb, c.g * fb, c.b * fb);
+    if (Math.random() < 0.4)
+      this.node(px[0], py[0], z, 0.9 + Math.random() * 0.4, 0.1 + Math.random() * 0.08);
+  }
+
+  // larger holographic feature panel (the reference has one or two near
+  // the core) — outline, translucent fill, inner detail lines
+  panel(cx: number, cy: number, z: number, w: number, h: number, rot: number, bright: number) {
+    const c = radialColor(Math.hypot(cx, cy), this.tmp);
+    const ux = Math.cos(rot), uy = Math.sin(rot);
+    const vx = -uy, vy = ux;
+    const corner = (su: number, sv: number) => [cx + ux * w * su + vx * h * sv, cy + uy * w * su + vy * h * sv];
+    const cs = [corner(1, 1), corner(-1, 1), corner(-1, -1), corner(1, -1)];
+    for (let k = 0; k < 4; k++) {
+      const n = (k + 1) % 4;
+      this.seg(cs[k][0], cs[k][1], z, cs[n][0], cs[n][1], z, c, bright);
+      this.node(cs[k][0], cs[k][1], z, 1.1, 0.14);
+    }
+    this.fill.push(
+      cs[0][0], cs[0][1], z, cs[1][0], cs[1][1], z, cs[2][0], cs[2][1], z,
+      cs[0][0], cs[0][1], z, cs[2][0], cs[2][1], z, cs[3][0], cs[3][1], z,
+    );
+    const fb = bright * 0.38;
+    for (let k = 0; k < 6; k++) this.fillCol.push(c.r * fb, c.g * fb, c.b * fb);
+    // inner detail: a few horizontal scan lines
+    for (let s = 1; s <= 3; s++) {
+      const sv = -1 + (s / 2) * 1;
+      const a = [cx - ux * w * 0.7 + vx * h * sv * 0.6, cy - uy * w * 0.7 + vy * h * sv * 0.6];
+      const b2 = [cx + ux * w * 0.7 + vx * h * sv * 0.6, cy + uy * w * 0.7 + vy * h * sv * 0.6];
+      this.seg(a[0], a[1], z, b2[0], b2[1], z, c, bright * 0.45);
+    }
+  }
+
+  // PCB elbow trace: thin radial step -> arc step, repeated; every bend
+  // and the terminal get a glowing node dot
+  trace(r0: number, th0: number, z: number, rMax: number) {
+    let r = r0, th = th0;
+    const b = 0.28 + Math.random() * 0.3;
+    const elbows = 2 + Math.floor(Math.random() * 3);
+    for (let e = 0; e < elbows; e++) {
+      const c = radialColor(r, this.tmp);
+      const rNew = Math.min(rMax - 0.02, r + 0.04 + Math.random() * 0.12);
+      this.seg(Math.cos(th) * r, Math.sin(th) * r, z, Math.cos(th) * rNew, Math.sin(th) * rNew, z, c, b);
+      r = rNew;
+      if (Math.random() < 0.55)
+        this.node(Math.cos(th) * r, Math.sin(th) * r, z, 0.7 + Math.random() * 0.5, 0.09 + Math.random() * 0.08);
+      const dth = (Math.random() < 0.5 ? -1 : 1) * (0.08 + Math.random() * 0.35);
+      this.arc(r, z, th, th + dth, c, b);
+      th += dth;
+      if (r >= rMax - 0.03) break;
+    }
+    this.node(Math.cos(th) * r, Math.sin(th) * r, z, 1 + Math.random() * 0.5, 0.12 + Math.random() * 0.1);
+  }
+
+  // blocky castellated rim: arc blocks alternating between two radii with
+  // radial caps — the stepped outer edge of the reference
+  notchRing(rHi: number, z: number, bright: number) {
+    const rLo = rHi - (0.04 + Math.random() * 0.04);
+    const blocks = 20 + Math.floor(Math.random() * 12);
+    let th = Math.random() * Math.PI * 2;
+    let prevR: number | null = null;
+    for (let k = 0; k < blocks; k++) {
+      const span = ((Math.PI * 2) / blocks) * (0.55 + Math.random() * 0.4);
+      const rB = Math.random() < 0.5 ? rHi : rLo;
+      const c = radialColor(rB, this.tmp);
+      const b = bright * (0.5 + Math.random() * 0.5);
+      this.arc(rB, z, th, th + span, c, b);
+      if (prevR !== null && prevR !== rB)
+        this.seg(Math.cos(th) * prevR, Math.sin(th) * prevR, z, Math.cos(th) * rB, Math.sin(th) * rB, z, c, b);
+      if (Math.random() < 0.4)
+        this.node(Math.cos(th) * rB, Math.sin(th) * rB, z, 0.8 + Math.random() * 0.4, 0.1);
+      prevR = rB;
+      th += span + ((Math.PI * 2) / blocks) * (Math.random() * 0.25);
+    }
+  }
+
+  build() {
+    return {
+      line: new Float32Array(this.line),
+      lineCol: new Float32Array(this.lineCol),
+      fill: new Float32Array(this.fill),
+      fillCol: new Float32Array(this.fillCol),
+      nodePos: new Float32Array(this.nodePos),
+      nodeCol: new Float32Array(this.nodeCol),
+      nodeSize: new Float32Array(this.nodeSize),
+      nodeBright: new Float32Array(this.nodeBright),
+    };
   }
 }
 
-// --- shaders ---------------------------------------------------------
+type LayerData = ReturnType<LayerBuilder["build"]>;
+
+// one circuitry band: thin rings + bridges + small modules + many fine
+// elbow traces, spread over shallow z-planes
+function buildBand(
+  rMin: number, rMax: number, ringCount: number,
+  density: number, zSpread: number, notchedRim = false,
+): LayerData {
+  const b = new LayerBuilder();
+  for (let i = 0; i < ringCount; i++) {
+    const r = THREE.MathUtils.lerp(rMin, rMax, ringCount === 1 ? 0.5 : i / (ringCount - 1))
+      + (Math.random() - 0.5) * 0.015;
+    const z = (Math.random() - 0.5) * zSpread;
+    b.ring(r, z, 0.62);
+    const mods = Math.floor(r * 6 * density * (0.4 + Math.random()));
+    for (let m = 0; m < mods; m++)
+      b.module(r, Math.random() * Math.PI * 2, z, 0.55 + Math.random() * 0.4);
+    if (i < ringCount - 1 && Math.random() < 0.55) {
+      const rNext = THREE.MathUtils.lerp(rMin, rMax, (i + 1) / (ringCount - 1));
+      b.ticks(r, rNext, z, 5 + Math.floor(Math.random() * 12), 0.4);
+    }
+  }
+  const traces = Math.floor(ringCount * 9 * density);
+  for (let k = 0; k < traces; k++) {
+    const r0 = rMin + Math.random() * (rMax - rMin) * 0.8;
+    b.trace(r0, Math.random() * Math.PI * 2, (Math.random() - 0.5) * zSpread, rMax);
+  }
+  if (notchedRim) {
+    b.notchRing(rMax, 0, 0.8);
+    b.notchRing(rMax - 0.09, (Math.random() - 0.5) * 0.05, 0.6);
+  }
+  return b.build();
+}
+
+// the nucleus: blazing center — tight bright rings, a short radial burst,
+// and sparks; the brightest thing in the scene
+function buildCore(): LayerData {
+  const b = new LayerBuilder();
+  const gold = new THREE.Color("#ffedbf");
+  const white = new THREE.Color("#fff8ea");
+  for (let i = 0; i < 9; i++) {
+    const r = 0.06 + i * 0.032;
+    const bright = 1.7 - i * 0.12;
+    if (i % 3 === 2) {
+      const blocks = 4 + Math.floor(Math.random() * 4);
+      let th = Math.random() * Math.PI * 2;
+      for (let k = 0; k < blocks; k++) {
+        const len = (0.5 + Math.random() * 0.8) * ((Math.PI * 2) / blocks) * 0.8;
+        b.arc(r, 0, th, th + len, gold, bright);
+        th += (Math.PI * 2) / blocks;
+      }
+    } else {
+      b.arc(r, 0, 0, Math.PI * 2, gold, bright);
+    }
+  }
+  // short radial burst around the nucleus
+  for (let k = 0; k < 28; k++) {
+    const th = (k / 28) * Math.PI * 2 + Math.random() * 0.1;
+    const r0 = 0.09 + Math.random() * 0.05;
+    const r1 = r0 + 0.08 + Math.random() * 0.16;
+    b.seg(Math.cos(th) * r0, Math.sin(th) * r0, 0, Math.cos(th) * r1, Math.sin(th) * r1, 0, gold, 0.7 + Math.random() * 0.6);
+    if (Math.random() < 0.6) b.node(Math.cos(th) * r1, Math.sin(th) * r1, 0, 1.2, 0.12, white);
+  }
+  // fine tick crown
+  for (let k = 0; k < 56; k++) {
+    const th = (k / 56) * Math.PI * 2;
+    b.seg(Math.cos(th) * 0.3, Math.sin(th) * 0.3, 0, Math.cos(th) * 0.335, Math.sin(th) * 0.335, 0, gold, k % 4 === 0 ? 1.2 : 0.6);
+  }
+  // sparks inside the hot zone
+  for (let k = 0; k < 40; k++) {
+    const th = Math.random() * Math.PI * 2;
+    const r = 0.06 + Math.random() * 0.28;
+    b.node(Math.cos(th) * r, Math.sin(th) * r, (Math.random() - 0.5) * 0.04, 0.9 + Math.random() * 0.8, 0.08 + Math.random() * 0.1, white);
+  }
+  return b.build();
+}
+
+// dashed radial data highways from the core to the rim, with node dots —
+// prominent in the reference (in-plane radial structure, not stray rays)
+function buildSpokes(major: number, minor: number): LayerData {
+  const b = new LayerBuilder();
+  const tmp = new THREE.Color();
+  for (let k = 0; k < major; k++) {
+    const th = (k / major) * Math.PI * 2 + (Math.random() - 0.5) * 0.12;
+    const ca = Math.cos(th), sa = Math.sin(th);
+    let r = 0.17 + Math.random() * 0.1;
+    const rEnd = R * (0.82 + Math.random() * 0.16);
+    const z = (Math.random() - 0.5) * 0.05;
+    while (r < rEnd) {
+      const dash = 0.05 + Math.random() * 0.18;
+      const r1 = Math.min(rEnd, r + dash);
+      const c = radialColor((r + r1) / 2, tmp);
+      b.seg(ca * r, sa * r, z, ca * r1, sa * r1, z, c, 0.45 + Math.random() * 0.35);
+      if (Math.random() < 0.45) b.node(ca * r1, sa * r1, z, 0.8 + Math.random() * 0.5, 0.1 + Math.random() * 0.07);
+      r = r1 + 0.02 + Math.random() * 0.07;
+    }
+  }
+  // minor short radial dashes scattered mid-disc
+  for (let k = 0; k < minor; k++) {
+    const th = Math.random() * Math.PI * 2;
+    const ca = Math.cos(th), sa = Math.sin(th);
+    const r0 = 0.4 + Math.random() * (R - 0.5);
+    const r1 = r0 + 0.04 + Math.random() * 0.1;
+    const c = radialColor(r0, tmp);
+    b.seg(ca * r0, sa * r0, (Math.random() - 0.5) * 0.08, ca * r1, sa * r1, (Math.random() - 0.5) * 0.08, c, 0.3 + Math.random() * 0.25);
+  }
+  return b.build();
+}
+
+// a few gently tilted rings for spherical volume (shallow tilts only)
+function buildTiltRings(): LayerData {
+  const b = new LayerBuilder();
+  const tmp = new THREE.Color();
+  for (let i = 0; i < 5; i++) {
+    const r = 0.75 + i * 0.15;
+    const tilt = 0.12 + Math.random() * 0.28;
+    const c = radialColor(r, tmp);
+    const segs = 90;
+    let px = 0, py = 0, pz = 0;
+    const a0 = Math.random() * Math.PI * 2;
+    const span = Math.PI * (i % 2 === 0 ? 2 : 1.2 + Math.random() * 0.6);
+    for (let k = 0; k <= segs; k++) {
+      const th = a0 + span * (k / segs);
+      const x = Math.cos(th) * r;
+      const y = Math.sin(th) * r * Math.cos(tilt);
+      const z = Math.sin(th) * r * Math.sin(tilt);
+      if (k > 0) b.seg(px, py, pz, x, y, z, c, 0.4);
+      px = x; py = y; pz = z;
+    }
+  }
+  return b.build();
+}
+
+// small floating holographic plates around the shell — subtle, few
+function buildPlates(count: number): LayerData {
+  const b = new LayerBuilder();
+  const tmp = new THREE.Color();
+  for (let i = 0; i < count; i++) {
+    const th = Math.random() * Math.PI * 2;
+    const rad = 0.8 + Math.random() * (R - 0.85);
+    const cx = Math.cos(th) * rad;
+    const cy = Math.sin(th) * rad * (0.6 + Math.random() * 0.4);
+    const cz = (Math.random() - 0.5) * 0.5;
+    const spin = Math.random() * Math.PI * 2;
+    const q = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler((Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.6, spin),
+    );
+    const U = new THREE.Vector3(1, 0, 0).applyQuaternion(q);
+    const V = new THREE.Vector3(0, 1, 0).applyQuaternion(q);
+    const w = 0.03 + Math.random() * 0.06;
+    const h = 0.02 + Math.random() * 0.04;
+    const c = radialColor(rad, tmp);
+    const corner = (su: number, sv: number) => [
+      cx + U.x * w * su + V.x * h * sv,
+      cy + U.y * w * su + V.y * h * sv,
+      cz + U.z * w * su + V.z * h * sv,
+    ];
+    const cs = [corner(1, 1), corner(-1, 1), corner(-1, -1), corner(1, -1)];
+    const bright = 0.5 + Math.random() * 0.35;
+    for (let k = 0; k < 4; k++) {
+      const n = (k + 1) % 4;
+      b.seg(cs[k][0], cs[k][1], cs[k][2], cs[n][0], cs[n][1], cs[n][2], c, bright);
+    }
+    b.fill.push(...cs[0], ...cs[1], ...cs[2], ...cs[0], ...cs[2], ...cs[3]);
+    const fb = bright * 0.22;
+    for (let k = 0; k < 6; k++) b.fillCol.push(c.r * fb, c.g * fb, c.b * fb);
+    if (Math.random() < 0.5) b.node(cx, cy, cz, 0.8, 0.1);
+  }
+  return b.build();
+}
+
+// --- shaders -----------------------------------------------------------
 const glowVertex = /* glsl */ `
   attribute vec3 aColor;
   attribute float aBright;
@@ -107,7 +422,7 @@ const glowVertex = /* glsl */ `
     vColor = aColor;
     vBright = aBright;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = clamp(aSize * (42.0 / -mv.z), 1.0, 13.0);
+    gl_PointSize = clamp(aSize * (42.0 / -mv.z), 1.0, 14.0);
     gl_Position = projectionMatrix * mv;
   }
 `;
@@ -127,72 +442,134 @@ const glowFragment = /* glsl */ `
 
 const bloomVertex = /* glsl */ `
   attribute float aSize;
+  attribute vec3 aColor;
+  varying vec3 vColor;
   void main() {
+    vColor = aColor;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = clamp(aSize * (300.0 / -mv.z), 2.0, 420.0);
+    gl_PointSize = clamp(aSize * (300.0 / -mv.z), 2.0, 640.0);
     gl_Position = projectionMatrix * mv;
   }
 `;
 const bloomFragment = /* glsl */ `
   precision highp float;
-  uniform vec3 uColor;
   uniform float uIntensity;
+  varying vec3 vColor;
   void main() {
     vec2 c = gl_PointCoord - 0.5;
     float d = length(c);
     if (d > 0.5) discard;
     float halo = smoothstep(0.5, 0.0, d);
-    float core = smoothstep(0.1, 0.0, d);
-    gl_FragColor = vec4(uColor, (halo * halo * 0.65 + core) * uIntensity);
+    float core = smoothstep(0.12, 0.0, d);
+    gl_FragColor = vec4(vColor, (halo * halo * 0.55 + core) * uIntensity);
   }
 `;
 
-const STREAM_COLORS = ["#ffe08a", "#ffffff", "#ff9a3c"];
+// --- reusable JSX pieces -----------------------------------------------
+function LayerLines({ data, opacity = 0.9 }: { data: LayerData; opacity?: number }) {
+  return (
+    <lineSegments frustumCulled={false}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[data.line, 3]} />
+        <bufferAttribute attach="attributes-color" args={[data.lineCol, 3]} />
+      </bufferGeometry>
+      <lineBasicMaterial
+        vertexColors
+        transparent
+        opacity={opacity}
+        depthTest={false}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </lineSegments>
+  );
+}
+
+function LayerFills({ data }: { data: LayerData }) {
+  if (data.fill.length === 0) return null;
+  return (
+    <mesh frustumCulled={false}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[data.fill, 3]} />
+        <bufferAttribute attach="attributes-color" args={[data.fillCol, 3]} />
+      </bufferGeometry>
+      <meshBasicMaterial
+        vertexColors
+        transparent
+        opacity={0.45}
+        side={THREE.DoubleSide}
+        depthTest={false}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
+  );
+}
+
+function LayerNodes({ data }: { data: LayerData }) {
+  if (data.nodePos.length === 0) return null;
+  return (
+    <points frustumCulled={false}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[data.nodePos, 3]} />
+        <bufferAttribute attach="attributes-aColor" args={[data.nodeCol, 3]} />
+        <bufferAttribute attach="attributes-aBright" args={[data.nodeBright, 1]} />
+        <bufferAttribute attach="attributes-aSize" args={[data.nodeSize, 1]} />
+      </bufferGeometry>
+      <shaderMaterial
+        vertexShader={glowVertex}
+        fragmentShader={glowFragment}
+        transparent
+        depthTest={false}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
+  );
+}
+
+function Layer({ data, opacity, groupRef, renderOrder }: {
+  data: LayerData;
+  opacity?: number;
+  groupRef: React.RefObject<THREE.Group | null>;
+  renderOrder?: number;
+}) {
+  return (
+    <group ref={groupRef} renderOrder={renderOrder}>
+      <LayerLines data={data} opacity={opacity} />
+      <LayerFills data={data} />
+      <LayerNodes data={data} />
+    </group>
+  );
+}
 
 function Core() {
-  const spin = useRef<THREE.Group>(null);
-  const inner = useRef<THREE.Group>(null);
-  const mid = useRef<THREE.Group>(null);
-  const outer = useRef<THREE.Group>(null);
-  const gyro = useRef<THREE.Group>(null);
-  const frags = useRef<THREE.Group>(null);
-  const nucleus = useRef<THREE.Group>(null);
+  const assembly = useRef<THREE.Group>(null);
+  const coreGrp = useRef<THREE.Group>(null);
+  const grpA = useRef<THREE.Group>(null);
+  const grpB = useRef<THREE.Group>(null);
+  const grpC = useRef<THREE.Group>(null);
+  const spokesGrp = useRef<THREE.Group>(null);
+  const tiltGrp = useRef<THREE.Group>(null);
+  const haloGrp = useRef<THREE.Group>(null);
+  const plateGrps = [useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null)];
   const coreMesh = useRef<THREE.Mesh>(null);
   const waveGroup = useRef<THREE.Group>(null);
   const waveMat = useRef<THREE.LineBasicMaterial>(null);
-  const baseSpin = useRef<THREE.Group>(null);
-  const streamsGeo = useRef<THREE.BufferGeometry>(null);
+  const pulsesGeo = useRef<THREE.BufferGeometry>(null);
 
   const mobile = isMobileDevice();
-  const SEEDS = mobile ? 10 : 18;
-  const STREAMS = mobile ? 46 : 96;
-  const MICRO = mobile ? 260 : 520;
+  const DENSITY = mobile ? 0.55 : 1;
+  const PULSES = mobile ? 70 : 150;
+  const HALO = mobile ? 220 : 480;
+  const PLATES = mobile ? 4 : 7;
 
-  const singularityMat = useMemo(
+  const bloomMat = useMemo(
     () =>
       new THREE.ShaderMaterial({
         vertexShader: bloomVertex,
         fragmentShader: bloomFragment,
-        uniforms: {
-          uColor: { value: new THREE.Color("#fff2cc") },
-          uIntensity: { value: 1 },
-        },
-        transparent: true,
-        depthTest: false,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      }),
-    [],
-  );
-  const baseBloomMat = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        vertexShader: bloomVertex,
-        fragmentShader: bloomFragment,
-        uniforms: {
-          uColor: { value: new THREE.Color("#ffb04a") },
-          uIntensity: { value: 1 },
-        },
+        uniforms: { uIntensity: { value: 1 } },
         transparent: true,
         depthTest: false,
         depthWrite: false,
@@ -202,646 +579,253 @@ function Core() {
   );
 
   const data = useMemo(() => {
-    const cGold = new THREE.Color("#ffe6a6");
-    const cAmber = new THREE.Color("#ffab4d");
-    const cOrange = new THREE.Color("#ff7a24");
+    const core = buildCore();
+    const bandABuilder = buildBand(0.38, 0.84, Math.round(13 * DENSITY) + 5, DENSITY, 0.08);
+    const bandB = buildBand(0.86, 1.14, Math.round(11 * DENSITY) + 4, DENSITY, 0.12);
+    const bandC = buildBand(1.16, R, Math.round(8 * DENSITY) + 3, DENSITY * 0.8, 0.16, true);
+    const spokes = buildSpokes(mobile ? 9 : 14, mobile ? 16 : 34);
+    const tilt = buildTiltRings();
+    const plates = [buildPlates(PLATES), buildPlates(PLATES), buildPlates(PLATES)];
+
+    // one or two bright feature panels near the core (reference detail)
+    {
+      const pb = new LayerBuilder();
+      pb.panel(0.06, 0.42, 0.02, 0.055, 0.13, Math.PI / 2 + 0.08, 1.1);
+      pb.panel(-0.38, -0.2, -0.02, 0.045, 0.09, -0.5, 0.85);
+      const fp = pb.build();
+      // merge into band A so they rotate with the inner circuitry
+      const mergeF32 = (a: Float32Array, b: Float32Array) => {
+        const out = new Float32Array(a.length + b.length);
+        out.set(a); out.set(b, a.length);
+        return out;
+      };
+      bandABuilder.line = mergeF32(bandABuilder.line, fp.line);
+      bandABuilder.lineCol = mergeF32(bandABuilder.lineCol, fp.lineCol);
+      bandABuilder.fill = mergeF32(bandABuilder.fill, fp.fill);
+      bandABuilder.fillCol = mergeF32(bandABuilder.fillCol, fp.fillCol);
+      bandABuilder.nodePos = mergeF32(bandABuilder.nodePos, fp.nodePos);
+      bandABuilder.nodeCol = mergeF32(bandABuilder.nodeCol, fp.nodeCol);
+      bandABuilder.nodeSize = mergeF32(bandABuilder.nodeSize, fp.nodeSize);
+      bandABuilder.nodeBright = mergeF32(bandABuilder.nodeBright, fp.nodeBright);
+    }
+    const bandA = bandABuilder;
+
+    // layered core bloom: white-hot center -> gold -> orange halo
+    const bloomPos = new Float32Array([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const bloomSize = new Float32Array([1.3, 2.6, 4.6]);
+    const bloomCol = new Float32Array(9);
     const tmp = new THREE.Color();
-
-    // ---- Rotating ring layers (built as flat segment lists) ----------
-    const innerArr: number[] = [];
-    const midArr: number[] = [];
-    const outerArr: number[] = [];
-    const gyroArr: number[] = [];
-    const O = new THREE.Vector3();
-
-    // NUCLEUS RINGS (spin with the inner layer): 5 tight rings, tilted
-    [
-      [0.11, 0, 1, 0],
-      [0.15, 1, 0, 0],
-      [0.18, 0, 0, 1],
-      [0.14, 1, 1, 0],
-      [0.16, 1, 0, 1],
-    ].forEach(([rad, ax, ay, az]) => {
-      const { U, V } = basisFromAxis(new THREE.Vector3(ax, ay, az).normalize());
-      pushArc(innerArr, rad, U, V, O, 72);
+    [["#ffffff", 1.15], ["#ffd98a", 0.6], ["#ff7f1e", 0.28]].forEach(([hex, mul], i) => {
+      tmp.set(hex as string).multiplyScalar(mul as number);
+      bloomCol.set([tmp.r, tmp.g, tmp.b], i * 3);
     });
 
-    // INNER: dense circuitry near the core — small rings + broken arcs
-    for (let i = 0; i < 6; i++) {
-      const rad = 0.26 + i * 0.05;
-      const axis = randUnit();
-      const { U, V } = basisFromAxis(axis);
-      if (i % 2 === 0) pushArc(innerArr, rad, U, V, O, 96);
-      else {
-        // segmented arc with a gap (broken ring — breaks symmetry)
-        const start = Math.random() * Math.PI * 2;
-        pushArc(innerArr, rad, U, V, O, 60, start, start + Math.PI * 1.4);
-      }
-    }
-    pushTicks(
-      innerArr,
-      0.5,
-      0.56,
-      new THREE.Vector3(1, 0, 0),
-      new THREE.Vector3(0, 0, 1),
-      O,
-      36,
-    );
-
-    // MID: multi-orbital processing rings + HUD radial slices
-    for (let i = 0; i < 4; i++) {
-      const rad = 0.68 + i * 0.09;
-      const axis = new THREE.Vector3(
-        Math.sin(i * 1.3),
-        Math.cos(i * 0.7),
-        Math.sin(i * 2.1),
-      ).normalize();
-      const { U, V } = basisFromAxis(axis);
-      if (i % 2 === 1) {
-        const start = Math.random() * Math.PI * 2;
-        pushArc(midArr, rad, U, V, O, 90, start, start + Math.PI * 1.55);
-      } else {
-        pushArc(midArr, rad, U, V, O, 120);
-      }
-    }
-    // HUD slices around the equator
-    pushTicks(
-      midArr,
-      0.6,
-      0.7,
-      new THREE.Vector3(1, 0, 0),
-      new THREE.Vector3(0, 0, 1),
-      O,
-      48,
-    );
-
-    // OUTER: slow big orbital rings (some broken) + outer tick ring
-    for (let i = 0; i < 3; i++) {
-      const rad = 1.12 + i * 0.16;
-      const axis = new THREE.Vector3(
-        Math.sin(i * 2.0 + 1),
-        1.6,
-        Math.cos(i * 1.4),
-      ).normalize();
-      const { U, V } = basisFromAxis(axis);
-      if (i === 1) {
-        const start = Math.random() * Math.PI * 2;
-        pushArc(outerArr, rad, U, V, O, 100, start, start + Math.PI * 1.25);
-      } else {
-        pushArc(outerArr, rad, U, V, O, 140);
-      }
-    }
-    pushTicks(
-      outerArr,
-      1.42,
-      1.5,
-      new THREE.Vector3(1, 0, 0),
-      new THREE.Vector3(0, 0, 1),
-      O,
-      72,
-    );
-
-    // GYRO: three orthogonal-plane rings — the gyroscope cage
-    (
-      [
-        [1.18, new THREE.Vector3(0, 0, 1)],
-        [1.24, new THREE.Vector3(1, 0, 0)],
-        [1.0, new THREE.Vector3(1, 1, 0)],
-      ] as [number, THREE.Vector3][]
-    ).forEach(([rad, axis]) => {
-      const { U, V } = basisFromAxis(axis.normalize());
-      pushArc(gyroArr, rad, U, V, O, 130);
-    });
-
-    // ---- Branching curved energy veins -------------------------------
-    const SWIRL = new THREE.Vector3(0.2, 1, 0.1).normalize();
-    const paths: THREE.Vector3[][] = [];
-    let budget = mobile ? 900 : 1700;
-    const queue: { pos: THREE.Vector3; dir: THREE.Vector3; depth: number }[] = [];
-    for (let s = 0; s < SEEDS; s++) {
-      const d = randUnit();
-      queue.push({ pos: d.clone().multiplyScalar(0.22 * R), dir: d.clone(), depth: 0 });
-    }
-    let guard = 0;
-    while (queue.length && budget > 0 && guard < 4000) {
-      guard++;
-      const w = queue.shift()!;
-      const path = [w.pos.clone()];
-      let dir = w.dir.clone();
-      const maxSteps = 7 + Math.floor(Math.random() * 8) - w.depth * 2;
-      let steps = 0;
-      while (steps < maxSteps && budget > 0) {
-        const rad = w.pos.length();
-        if (rad > 1.5 * R) break;
-        const outward = w.pos.clone().normalize();
-        const swirl = new THREE.Vector3()
-          .crossVectors(outward, SWIRL)
-          .normalize();
-        dir = outward
-          .multiplyScalar(0.68)
-          .add(dir.multiplyScalar(0.22))
-          .add(swirl.multiplyScalar(0.32 * (Math.random() - 0.25)));
-        if (dir.lengthSq() < 1e-4) dir = outward;
-        dir.normalize();
-        const step = 0.1 * R + Math.random() * 0.08 * R;
-        w.pos = w.pos.clone().addScaledVector(dir, step);
-        path.push(w.pos.clone());
-        budget--;
-        steps++;
-        if (w.depth < 2 && Math.random() < 0.2 && budget > 30) {
-          queue.push({
-            pos: w.pos.clone(),
-            dir: dir.clone().applyAxisAngle(randUnit(), (Math.random() - 0.5) * 1.3),
-            depth: w.depth + 1,
-          });
-        }
-      }
-      if (path.length >= 2) paths.push(path);
+    // dim orbiting particle halo (flattened shell, inside R)
+    const haloPos = new Float32Array(HALO * 3);
+    const haloCol = new Float32Array(HALO * 3);
+    const haloSize = new Float32Array(HALO);
+    const haloBright = new Float32Array(HALO);
+    for (let i = 0; i < HALO; i++) {
+      const th = Math.random() * Math.PI * 2;
+      const rad = 0.5 + Math.pow(Math.random(), 0.7) * (R - 0.52);
+      const zz = (Math.random() - 0.5) * 2 * Math.sqrt(Math.max(0, R * R - rad * rad)) * 0.55;
+      haloPos.set([Math.cos(th) * rad, Math.sin(th) * rad, zz], i * 3);
+      radialColor(rad, tmp);
+      haloCol.set([tmp.r, tmp.g, tmp.b], i * 3);
+      haloSize[i] = 0.07 + Math.random() * 0.12;
+      haloBright[i] = 0.22 + Math.random() * 0.35;
     }
 
-    // Vein line segments + per-path metadata for streams
-    const veinSeg: number[] = [];
-    const metas: { pts: THREE.Vector3[]; cum: number[]; total: number }[] = [];
-    const junctions: THREE.Vector3[] = [];
-    for (const path of paths) {
-      const cum = [0];
-      let total = 0;
-      for (let i = 1; i < path.length; i++) {
-        const a = path[i - 1];
-        const b = path[i];
-        veinSeg.push(a.x, a.y, a.z, b.x, b.y, b.z);
-        total += a.distanceTo(b);
-        cum.push(total);
-      }
-      metas.push({ pts: path, cum, total });
-      // node at the tip (and occasionally along)
-      junctions.push(path[path.length - 1]);
-      if (path.length > 4) junctions.push(path[Math.floor(path.length / 2)]);
-    }
-    const veinPos = new Float32Array(veinSeg);
-
-    // Junction nodes (glow dots at vein tips / mid points)
-    const jN = junctions.length;
-    const jPos = new Float32Array(jN * 3);
-    const jCol = new Float32Array(jN * 3);
-    const jSize = new Float32Array(jN);
-    const jBright = new Float32Array(jN);
-    junctions.forEach((p, i) => {
-      jPos.set([p.x, p.y, p.z], i * 3);
-      const tt = THREE.MathUtils.smoothstep(p.length() / R, 0.2, 1.1);
-      tmp.copy(cGold).lerp(cOrange, tt);
-      jCol.set([tmp.r, tmp.g, tmp.b], i * 3);
-      jSize[i] = 0.3 + Math.random() * 0.4;
-      jBright[i] = 0.7 + Math.random() * 0.5;
-    });
-
-    // ---- Micro nodes: density biased toward the center ---------------
-    const microPos = new Float32Array(MICRO * 3);
-    const microCol = new Float32Array(MICRO * 3);
-    const microSize = new Float32Array(MICRO);
-    const microBright = new Float32Array(MICRO);
-    for (let i = 0; i < MICRO; i++) {
-      const d = randUnit();
-      const rad = R * Math.pow(Math.random(), 1.7); // dense near center
-      const p = d.multiplyScalar(rad);
-      microPos.set([p.x, p.y, p.z], i * 3);
-      const tt = THREE.MathUtils.smoothstep(rad / R, 0.0, 1.0);
-      tmp.copy(cGold).lerp(cOrange, tt);
-      microCol.set([tmp.r, tmp.g, tmp.b], i * 3);
-      microSize[i] = 0.12 + Math.random() * 0.16;
-      microBright[i] = 0.4 + Math.random() * 0.5;
+    // energy pulses: dots flowing around ring paths at many radii
+    const pulseR = new Float32Array(PULSES);
+    const pulseZ = new Float32Array(PULSES);
+    const pulseSpeed = new Float32Array(PULSES);
+    const pulsePhase = new Float32Array(PULSES);
+    const pulseCol = new Float32Array(PULSES * 3);
+    const pulseSize = new Float32Array(PULSES);
+    const PCOLS = ["#ffe08a", "#ffffff", "#ff9a3c"];
+    for (let i = 0; i < PULSES; i++) {
+      pulseR[i] = 0.18 + Math.random() * (R - 0.2);
+      pulseZ[i] = (Math.random() - 0.5) * 0.14;
+      pulseSpeed[i] = (Math.random() < 0.5 ? 1 : -1) * (0.15 + Math.random() * 0.55) / Math.max(0.35, pulseR[i]);
+      pulsePhase[i] = Math.random() * Math.PI * 2;
+      tmp.set(PCOLS[Math.floor(Math.random() * PCOLS.length)]);
+      pulseCol.set([tmp.r, tmp.g, tmp.b], i * 3);
+      pulseSize[i] = 0.2 + Math.random() * 0.16;
     }
 
-    // ---- Radial circuit-trace spokes from the center -----------------
-    const spokePos: number[] = [];
-    const spokeCol: number[] = [];
-    const SP = mobile ? 16 : 26;
-    const pushSpoke = (dir: THREE.Vector3, r0: number, r1: number, b: number) => {
-      tmp.copy(cAmber).multiplyScalar(b);
-      spokePos.push(dir.x * r0, dir.y * r0, dir.z * r0, dir.x * r1, dir.y * r1, dir.z * r1);
-      spokeCol.push(tmp.r, tmp.g, tmp.b, tmp.r, tmp.g, tmp.b);
-    };
-    [
-      new THREE.Vector3(1, 0, 0),
-      new THREE.Vector3(0, 1, 0),
-      new THREE.Vector3(0, 0, 1),
-    ].forEach((ax) => pushSpoke(ax, -R * 0.95, R * 0.95, 1.0));
-    for (let i = 0; i < SP; i++) {
-      const d = randUnit();
-      pushSpoke(d, 0.12 * R, R * (0.7 + Math.random() * 0.3), 0.35 + Math.random() * 0.4);
-    }
-    const spokePosArr = new Float32Array(spokePos);
-    const spokeColArr = new Float32Array(spokeCol);
-
-    // ---- Orbiting circuit fragments (rectangular panels) -------------
-    const PANELS = mobile ? 4 : 7;
-    const fragArr: number[] = [];
-    for (let i = 0; i < PANELS; i++) {
-      const d = randUnit();
-      const t1 = new THREE.Vector3()
-        .crossVectors(d, new THREE.Vector3(0, 1, 0))
-        .normalize();
-      if (t1.lengthSq() < 0.01) t1.set(1, 0, 0);
-      const t2 = new THREE.Vector3().crossVectors(d, t1).normalize();
-      // some panels orbit OUTSIDE the core
-      const c = d.clone().multiplyScalar(R * (0.85 + Math.random() * 0.7));
-      const w = 0.14 + Math.random() * 0.18;
-      const h = 0.1 + Math.random() * 0.16;
-      const corners = [
-        c.clone().addScaledVector(t1, w).addScaledVector(t2, h),
-        c.clone().addScaledVector(t1, -w).addScaledVector(t2, h),
-        c.clone().addScaledVector(t1, -w).addScaledVector(t2, -h),
-        c.clone().addScaledVector(t1, w).addScaledVector(t2, -h),
-      ];
-      for (let k = 0; k < 4; k++) {
-        const a = corners[k];
-        const b = corners[(k + 1) % 4];
-        fragArr.push(a.x, a.y, a.z, b.x, b.y, b.z);
-      }
-      // one internal trace line for a "chip" look
-      fragArr.push(
-        corners[0].x, corners[0].y, corners[0].z,
-        corners[2].x, corners[2].y, corners[2].z,
-      );
-    }
-    const fragPos = new Float32Array(fragArr);
-
-    // ---- Streams assignment ------------------------------------------
-    const streamMeta = new Int32Array(STREAMS);
-    const streamDir = new Float32Array(STREAMS);
-    const streamSpeed = new Float32Array(STREAMS);
-    const streamPhase = new Float32Array(STREAMS);
-    const streamColor = new Float32Array(STREAMS * 3);
-    const streamSize = new Float32Array(STREAMS).fill(0.36);
-    for (let i = 0; i < STREAMS; i++) {
-      streamMeta[i] = metas.length ? Math.floor(Math.random() * metas.length) : 0;
-      streamDir[i] = Math.random() < 0.7 ? 1 : -1; // mostly center -> edge
-      streamSpeed[i] = 0.28 + Math.random() * 0.4;
-      streamPhase[i] = Math.random();
-      tmp.set(STREAM_COLORS[Math.floor(Math.random() * STREAM_COLORS.length)]);
-      streamColor.set([tmp.r, tmp.g, tmp.b], i * 3);
-    }
-
-    // ---- Expanding energy wave ring (equatorial) ---------------------
+    // expanding wave ring (unit circle, scaled at runtime)
     const wave: number[] = [];
-    pushArc(
-      wave,
-      1.0,
-      new THREE.Vector3(1, 0, 0),
-      new THREE.Vector3(0, 0, 1),
-      O,
-      120,
-    );
-    const wavePos = new Float32Array(wave);
-
-    // ---- Projector base ----------------------------------------------
-    const base: number[] = [];
-    const baseY = -R - 0.3;
-    [0.5, 0.85, 1.2, 1.55].forEach((rr) =>
-      pushArc(
-        base,
-        rr,
-        new THREE.Vector3(1, 0, 0),
-        new THREE.Vector3(0, 0, 1),
-        new THREE.Vector3(0, baseY, 0),
-        120,
-      ),
-    );
-    const basePos = new Float32Array(base);
+    const wsegs = 110;
+    for (let i = 0; i < wsegs; i++) {
+      const a = (i / wsegs) * Math.PI * 2;
+      const b2 = ((i + 1) / wsegs) * Math.PI * 2;
+      wave.push(Math.cos(a), Math.sin(a), 0, Math.cos(b2), Math.sin(b2), 0);
+    }
 
     return {
-      innerArr: new Float32Array(innerArr),
-      midArr: new Float32Array(midArr),
-      outerArr: new Float32Array(outerArr),
-      gyroArr: new Float32Array(gyroArr),
-      veinPos,
-      jPos,
-      jCol,
-      jSize,
-      jBright,
-      microPos,
-      microCol,
-      microSize,
-      microBright,
-      spokePosArr,
-      spokeColArr,
-      fragPos,
-      metas,
-      streamMeta,
-      streamDir,
-      streamSpeed,
-      streamPhase,
-      streamColor,
-      streamSize,
-      wavePos,
-      basePos,
-      baseY,
+      core, bandA, bandB, bandC, spokes, tilt, plates,
+      bloomPos, bloomSize, bloomCol,
+      haloPos, haloCol, haloSize, haloBright,
+      pulseR, pulseZ, pulseSpeed, pulsePhase, pulseCol, pulseSize,
+      wavePos: new Float32Array(wave),
     };
-  }, [SEEDS, STREAMS, MICRO, mobile]);
+  }, [DENSITY, PULSES, HALO, PLATES, mobile]);
 
-  const streamPosBuf = useMemo(() => new Float32Array(STREAMS * 3), [STREAMS]);
-  const streamBrightBuf = useMemo(() => new Float32Array(STREAMS), [STREAMS]);
+  const pulsePosBuf = useMemo(() => new Float32Array(PULSES * 3), [PULSES]);
+  const pulseBrightBuf = useMemo(() => new Float32Array(PULSES), [PULSES]);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     const scroll = typeof window !== "undefined" ? window.scrollY : 0;
 
-    if (spin.current) {
-      spin.current.rotation.y = t * 0.1 + scroll * 0.004;
-      spin.current.rotation.x = -0.08 + Math.sin(t * 0.2) * 0.04;
+    // whole hologram: gentle presentation tilt + slow sway (never edge-on)
+    if (assembly.current) {
+      assembly.current.rotation.x = -0.16 + Math.sin(t * 0.17) * 0.05;
+      assembly.current.rotation.y = Math.sin(t * 0.11) * 0.24 + scroll * 0.0012;
     }
-    // Independent motion layers
-    if (inner.current) {
-      inner.current.rotation.y = t * 0.55;
-      inner.current.rotation.x = t * 0.24;
-    }
-    if (mid.current) {
-      mid.current.rotation.y = -t * 0.3;
-      mid.current.rotation.z = t * 0.14;
-    }
-    if (outer.current) outer.current.rotation.y = t * 0.16;
-    if (gyro.current) {
-      gyro.current.rotation.x = t * 0.34;
-      gyro.current.rotation.z = -t * 0.2;
-    }
-    if (frags.current) {
-      frags.current.rotation.y = t * 0.18;
-      frags.current.rotation.x = Math.sin(t * 0.4) * 0.2;
-    }
-    if (baseSpin.current) baseSpin.current.rotation.y = -t * 0.08;
 
-    // Nucleus pulse
-    const pulse = 0.75 + 0.25 * Math.sin(t * 2.4);
-    singularityMat.uniforms.uIntensity.value = pulse;
-    baseBloomMat.uniforms.uIntensity.value = 0.7 + 0.3 * Math.sin(t * 1.3 + 1);
-    if (coreMesh.current) coreMesh.current.scale.setScalar(1 + 0.14 * Math.sin(t * 2.4));
+    // every band rotates in-plane at its own speed/direction
+    if (coreGrp.current) coreGrp.current.rotation.z = t * 0.85;
+    if (grpA.current) grpA.current.rotation.z = -t * 0.3;
+    if (grpB.current) grpB.current.rotation.z = t * 0.16;
+    if (grpC.current) grpC.current.rotation.z = -t * 0.07;
+    if (spokesGrp.current) spokesGrp.current.rotation.z = t * 0.045;
+    if (tiltGrp.current) {
+      tiltGrp.current.rotation.z = t * 0.1;
+      tiltGrp.current.rotation.x = Math.sin(t * 0.23) * 0.1;
+    }
+    if (haloGrp.current) haloGrp.current.rotation.z = t * 0.05;
+    plateGrps.forEach((g, i) => {
+      if (!g.current) return;
+      g.current.rotation.z = t * 0.04 * (i % 2 === 0 ? 1 : -1);
+      g.current.position.y = Math.sin(t * 0.5 + i * 2.1) * 0.03;
+    });
 
-    // Expanding energy wave (repeats every 4.5s)
+    // nucleus pulse
+    const pulse = 0.95 + 0.25 * Math.sin(t * 2.2);
+    bloomMat.uniforms.uIntensity.value = pulse;
+    if (coreMesh.current) coreMesh.current.scale.setScalar(1 + 0.12 * Math.sin(t * 2.2));
+
+    // expanding energy wave (repeats every 5s)
     if (waveGroup.current && waveMat.current) {
-      const ph = (t % 4.5) / 4.5;
-      const sc = 0.35 + ph * 1.5;
-      waveGroup.current.scale.set(sc, sc, sc);
-      waveMat.current.opacity = (1 - ph) * 0.5;
+      const ph = (t % 5) / 5;
+      const sc = 0.3 + ph * (R - 0.28);
+      waveGroup.current.scale.set(sc, sc, 1);
+      waveMat.current.opacity = (1 - ph) * 0.4;
     }
 
-    // Energy streams flowing along the veins
-    const { metas, streamMeta, streamDir, streamSpeed, streamPhase } = data;
-    if (metas.length) {
-      for (let i = 0; i < STREAMS; i++) {
-        const meta = metas[streamMeta[i]];
-        let u = (t * streamSpeed[i] + streamPhase[i]) % 1;
-        if (streamDir[i] < 0) u = 1 - u;
-        const target = u * meta.total;
-        const cum = meta.cum;
-        const pts = meta.pts;
-        let s = 1;
-        while (s < cum.length - 1 && cum[s] < target) s++;
-        const a = pts[s - 1];
-        const b = pts[s];
-        const segLen = cum[s] - cum[s - 1] || 1;
-        const f = Math.min(1, Math.max(0, (target - cum[s - 1]) / segLen));
-        const o = i * 3;
-        streamPosBuf[o] = a.x + (b.x - a.x) * f;
-        streamPosBuf[o + 1] = a.y + (b.y - a.y) * f;
-        streamPosBuf[o + 2] = a.z + (b.z - a.z) * f;
-        streamBrightBuf[i] = 0.6 + 0.4 * Math.sin(u * Math.PI);
-      }
-      if (streamsGeo.current) {
-        streamsGeo.current.attributes.position.needsUpdate = true;
-        streamsGeo.current.attributes.aBright.needsUpdate = true;
-      }
+    // pulses orbiting the rings
+    const { pulseR, pulseZ, pulseSpeed, pulsePhase } = data;
+    for (let i = 0; i < PULSES; i++) {
+      const a = pulsePhase[i] + t * pulseSpeed[i];
+      const o = i * 3;
+      pulsePosBuf[o] = Math.cos(a) * pulseR[i];
+      pulsePosBuf[o + 1] = Math.sin(a) * pulseR[i];
+      pulsePosBuf[o + 2] = pulseZ[i];
+      pulseBrightBuf[i] = 0.55 + 0.45 * Math.sin(a * 3 + i);
+    }
+    if (pulsesGeo.current) {
+      pulsesGeo.current.attributes.position.needsUpdate = true;
+      pulsesGeo.current.attributes.aBright.needsUpdate = true;
     }
   });
 
   return (
-    <group>
-      <group ref={spin}>
-        {/* Radial circuit-trace spokes */}
-        <lineSegments renderOrder={1} frustumCulled={false}>
+    <group ref={assembly}>
+      {/* nucleus: layered bloom + white-hot sphere + tight rings + burst */}
+      <group ref={coreGrp} renderOrder={6}>
+        <points renderOrder={6}>
           <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[data.spokePosArr, 3]} />
-            <bufferAttribute attach="attributes-color" args={[data.spokeColArr, 3]} />
+            <bufferAttribute attach="attributes-position" args={[data.bloomPos, 3]} />
+            <bufferAttribute attach="attributes-aSize" args={[data.bloomSize, 1]} />
+            <bufferAttribute attach="attributes-aColor" args={[data.bloomCol, 3]} />
           </bufferGeometry>
-          <lineBasicMaterial
-            vertexColors
-            transparent
-            opacity={0.7}
-            depthTest={false}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </lineSegments>
-
-        {/* Branching energy veins */}
-        <lineSegments renderOrder={2} frustumCulled={false}>
-          <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[data.veinPos, 3]} />
-          </bufferGeometry>
-          <lineBasicMaterial
-            color="#ff8a34"
-            transparent
-            opacity={0.42}
-            depthTest={false}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </lineSegments>
-
-        {/* Micro nodes (dense near core) */}
-        <points renderOrder={3} frustumCulled={false}>
-          <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[data.microPos, 3]} />
-            <bufferAttribute attach="attributes-aColor" args={[data.microCol, 3]} />
-            <bufferAttribute attach="attributes-aBright" args={[data.microBright, 1]} />
-            <bufferAttribute attach="attributes-aSize" args={[data.microSize, 1]} />
-          </bufferGeometry>
-          <shaderMaterial
-            vertexShader={glowVertex}
-            fragmentShader={glowFragment}
-            transparent
-            depthTest={false}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
+          <primitive object={bloomMat} attach="material" />
         </points>
-
-        {/* Vein junction nodes */}
-        <points renderOrder={4} frustumCulled={false}>
-          <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[data.jPos, 3]} />
-            <bufferAttribute attach="attributes-aColor" args={[data.jCol, 3]} />
-            <bufferAttribute attach="attributes-aBright" args={[data.jBright, 1]} />
-            <bufferAttribute attach="attributes-aSize" args={[data.jSize, 1]} />
-          </bufferGeometry>
-          <shaderMaterial
-            vertexShader={glowVertex}
-            fragmentShader={glowFragment}
-            transparent
-            depthTest={false}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </points>
-
-        {/* Energy streams */}
-        <points renderOrder={5} frustumCulled={false}>
-          <bufferGeometry ref={streamsGeo}>
-            <bufferAttribute attach="attributes-position" args={[streamPosBuf, 3]} />
-            <bufferAttribute attach="attributes-aColor" args={[data.streamColor, 3]} />
-            <bufferAttribute attach="attributes-aBright" args={[streamBrightBuf, 1]} />
-            <bufferAttribute attach="attributes-aSize" args={[data.streamSize, 1]} />
-          </bufferGeometry>
-          <shaderMaterial
-            vertexShader={glowVertex}
-            fragmentShader={glowFragment}
-            transparent
-            depthTest={false}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </points>
-
-        {/* Rotating ring layers */}
-        <group ref={inner}>
-          <lineSegments renderOrder={4} frustumCulled={false}>
-            <bufferGeometry>
-              <bufferAttribute attach="attributes-position" args={[data.innerArr, 3]} />
-            </bufferGeometry>
-            <lineBasicMaterial
-              color="#ffd98a"
-              transparent
-              opacity={0.72}
-              depthTest={false}
-              depthWrite={false}
-              blending={THREE.AdditiveBlending}
-            />
-          </lineSegments>
-        </group>
-        <group ref={mid}>
-          <lineSegments renderOrder={3} frustumCulled={false}>
-            <bufferGeometry>
-              <bufferAttribute attach="attributes-position" args={[data.midArr, 3]} />
-            </bufferGeometry>
-            <lineBasicMaterial
-              color="#ff9a3c"
-              transparent
-              opacity={0.5}
-              depthTest={false}
-              depthWrite={false}
-              blending={THREE.AdditiveBlending}
-            />
-          </lineSegments>
-        </group>
-        <group ref={outer}>
-          <lineSegments renderOrder={2} frustumCulled={false}>
-            <bufferGeometry>
-              <bufferAttribute attach="attributes-position" args={[data.outerArr, 3]} />
-            </bufferGeometry>
-            <lineBasicMaterial
-              color="#e07a1e"
-              transparent
-              opacity={0.4}
-              depthTest={false}
-              depthWrite={false}
-              blending={THREE.AdditiveBlending}
-            />
-          </lineSegments>
-        </group>
-        <group ref={gyro}>
-          <lineSegments renderOrder={2} frustumCulled={false}>
-            <bufferGeometry>
-              <bufferAttribute attach="attributes-position" args={[data.gyroArr, 3]} />
-            </bufferGeometry>
-            <lineBasicMaterial
-              color="#ff8a3d"
-              transparent
-              opacity={0.45}
-              depthTest={false}
-              depthWrite={false}
-              blending={THREE.AdditiveBlending}
-            />
-          </lineSegments>
-        </group>
-
-        {/* Orbiting circuit fragments */}
-        <group ref={frags}>
-          <lineSegments renderOrder={3} frustumCulled={false}>
-            <bufferGeometry>
-              <bufferAttribute attach="attributes-position" args={[data.fragPos, 3]} />
-            </bufferGeometry>
-            <lineBasicMaterial
-              color="#ffc061"
-              transparent
-              opacity={0.75}
-              depthTest={false}
-              depthWrite={false}
-              blending={THREE.AdditiveBlending}
-            />
-          </lineSegments>
-        </group>
-
-        {/* Expanding energy wave */}
-        <group ref={waveGroup}>
-          <lineSegments renderOrder={1} frustumCulled={false}>
-            <bufferGeometry>
-              <bufferAttribute attach="attributes-position" args={[data.wavePos, 3]} />
-            </bufferGeometry>
-            <lineBasicMaterial
-              ref={waveMat}
-              color="#ffb457"
-              transparent
-              opacity={0.4}
-              depthTest={false}
-              depthWrite={false}
-              blending={THREE.AdditiveBlending}
-            />
-          </lineSegments>
-        </group>
-
-        {/* Central nucleus: solid core + soft bloom */}
-        <group ref={nucleus}>
-          <mesh ref={coreMesh} renderOrder={6}>
-            <sphereGeometry args={[0.075, 16, 16]} />
-            <meshBasicMaterial color="#fff7e0" transparent depthTest={false} />
-          </mesh>
-          <points renderOrder={6}>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                args={[new Float32Array([0, 0, 0]), 3]}
-              />
-              <bufferAttribute attach="attributes-aSize" args={[new Float32Array([1.2]), 1]} />
-            </bufferGeometry>
-            <primitive object={singularityMat} attach="material" />
-          </points>
-        </group>
+        <mesh ref={coreMesh} renderOrder={7}>
+          <sphereGeometry args={[0.15, 24, 24]} />
+          <meshBasicMaterial color="#fffaf0" transparent depthTest={false} />
+        </mesh>
+        <LayerLines data={data.core} />
+        <LayerNodes data={data.core} />
       </group>
 
-      {/* Projector base (counter-rotating) */}
-      <group ref={baseSpin}>
-        <lineSegments renderOrder={0} frustumCulled={false}>
+      {/* circuitry bands (A holds the feature panels) */}
+      <Layer data={data.bandA} groupRef={grpA} renderOrder={4} opacity={0.85} />
+      <Layer data={data.bandB} groupRef={grpB} renderOrder={3} opacity={0.72} />
+      <Layer data={data.bandC} groupRef={grpC} renderOrder={2} opacity={0.6} />
+
+      {/* dashed radial data highways */}
+      <group ref={spokesGrp} renderOrder={3}>
+        <LayerLines data={data.spokes} opacity={0.7} />
+        <LayerNodes data={data.spokes} />
+      </group>
+
+      {/* shallow tilted volume rings */}
+      <group ref={tiltGrp} renderOrder={2}>
+        <LayerLines data={data.tilt} opacity={0.5} />
+      </group>
+
+      {/* small floating holographic plates */}
+      {data.plates.map((p, i) => (
+        <Layer key={i} data={p} groupRef={plateGrps[i]} renderOrder={5} opacity={0.7} />
+      ))}
+
+      {/* dim orbiting particle halo */}
+      <group ref={haloGrp} renderOrder={1}>
+        <points frustumCulled={false}>
           <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[data.basePos, 3]} />
+            <bufferAttribute attach="attributes-position" args={[data.haloPos, 3]} />
+            <bufferAttribute attach="attributes-aColor" args={[data.haloCol, 3]} />
+            <bufferAttribute attach="attributes-aBright" args={[data.haloBright, 1]} />
+            <bufferAttribute attach="attributes-aSize" args={[data.haloSize, 1]} />
+          </bufferGeometry>
+          <shaderMaterial
+            vertexShader={glowVertex}
+            fragmentShader={glowFragment}
+            transparent
+            depthTest={false}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </points>
+      </group>
+
+      {/* energy pulses flowing along the rings */}
+      <points renderOrder={5} frustumCulled={false}>
+        <bufferGeometry ref={pulsesGeo}>
+          <bufferAttribute attach="attributes-position" args={[pulsePosBuf, 3]} />
+          <bufferAttribute attach="attributes-aColor" args={[data.pulseCol, 3]} />
+          <bufferAttribute attach="attributes-aBright" args={[pulseBrightBuf, 1]} />
+          <bufferAttribute attach="attributes-aSize" args={[data.pulseSize, 1]} />
+        </bufferGeometry>
+        <shaderMaterial
+          vertexShader={glowVertex}
+          fragmentShader={glowFragment}
+          transparent
+          depthTest={false}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+
+      {/* repeating expanding wave */}
+      <group ref={waveGroup} renderOrder={1}>
+        <lineSegments frustumCulled={false}>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" args={[data.wavePos, 3]} />
           </bufferGeometry>
           <lineBasicMaterial
-            color="#ffa63c"
+            ref={waveMat}
+            color="#ffb457"
             transparent
-            opacity={0.55}
+            opacity={0.4}
             depthTest={false}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
           />
         </lineSegments>
-        <points renderOrder={0}>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              args={[new Float32Array([0, data.baseY, 0]), 3]}
-            />
-            <bufferAttribute attach="attributes-aSize" args={[new Float32Array([0.85]), 1]} />
-          </bufferGeometry>
-          <primitive object={baseBloomMat} attach="material" />
-        </points>
       </group>
     </group>
   );

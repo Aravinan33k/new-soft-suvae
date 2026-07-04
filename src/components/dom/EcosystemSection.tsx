@@ -88,120 +88,168 @@ function NeuralMesh() {
   );
 }
 
-// animated ecosystem diagram: satellite nodes feed the pulsing AI core,
-// which fans out into the four stat-card columns below (lg screens)
-const SATELLITES: { x: number; y: number; label: string }[] = [
-  { x: 140, y: 62, label: "Data" },
-  { x: 275, y: 24, label: "Systems" },
-  { x: 525, y: 24, label: "Workflows" },
-  { x: 660, y: 62, label: "Teams" },
-  { x: 205, y: 152, label: "Apps" },
-  { x: 595, y: 152, label: "Insights" },
+// Animated AI workflow (lg screens): an explicit pipeline — INPUT sources
+// at the top flow down into the AI BRAIN, which fans out into the four
+// stat-card OUTPUTs below. Particles stream through every connector
+// continuously (one passes roughly every second).
+const INPUTS: { x: number; label: string }[] = [
+  { x: 160, label: "Data" },
+  { x: 280, label: "Systems" },
+  { x: 400, label: "Workflows" },
+  { x: 520, label: "Apps" },
+  { x: 640, label: "Teams" },
 ];
-const CORE = { x: 400, y: 112 };
+const INPUT_Y = 40;
+const CORE = { x: 400, y: 172 };
 const FAN_XS = [100, 300, 500, 700];
 
 function EcosystemDiagram() {
+  const inPaths = INPUTS.map(
+    (s) =>
+      `M${s.x},${INPUT_Y} C${s.x},${INPUT_Y + 62} ${CORE.x},${CORE.y - 72} ${CORE.x},${CORE.y - 26}`,
+  );
+  const outPaths = FAN_XS.map(
+    (x) => `M${CORE.x},${CORE.y + 26} C${CORE.x},${CORE.y + 82} ${x},252 ${x},330`,
+  );
   return (
     <svg
       aria-hidden
       className="mx-auto hidden w-full max-w-4xl lg:block"
-      viewBox="0 0 800 300"
+      viewBox="0 0 800 340"
       fill="none"
     >
-      {/* inbound: satellites -> core */}
-      {SATELLITES.map((s, i) => {
-        const mx = (s.x + CORE.x) / 2;
-        const my = Math.min(s.y, CORE.y) - 18;
-        const path = `M${s.x},${s.y} Q${mx},${my} ${CORE.x},${CORE.y}`;
-        return (
-          <g key={s.label}>
-            <path
-              d={path}
-              stroke="#FF8A3D"
-              strokeOpacity="0.28"
-              strokeWidth="1"
-              strokeDasharray="3 7"
-            >
-              <animate
-                attributeName="stroke-dashoffset"
-                values="0;-60"
-                dur={`${3 + i * 0.4}s`}
-                repeatCount="indefinite"
-              />
-            </path>
-            <circle r="2.4" fill="#FFCF8A">
-              <animateMotion dur={`${2.6 + i * 0.5}s`} repeatCount="indefinite" path={path} />
-            </circle>
-            <circle cx={s.x} cy={s.y} r="4.5" fill="#131316" stroke="#FF8A3D" strokeOpacity="0.55" />
-            <circle cx={s.x} cy={s.y} r="1.6" fill="#FFB057" />
-            <text
-              x={s.x}
-              y={s.y - 11}
-              textAnchor="middle"
-              fill="#a1a1aa"
-              fontSize="11"
-              fontFamily="inherit"
-            >
-              {s.label}
-            </text>
-          </g>
-        );
-      })}
+      {/* stage labels down the left edge */}
+      {[
+        { y: INPUT_Y, label: "INPUT" },
+        { y: CORE.y, label: "AI BRAIN" },
+        { y: 320, label: "OUTPUT" },
+      ].map((s) => (
+        <text
+          key={s.label}
+          x={14}
+          y={s.y + 3}
+          fill="#71717a"
+          fontSize="9"
+          letterSpacing="3"
+          fontFamily="inherit"
+        >
+          {s.label}
+        </text>
+      ))}
 
-      {/* the AI core */}
-      <circle cx={CORE.x} cy={CORE.y} r="26" fill="#FF6A3D" fillOpacity="0.12" />
+      {/* INPUT nodes + connectors flowing down into the brain */}
+      {INPUTS.map((s, i) => (
+        <g key={s.label}>
+          <path
+            d={inPaths[i]}
+            stroke="#FF8A3D"
+            strokeOpacity="0.3"
+            strokeWidth="1"
+            strokeDasharray="3 7"
+          >
+            <animate
+              attributeName="stroke-dashoffset"
+              values="0;-60"
+              dur={`${2.6 + i * 0.3}s`}
+              repeatCount="indefinite"
+            />
+          </path>
+          {/* two particles per connector, staggered ~1s apart */}
+          {[0, 1].map((k) => (
+            <circle key={k} r="2.4" fill="#FFCF8A">
+              <animateMotion
+                dur="2s"
+                begin={`${((i * 0.4 + k) % 2).toFixed(1)}s`}
+                repeatCount="indefinite"
+                path={inPaths[i]}
+              />
+            </circle>
+          ))}
+          <circle cx={s.x} cy={INPUT_Y} r="4.5" fill="#131316" stroke="#FF8A3D" strokeOpacity="0.55" />
+          <circle cx={s.x} cy={INPUT_Y} r="1.6" fill="#FFB057" />
+          <text
+            x={s.x}
+            y={INPUT_Y - 13}
+            textAnchor="middle"
+            fill="#a1a1aa"
+            fontSize="11"
+            fontFamily="inherit"
+          >
+            {s.label}
+          </text>
+        </g>
+      ))}
+
+      {/* the AI BRAIN: layered core with pulse + rotating dashed ring */}
+      <circle cx={CORE.x} cy={CORE.y} r="30" fill="#FF6A3D" fillOpacity="0.1" />
       <circle cx={CORE.x} cy={CORE.y} r="16" stroke="#FF8A3D" strokeOpacity="0.6">
-        <animate attributeName="r" values="14;22;14" dur="3s" repeatCount="indefinite" />
+        <animate attributeName="r" values="14;24;14" dur="3s" repeatCount="indefinite" />
         <animate attributeName="stroke-opacity" values="0.6;0;0.6" dur="3s" repeatCount="indefinite" />
       </circle>
+      <g>
+        <circle
+          cx={CORE.x}
+          cy={CORE.y}
+          r="22"
+          stroke="#FFB057"
+          strokeOpacity="0.4"
+          strokeDasharray="4 9"
+          fill="none"
+        />
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          from={`0 ${CORE.x} ${CORE.y}`}
+          to={`360 ${CORE.x} ${CORE.y}`}
+          dur="14s"
+          repeatCount="indefinite"
+        />
+      </g>
       <circle cx={CORE.x} cy={CORE.y} r="9" fill="#FF6A3D" />
       <circle cx={CORE.x} cy={CORE.y} r="4" fill="#FFE3C2">
         <animate attributeName="r" values="3.4;5;3.4" dur="1.6s" repeatCount="indefinite" />
       </circle>
       <text
-        x={CORE.x}
-        y={CORE.y + 34}
-        textAnchor="middle"
+        x={CORE.x + 36}
+        y={CORE.y + 4}
         fill="#FFB057"
         fontSize="10"
         letterSpacing="2"
         fontFamily="inherit"
       >
-        AI CORE
+        AI BRAIN
       </text>
 
-      {/* outbound: core -> the four card columns */}
-      {FAN_XS.map((x, i) => {
-        const path = `M${CORE.x},${CORE.y + 16} C${CORE.x},${CORE.y + 90} ${x},220 ${x},288`;
-        return (
-          <g key={x}>
-            <path
-              d={path}
-              stroke="#FF8A3D"
-              strokeOpacity="0.25"
-              strokeWidth="1"
-              strokeDasharray="3 7"
-            >
-              <animate
-                attributeName="stroke-dashoffset"
-                values="0;-60"
-                dur={`${3.4 + i * 0.3}s`}
-                repeatCount="indefinite"
-              />
-            </path>
-            <circle r="2.4" fill="#FFCF8A">
+      {/* OUTPUT connectors flowing down into the stat cards */}
+      {outPaths.map((path, i) => (
+        <g key={FAN_XS[i]}>
+          <path
+            d={path}
+            stroke="#FF8A3D"
+            strokeOpacity="0.26"
+            strokeWidth="1"
+            strokeDasharray="3 7"
+          >
+            <animate
+              attributeName="stroke-dashoffset"
+              values="0;-60"
+              dur={`${3 + i * 0.3}s`}
+              repeatCount="indefinite"
+            />
+          </path>
+          {[0, 1].map((k) => (
+            <circle key={k} r="2.4" fill="#FFCF8A">
               <animateMotion
-                dur={`${2.8 + i * 0.45}s`}
-                begin={`${i * 0.4}s`}
+                dur="2.2s"
+                begin={`${((i * 0.5 + k * 1.1) % 2.2).toFixed(1)}s`}
                 repeatCount="indefinite"
                 path={path}
               />
             </circle>
-            <circle cx={x} cy={290} r="3" fill="#FF8A3D" fillOpacity="0.7" />
-          </g>
-        );
-      })}
+          ))}
+          <circle cx={FAN_XS[i]} cy={332} r="3" fill="#FF8A3D" fillOpacity="0.7" />
+        </g>
+      ))}
     </svg>
   );
 }
@@ -236,8 +284,25 @@ function CountUp({ value, suffix }: { value: number; suffix: string }) {
 }
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
+  hidden: { opacity: 0, y: 24, filter: "blur(8px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.7, ease: "easeOut" as const },
+  },
+};
+
+// premium heading reveal: de-blur + letter spacing settling from wide to tight
+const headingReveal = {
+  hidden: { opacity: 0, y: 24, filter: "blur(10px)", letterSpacing: "0.12em" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    letterSpacing: "-0.025em",
+    transition: { duration: 1, ease: "easeOut" as const },
+  },
 };
 
 export default function EcosystemSection() {
@@ -264,8 +329,8 @@ export default function EcosystemSection() {
           How It Works
         </motion.p>
         <motion.h2
-          variants={fadeUp}
-          className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-4xl"
+          variants={headingReveal}
+          className="mt-4 text-3xl font-semibold text-white md:text-4xl"
         >
           We connect it all into one{" "}
           <span className="bg-gradient-to-r from-[#FF8A3D] via-[#FFB868] to-white bg-clip-text text-transparent">

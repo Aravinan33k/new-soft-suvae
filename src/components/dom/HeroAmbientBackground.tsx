@@ -10,7 +10,17 @@ type Particle = {
   r: number;
 };
 
+type Star = {
+  x: number;
+  y: number;
+  r: number;
+  phase: number;
+  speed: number;
+  amp: number;
+};
+
 const PARTICLE_COUNT = 34;
+const STAR_COUNT = 70;
 const LINK_DIST = 130;
 
 // Faint engineering-grid + drifting particle texture behind the hero copy
@@ -32,6 +42,7 @@ export default function HeroAmbientBackground() {
     let width = 0;
     let height = 0;
     let particles: Particle[] = [];
+    let stars: Star[] = [];
     let raf = 0;
 
     function seed() {
@@ -49,10 +60,30 @@ export default function HeroAmbientBackground() {
         vy: (Math.random() - 0.5) * 0.18,
         r: 0.8 + Math.random(),
       }));
+
+      // Tiny static stars that gently twinkle
+      stars = Array.from({ length: STAR_COUNT }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        r: 0.4 + Math.random() * 0.9,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.6 + Math.random() * 1.6,
+        amp: 0.25 + Math.random() * 0.55,
+      }));
     }
 
     function draw() {
+      const now = performance.now() * 0.001;
       ctx!.clearRect(0, 0, width, height);
+
+      // twinkling starfield (behind the particle web)
+      for (const s of stars) {
+        const tw = 0.5 + 0.5 * Math.sin(now * s.speed + s.phase);
+        ctx!.beginPath();
+        ctx!.fillStyle = `rgba(255,240,220,${(0.12 + tw * s.amp) * 0.5})`;
+        ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx!.fill();
+      }
 
       for (const p of particles) {
         p.x += p.vx;
@@ -106,7 +137,10 @@ export default function HeroAmbientBackground() {
   }, []);
 
   return (
-    <div className="pointer-events-none absolute inset-0 -z-20 overflow-hidden">
+    <div
+      className="pointer-events-none absolute inset-0 -z-20 overflow-hidden"
+      data-parallax="-5"
+    >
       <div
         className="absolute inset-0 opacity-[0.07]"
         style={{
@@ -119,8 +153,18 @@ export default function HeroAmbientBackground() {
             "radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent 75%)",
         }}
       />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_28%_35%,rgba(255,138,61,0.10),transparent_65%)]" />
+      {/* Slowly drifting warm gradient — barely perceptible motion */}
+      <div className="hero-gradient-drift absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_28%_35%,rgba(255,138,61,0.12),transparent_65%)]" />
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+      {/* Subtle film-grain noise texture */}
+      <div
+        className="absolute inset-0 opacity-[0.04] mix-blend-soft-light"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          backgroundSize: "140px 140px",
+        }}
+      />
     </div>
   );
 }

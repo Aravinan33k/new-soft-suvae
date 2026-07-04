@@ -12,7 +12,6 @@ import {
 // beam (see .card-* styles in globals.css).
 
 const MAX_TILT_DEG = 6;
-const LIFT_PX = 12;
 
 export default function FloatingCard({
   children,
@@ -20,6 +19,7 @@ export default function FloatingCard({
   offsetClass = "",
   floatDelay = 0,
   float = true,
+  lift = 12,
   style,
 }: {
   children: ReactNode;
@@ -27,6 +27,7 @@ export default function FloatingCard({
   offsetClass?: string;
   floatDelay?: number;
   float?: boolean;
+  lift?: number;
   style?: CSSProperties;
 }) {
   // Rect is measured on the outer wrapper (its transform never changes),
@@ -43,7 +44,7 @@ export default function FloatingCard({
     const py = (e.clientY - r.top) / r.height - 0.5;
     const rx = (-py * MAX_TILT_DEG).toFixed(2);
     const ry = (px * MAX_TILT_DEG).toFixed(2);
-    card.style.transform = `perspective(900px) translateY(-${LIFT_PX}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+    card.style.transform = `perspective(900px) translateY(-${lift}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
   };
 
   const settle = () => {

@@ -2,12 +2,12 @@
 
 import dynamic from "next/dynamic";
 
-// Client wrapper so the three.js core never blocks first paint.
-const UltronCore = dynamic(() => import("@/components/canvas/UltronCore"), {
+// Client wrapper so the three.js brain never blocks first paint.
+const BrainScene = dynamic(() => import("@/components/canvas/BrainScene"), {
   ssr: false,
   loading: () => null,
 });
 
 export default function HeroBrain() {
-  return <UltronCore />;
+  return <BrainScene />;
 }

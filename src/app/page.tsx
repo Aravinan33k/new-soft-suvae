@@ -14,6 +14,12 @@ import {
   TbSchool,
   TbBuildingBank,
   TbBuildingFactory2,
+  TbRocket,
+  TbBrain,
+  TbClock,
+  TbHeadset,
+  TbUsers,
+  TbShieldCheck,
 } from "react-icons/tb";
 import ExperienceStage from "@/components/dom/ExperienceStage";
 import FloatingCard from "@/components/dom/FloatingCard";
@@ -44,10 +50,12 @@ const HERO_FEATURES = [
 ];
 
 const HERO_METRICS = [
-  { value: "50+", label: "Projects Delivered" },
-  { value: "15+", label: "AI Solutions" },
-  { value: "99.9%", label: "Uptime" },
-  { value: "24/7", label: "Support" },
+  { value: "50+", label: "Projects Delivered", icon: TbRocket },
+  { value: "15+", label: "AI Solutions", icon: TbBrain },
+  { value: "99.9%", label: "Uptime", icon: TbClock },
+  { value: "24/7", label: "Support", icon: TbHeadset },
+  { value: "200+", label: "Happy Clients", icon: TbUsers },
+  { value: "100%", label: "Secure & Compliant", icon: TbShieldCheck },
 ];
 
 const PROBLEMS = [
@@ -277,10 +285,10 @@ export default function Home() {
               point. Bleeds slightly right on wide screens for presence. */}
           <div className="flex items-center justify-center lg:col-span-6">
             <div
-              className="hero-float pointer-events-none relative hidden aspect-square w-full max-w-2xl md:block lg:-mr-10 lg:w-[118%] xl:-mr-16"
+              className="hero-float pointer-events-none relative hidden aspect-square w-full max-w-2xl md:block lg:-mr-4 lg:w-[110%] xl:-mr-8"
               data-parallax="4"
             >
-              <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle,rgba(255,138,61,0.16),transparent_68%)] blur-3xl" />
+              <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle,rgba(255,138,61,0.1),transparent_66%)] blur-3xl" />
               <div className="relative h-full w-full">
                 {/* <HeroBrain /> */}
                 <HeroGlobe />
@@ -288,15 +296,20 @@ export default function Home() {
             </div>
           </div>
           <div
-            className="hero-reveal mt-4 grid grid-cols-2 gap-8 border-t border-white/[0.08] pt-8 sm:grid-cols-4 lg:col-span-12"
+            className="hero-reveal mt-4 grid grid-cols-2 gap-x-6 gap-y-6 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-6 py-6 backdrop-blur-sm sm:grid-cols-3 lg:col-span-12 lg:grid-cols-6 lg:px-8"
             style={{ animationDelay: "0.66s" }}
           >
             {HERO_METRICS.map((metric) => (
-              <div key={metric.label}>
-                <p className="text-2xl font-bold text-white md:text-3xl">
-                  <CountUp value={metric.value} />
-                </p>
-                <p className="mt-1 text-xs text-zinc-500">{metric.label}</p>
+              <div key={metric.label} className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#FF8A3D]/25 bg-[#FF8A3D]/10 text-[#FF9E55]">
+                  <metric.icon className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-xl font-bold text-white md:text-2xl">
+                    <CountUp value={metric.value} />
+                  </p>
+                  <p className="mt-0.5 text-xs text-zinc-500">{metric.label}</p>
+                </div>
               </div>
             ))}
           </div>
