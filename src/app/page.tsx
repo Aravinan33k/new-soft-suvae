@@ -6,7 +6,7 @@ import DisconnectedDevices from "@/components/dom/DisconnectedDevices";
 import ManualWorkflows from "@/components/dom/ManualWorkflows";
 import SlowDecisions from "@/components/dom/SlowDecisions";
 import HeroBrain from "@/components/dom/HeroBrain";
-import ServicesBackground from "@/components/dom/ServicesBackground";
+import ServicesCarouselBackground from "@/components/dom/ServicesCarouselBackground";
 
 const PROBLEMS = [
   {
@@ -157,8 +157,8 @@ export default function Home() {
       <div id="top" className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-10">
         {/* ── Hero: headline left, supporting copy right ────────────── */}
         <section className="relative grid grid-cols-1 gap-12 pt-20 md:grid-cols-12 md:items-center md:pt-28">
-          {/* Glowing human-head profile with a 3D neural brain rotating
-              inside the cranium; idle spin + page scroll drive the rotation */}
+          {/* 3D neural brain layered into the hero background; page scroll
+              spins it a full 360° */}
           <div className="pointer-events-none absolute -right-16 top-1/2 -z-10 hidden aspect-square w-[46%] -translate-y-1/2 opacity-90 md:block lg:-right-8">
             <HeroBrain />
           </div>
@@ -280,9 +280,9 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Services: mecha-clash animation shared behind every card ── */}
+        {/* ── Services: mecha/brain artwork crossfades behind every card ── */}
         <section id="services" className="relative -mx-6 px-6 py-16 md:-mx-10 md:px-10 md:py-20">
-          <ServicesBackground />
+          <ServicesCarouselBackground />
           <SectionHeading
             eyebrow="Our Services"
             title="AI & Software Services Built for Businesses of All Sizes"
