@@ -4,21 +4,19 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 const SLIDES = [
-  "/carousel/02-rising-defiance.png",
-  "/carousel/03-towering-purple.png",
-  "/carousel/04-towering-victory.png",
-  "/carousel/05-fist-clash-sky.png",
-  "/carousel/06-heads-clash-city.png",
-  "/carousel/07-slam.png",
-  "/carousel/08-rain-fight.png",
-  "/carousel/09-clash-of-titans-poster.png",
+  "/carousel/01-ai-chatbot-assistant.jpg",
+  "/carousel/02-mobile-app-ui.jpg",
+  "/carousel/03-ai-data-interface.jpg",
+  "/carousel/04-cross-platform-software.jpg",
+  "/carousel/05-global-network.jpg",
+  "/carousel/06-cloud-computing.jpg",
 ];
 
 const INTERVAL_MS = 1000;
 
-// Shared background for the Services grid: cycles through the mecha/brain
-// artwork every second with a soft cross-dissolve (all frames are mounted
-// at once — only opacity toggles — so nothing pops in unloaded mid-fade).
+// Shared background for the Services grid: cycles through the AI/software
+// service artwork every second with a soft cross-dissolve (all frames are
+// mounted at once — only opacity toggles — so nothing pops in unloaded mid-fade).
 export default function ServicesCarouselBackground() {
   const [active, setActive] = useState(0);
 
