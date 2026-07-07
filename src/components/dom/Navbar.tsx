@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { FiArrowRight } from "react-icons/fi";
 
 const NAV_LINKS = [
-  { label: "Solutions", href: "#services" },
-  { label: "Services", href: "#services" },
+  { label: "Solutions", href: "#experience" },
+  { label: "Services", href: "#experience" },
   { label: "Industries", href: "#industries" },
   { label: "About Us", href: "#experience" },
   { label: "Resources", href: "#stack" },
@@ -19,7 +19,11 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    // Hysteresis: condense past 72px, expand back under 16px. The gap stops
+    // the nav flip-flopping mid-animation when the user hovers around one
+    // scroll position.
+    const onScroll = () =>
+      setScrolled((prev) => (prev ? window.scrollY > 16 : window.scrollY > 72));
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -27,18 +31,21 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 flex h-20 items-center justify-center">
+      {/* Width animates between two interpolable values (100% ↔ min(95%,72rem))
+          — never `max-w-none`, which CSS cannot transition and which made the
+          pill snap on desktop. One eased curve for width/height/radius/shadow. */}
       <nav
-        className={`flex items-center px-6 backdrop-blur-[12px] transition-all duration-500 ease-out md:px-10 ${
+        className={`flex items-center px-6 backdrop-blur-[12px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] md:px-10 ${
           scrolled
-            ? "h-14 w-[95%] max-w-6xl rounded-2xl border border-white/10 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7),0_0_24px_-12px_rgba(255,106,61,0.25)]"
-            : "h-20 w-full max-w-none border border-transparent"
+            ? "h-12 w-[min(95%,85rem)] rounded-2xl border border-white/10 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7),0_0_24px_-12px_rgba(255,106,61,0.25)]"
+            : "h-20 w-full rounded-none border border-transparent"
         }`}
         style={{ backgroundColor: "rgba(10,10,20,0.5)" }}
       >
-        <div className={`mx-auto flex w-full items-center ${scrolled ? "max-w-6xl" : "max-w-7xl"}`}>
+        <div className="mx-auto flex w-full max-w-[85rem] items-center">
           <a
             href="#top"
-            className="group flex items-center gap-3 text-xl font-bold tracking-tight text-white md:text-2xl"
+            className="group flex items-center gap-3 font-(family-name:--font-manrope) text-xl font-bold tracking-tight text-white md:text-2xl"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -63,7 +70,7 @@ export default function Navbar() {
           </nav>
 
           <a
-            href="#contact"
+            href="mailto:softsuave.ai@gmail.com"
             className="btn-primary group ml-auto inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-[#1a0a04] lg:ml-8"
           >
             Contact Us

@@ -1,17 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FiPause, FiPlay } from "react-icons/fi";
 import { scrollState } from "@/lib/scrollState";
-
-// Lazy-loaded client-only: three.js never blocks first paint.
-const CanvasRoot = dynamic(() => import("@/components/canvas/CanvasRoot"), {
-  ssr: false,
-  loading: () => <div className="absolute inset-0 bg-[#0a0a0c]" aria-hidden />,
-});
+import ExperienceScenes from "@/components/dom/ExperienceScenes";
 
 type Slide = {
   label: string;
@@ -19,44 +13,89 @@ type Slide = {
   index?: string;
   title: string;
   body: string;
+  tags?: string[];
+  image?: string;
   button?: string;
 };
 
 const SLIDES: Slide[] = [
   {
-    label: "Complexity",
-    eyebrow: "Soft Suave",
-    title: "From Complexity to Intelligence",
-    body: "Disconnected data, systems, and processes — analyzed, connected, and transformed into one intelligent digital ecosystem.",
-  },
-  {
-    label: "Awaken",
+    label: "Custom AI",
+    image: "/services/custom-ai.jpg",
+    eyebrow: "AI Systems",
     index: "01",
-    title: "Intelligence awakens at the core",
-    body: "A single AI ignites at the center — scanning the noise, pulsing light outward, giving scattered data its first sense of purpose.",
+    title: "Custom AI Solutions",
+    body: "Production-ready AI systems built on LLMs, RAG, agents, and predictive models — engineered to automate decisions at scale.",
+    tags: ["LLM", "RAG", "Agents"],
   },
   {
-    label: "Connect",
+    label: "Automation",
+    image: "/services/automation.jpg",
+    eyebrow: "Automation",
     index: "02",
-    title: "Connections form an intelligent web",
-    body: "Thousands of glowing pathways link every particle. Data flows through neural networks, APIs, and pipelines. Nothing is random anymore — everything has purpose.",
+    title: "AI Integrations & Workflow Automation",
+    body: "Wire AI into the tools you already use and automate the busywork that slows your team down.",
+    tags: ["Workflows", "Integrations", "Ops"],
   },
   {
-    label: "Build",
+    label: "Chatbots",
+    image: "/services/chatbots.jpg",
+    eyebrow: "AI Systems",
     index: "03",
-    title: "Solutions built from the network",
-    body: "Websites, mobile apps, AI assistants, cloud platforms, dashboards, automation — each one constructed from the same living network.",
+    title: "AI Chatbots & AI Agents",
+    body: "Conversational agents for support, sales, HR, and internal ops — always on, always learning.",
+    tags: ["Chatbots", "Support", "NLP"],
   },
   {
-    label: "Start",
-    title: "Transforming complexity into intelligence",
-    body: "Tell us where your business is heading — we'll engineer the intelligence that takes it there.",
+    label: "Software",
+    image: "/services/software.jpg",
+    eyebrow: "Development",
+    index: "04",
+    title: "Custom Software Development",
+    body: "Secure, scalable software engineered with AI-assisted development for faster delivery.",
+    tags: ["Full-Stack", "APIs", "Scale"],
+  },
+  {
+    label: "Mobile",
+    image: "/services/mobile.jpg",
+    eyebrow: "Mobile",
+    index: "05",
+    title: "Mobile App Development",
+    body: "Native-quality iOS and Android apps with intuitive design and AI-enhanced features.",
+    tags: ["iOS", "Android", "Cross-Platform"],
+  },
+  {
+    label: "Web Apps",
+    image: "/services/web.jpg",
+    eyebrow: "Development",
+    index: "06",
+    title: "Web App Development",
+    body: "Fast, AI-enabled web apps that simplify workflows and turn visitors into customers.",
+    tags: ["Web Apps", "UX", "Performance"],
+  },
+  {
+    label: "Modernization",
+    image: "/services/modernization.jpg",
+    eyebrow: "Cloud & Infra",
+    index: "07",
+    title: "Enterprise Modernization",
+    body: "Modernize legacy systems with cloud, automation, and AI — without disrupting the business.",
+    tags: ["Cloud", "Legacy", "Security"],
+  },
+  {
+    label: "GCC",
+    image: "/services/gcc.jpg",
+    eyebrow: "Cloud & Infra",
+    index: "08",
+    title: "Global Capability Center (GCC)",
+    body: "Stand up an AI-powered GCC with smarter workflows, analytics, and teams built to scale.",
+    tags: ["Teams", "Analytics", "Scale"],
     button: "Start a conversation",
   },
 ];
 
 const N = SLIDES.length;
-const SLIDE_MS = 5200; // time each chapter is shown before auto-advancing
+const SLIDE_MS = 12000; // each chapter's story plays ~12s before auto-advancing
 
 // Anthropic-style scroll expand: contained rounded card -> true full-bleed
 const CARD_START = { maxWidth: "58rem", height: "80vh", borderRadius: "24px" };
@@ -194,29 +233,23 @@ export default function ExperienceStage() {
 
   return (
     <section ref={sectionRef} className="relative w-full py-10">
-      {/* Layer 4: soft warm glow under the browser mockup */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto h-48 w-full max-w-5xl bg-[radial-gradient(ellipse,rgba(255,138,61,0.14),transparent_70%)] blur-[50px]" />
-
       <div
         ref={cardRef}
-        className="relative mx-auto flex min-h-[560px] w-full flex-col overflow-hidden border border-white/[0.08] bg-[#0a0a0c] shadow-[0_0_80px_-20px_rgba(255,138,61,0.35)]"
+        className="relative mx-auto flex min-h-[560px] w-full flex-col overflow-hidden bg-[#0a0a0c]"
         style={CARD_START}
       >
-        {/* Window chrome bar */}
-        <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.08] bg-[#111827] px-4 py-3">
-          <span className="h-3 w-3 rounded-full bg-red-500/70" />
-          <span className="h-3 w-3 rounded-full bg-yellow-500/70" />
-          <span className="h-3 w-3 rounded-full bg-green-500/70" />
-          <span className="ml-3 flex-1 truncate rounded-md bg-slate-900/80 px-3 py-1 text-center text-[11px] text-slate-500">
-            softsuave.com — the AI experience
-          </span>
-        </div>
-
         {/* Content area: neural scene + left slider + chapter copy */}
         <div className="relative min-h-0 flex-1">
-          {/* Neural scene runs automatically behind everything */}
-          <div className="absolute inset-0 z-0">
-            <CanvasRoot />
+          {/* The navy backdrop is painted here on the full card so its colour
+              never varies; the transparent canvas above it only draws the
+              animation content, centered in the right half on large screens */}
+          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,#0B1426_0%,#08101e_55%,#0a0a0c_100%)]">
+            {/* one cinematic story scene per service chapter */}
+            <ExperienceScenes
+              active={active}
+              className="absolute inset-0 lg:left-[38%]"
+            />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(10,10,12,0.8)_100%)]" />
           </div>
 
           {/* Left timeline / chapter navigation: a vertical rail where the
@@ -231,7 +264,7 @@ export default function ExperienceStage() {
                   type="button"
                   onClick={() => select(i)}
                   aria-current={isActive}
-                  className="group relative flex items-center gap-3 py-2.5 pl-4 text-left"
+                  className="group relative flex items-center gap-3 py-2.5 pl-4 pr-6 text-left"
                 >
                   {/* rail track */}
                   <span className="absolute left-0 top-0 h-full w-px bg-zinc-700/60" />
@@ -243,8 +276,34 @@ export default function ExperienceStage() {
                     className="absolute left-[-0.5px] top-0 w-[2px] rounded-full bg-gradient-to-b from-[#FFB057] to-[#FF6A3D] shadow-[0_0_10px_rgba(255,138,61,0.9)]"
                     style={{ height: "0%" }}
                   />
+
+                  {/* active state: frosted glass pill with a soft orange
+                      glow behind the label */}
                   <span
-                    className={`inline-block origin-left font-mono text-xs tabular-nums transition-all duration-300 ease-out ${
+                    aria-hidden
+                    className={`absolute inset-y-1 left-2.5 right-0 rounded-lg border backdrop-blur-md transition-all duration-500 ease-out ${
+                      isActive
+                        ? "border-[#FF8A3D]/25 bg-[#FF8A3D]/[0.08] opacity-100 shadow-[0_0_26px_-6px_rgba(255,138,61,0.55),inset_0_1px_10px_rgba(255,138,61,0.08)]"
+                        : "border-transparent bg-transparent opacity-0"
+                    }`}
+                  />
+                  {/* vertical accent line on the pill's edge */}
+                  <span
+                    aria-hidden
+                    className={`absolute left-2.5 top-1/2 w-[3px] -translate-y-1/2 rounded-full bg-gradient-to-b from-[#FFB057] to-[#FF6A3D] shadow-[0_0_10px_rgba(255,138,61,0.9)] transition-all duration-500 ease-out ${
+                      isActive ? "h-6 opacity-100" : "h-0 opacity-0"
+                    }`}
+                  />
+                  {/* animated indicator: breathing dot at the pill's end */}
+                  <span
+                    aria-hidden
+                    className={`absolute right-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#FF8A3D] shadow-[0_0_8px_2px_rgba(255,138,61,0.7)] transition-opacity duration-500 ${
+                      isActive ? "animate-pulse opacity-100" : "opacity-0"
+                    }`}
+                  />
+
+                  <span
+                    className={`relative inline-block origin-left pl-2 font-mono text-xs tabular-nums transition-all duration-300 ease-out ${
                       isActive
                         ? "scale-[1.2] text-[#FF8A3D]"
                         : "scale-100 text-zinc-600 group-hover:text-zinc-400"
@@ -253,7 +312,7 @@ export default function ExperienceStage() {
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span
-                    className={`inline-block text-sm font-medium transition-all duration-300 ease-out ${
+                    className={`relative inline-block text-sm font-medium transition-all duration-300 ease-out ${
                       isActive
                         ? "translate-x-[5px] text-white [text-shadow:0_0_14px_rgba(255,138,61,0.55)]"
                         : "translate-x-0 text-zinc-500 group-hover:text-zinc-300"
@@ -266,49 +325,53 @@ export default function ExperienceStage() {
             })}
           </nav>
 
-          {/* Chapter copy: heading pinned top-left, supporting line + CTA
-              pinned bottom-right — kept clear of the glowing core at center */}
+          {/* Chapter copy: one left-aligned column beside the nav rail —
+              the animated scene owns the right half of the card */}
           <div
             key={displayed}
-            className={`pointer-events-none absolute inset-0 z-10 flex flex-col justify-center gap-8 px-6 pl-24 md:gap-12 md:pl-44 transition-all duration-300 ease-in ${
+            className={`pointer-events-none absolute inset-y-0 left-0 z-10 flex w-full flex-col justify-start pt-24 md:pt-32 px-6 pl-28 md:pl-104 lg:w-[60%] lg:pr-0 transition-all duration-300 ease-in ${
               leaving
                 ? "-translate-y-3 opacity-0"
                 : "animate-[fadeUp_0.55s_cubic-bezier(0.22,1,0.36,1)]"
             }`}
           >
-            {/* Heading — upper left */}
-            <div className="relative max-w-xl -translate-y-10 translate-x-8 text-left md:-translate-y-16 md:translate-x-20">
-              <div className="pointer-events-none absolute -inset-x-8 -inset-y-6 -z-10 bg-[radial-gradient(ellipse_at_left,rgba(1,2,8,0.6),transparent_72%)]" />
-              {slide.eyebrow && (
-                <p className="mb-4 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D]/90 md:text-sm">
-                  {slide.eyebrow}
-                </p>
-              )}
-              {slide.index && (
-                <p className="mb-3 font-mono text-sm text-[#FF8A3D]/70">
-                  {slide.index}
-                </p>
-              )}
-              {active === 0 ? (
-                <h2 className="bg-gradient-to-r from-[#FF9440] via-[#FB5A38] to-[#F92B4E] bg-clip-text text-4xl font-semibold leading-[1.05] tracking-tight text-transparent md:text-6xl">
-                  {slide.title}
-                </h2>
-              ) : (
-                <h2 className="text-3xl font-semibold leading-[1.05] tracking-tight text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.95)] md:text-5xl">
-                  {slide.title}
-                </h2>
-              )}
-            </div>
-
-            {/* Supporting copy + CTA — lower right */}
-            <div className="relative max-w-md -translate-x-8 translate-y-10 self-end text-right md:-translate-x-20 md:translate-y-16">
-              <div className="pointer-events-none absolute -inset-x-8 -inset-y-6 -z-10 bg-[radial-gradient(ellipse_at_right,rgba(1,2,8,0.6),transparent_72%)]" />
-              <p className="ml-auto max-w-md text-base leading-relaxed text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.95)] md:text-lg">
+            <div className="relative max-w-xl text-left">
+              <div className="flex items-baseline gap-3">
+                {slide.index && (
+                  <p className="font-mono text-sm text-[#FF8A3D]/70">
+                    {slide.index}
+                  </p>
+                )}
+                {slide.eyebrow && (
+                  <p className="text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D]/90 md:text-sm">
+                    {slide.eyebrow}
+                  </p>
+                )}
+              </div>
+              <h2 className="mt-4 text-3xl font-semibold leading-[1.05] tracking-tight text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.95)] md:text-5xl">
+                {slide.title}
+              </h2>
+              <p className="mt-6 max-w-[520px] text-base leading-relaxed text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.95)] md:text-lg">
                 {slide.body}
               </p>
+              {slide.tags && (
+                <div className="mt-6 flex flex-wrap gap-2.5">
+                  {/* glass chips: gradient glass fill, glowing dot marker,
+                      soft outer glow — premium, not flat */}
+                  {slide.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-2 rounded-full border border-[#FF8A3D]/35 bg-[linear-gradient(135deg,rgba(255,138,61,0.16),rgba(255,255,255,0.04)_55%,rgba(255,138,61,0.07))] px-4 py-1.5 text-xs font-medium text-zinc-100 shadow-[0_0_16px_-4px_rgba(255,138,61,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#FF9E55] shadow-[0_0_6px_rgba(255,158,85,0.9)]" />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
               {slide.button && (
                 <a
-                  href="#contact"
+                  href="mailto:softsuave.ai@gmail.com"
                   className="btn-primary pointer-events-auto mt-8 inline-block rounded-full px-8 py-3.5 text-sm font-semibold text-[#1a0a04]"
                 >
                   {slide.button}

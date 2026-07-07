@@ -307,7 +307,7 @@ const headingReveal = {
 
 export default function EcosystemSection() {
   return (
-    <section id="connect" className="relative pt-28 md:pt-[140px] pb-16 md:pb-24">
+    <section id="connect" className="relative pt-24 lg:pt-30">
       <NeuralMesh />
       {/* soft glowing orb behind the heading */}
       <div
