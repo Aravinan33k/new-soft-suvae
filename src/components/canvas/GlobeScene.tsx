@@ -1,6 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 
@@ -11,8 +18,9 @@ import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 //    the visible hemisphere shows golden city clusters with a lit
 //    crescent at the terminator (Black-Marble look).
 //  - Warm atmosphere rim + soft volumetric back-glow.
-//  - Network arcs between REAL cities (Chennai HQ glows brightest) with
-//    traveling data pulses and breathing city nodes.
+//  - An external network cage: great-circle arcs between REAL cities bow
+//    well outside the surface (Chennai HQ glows brightest) with traveling
+//    data pulses and breathing city nodes.
 //  - Two faint orbital rings and a handful of tiny drifting sparks —
 //    restrained, so the Earth itself carries the scene.
 //
@@ -25,7 +33,20 @@ import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 const isMobileDevice = () =>
   typeof window !== "undefined" && window.innerWidth < 768;
 
-const R = 1.15; // globe radius
+// Deterministic PRNG (mulberry32) — geometry randomness must be pure so
+// React re-renders can't reshuffle the scene, and every visitor sees the
+// same composition.
+function mulberry32(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const R = 1.24; // globe radius (+8% per the premium-scale pass — the Earth should command the hero)
 const SPIN = (Math.PI * 2) / 120; // one revolution every 120s
 
 // lat/lon (degrees) → unit vector matching three.js SphereGeometry UVs
@@ -121,50 +142,104 @@ const earthFragment = /* glsl */ `
   uniform sampler2D uDay;
   uniform sampler2D uNight;
   uniform vec3 uSunDir;
-  uniform float uTime;
+  varying vec2 vUv;
+  varying vec3 vNw;
+  varying vec3 vNv;
+  // Deliberately minimal: NASA photography + ONE directional light + a thin
+  // atmospheric edge. Every removed effect (scan bands, glare stacks, tone
+  // remaps, heavy tints) is what made the globe read "painted" — the
+  // satellite imagery carries the realism, the shader stays out of its way.
+  void main() {
+    float sun = dot(normalize(vNw), normalize(uSunDir));
+
+    // --- Stage 1+2: textures lit by a single directional light -----------
+    vec3 albedo = texture2D(uDay, vUv).rgb;
+    // land vs ocean from the day map (land is red-dominant, ocean blue)
+    float land = smoothstep(0.03, 0.16, albedo.r - albedo.b);
+
+    // Night side: real space ocean is ~25-35% brightness, essentially black
+    // with a breath of navy. This floor is what makes every city light pop.
+    vec3 nightBase = mix(vec3(0.010, 0.020, 0.036), vec3(0.028, 0.040, 0.052), land);
+
+    // Day side: land stays photographic (no wash so Sahara keeps its dunes
+    // and shadows); oceans pulled hard toward near-black navy — royal-blue
+    // water is the one thing that fights the warm palette.
+    vec3 dayLand = albedo * vec3(1.0, 0.97, 0.92);
+    vec3 dayOcean = albedo * vec3(0.10, 0.15, 0.22);
+    vec3 dayCol = mix(dayOcean, dayLand, land);
+
+    // soft terminator, no artificial narrowing
+    float dayMix = smoothstep(-0.05, 0.3, sun);
+    float daylight = clamp(sun, 0.0, 1.0);
+    vec3 base = mix(nightBase, dayCol * (0.15 + 0.85 * daylight), dayMix);
+
+    // City lights: linear gain only, so the texture's own dynamic range
+    // decides — Tokyo blazes, a country town stays one crisp dot. The
+    // warm-white term uses a STEEP curve (pow 6) so only the very hottest
+    // downtown cores whiten; Europe reads as separate clusters (Italy,
+    // France, UK), never one merged white mass.
+    vec3 nl = texture2D(uNight, vUv).rgb;
+    float lum = dot(nl, vec3(0.299, 0.587, 0.114));
+    vec3 city = nl * vec3(1.0, 0.78, 0.416) * 1.45;
+    city += vec3(1.0, 0.969, 0.902) * pow(lum, 6.0) * 0.7;
+    base += city * (1.0 - dayMix);
+
+    // Tight sun glint on water only — tiny, PBR-style, not a wash
+    float glint = pow(daylight, 24.0) * (1.0 - land);
+    base += vec3(1.0, 0.85, 0.65) * glint * 0.18;
+
+    // --- Stage 4: atmosphere as a thin EDGE effect, not a halo ------------
+    float fres = pow(1.0 - abs(dot(normalize(vNv), vec3(0.0, 0.0, 1.0))), 5.0);
+    float limbLit = smoothstep(-0.1, 0.55, sun);
+    // sunrise edge on the lit limb: gold #FFD17A at the base of the glow
+    // rolling to orange #FF9A42 right at the rim — the CTA gradient
+    vec3 sunriseCol = mix(vec3(1.0, 0.82, 0.478), vec3(1.0, 0.604, 0.259), fres);
+    base += sunriseCol * fres * limbLit * 0.3;
+    // near-invisible warm air-line on the dark limb keeps the silhouette
+    // (spec atmosphere rgba(255,190,90) — no blue anywhere on the rim)
+    base += vec3(1.0, 0.745, 0.353) * fres * (1.0 - limbLit) * 0.05;
+
+    gl_FragColor = vec4(base, 1.0);
+  }
+`;
+
+// Real NASA cloud layer on its own sphere — the texture carries hurricanes,
+// fronts and streaks no noise function can fake. Nearly invisible over deep
+// night, warm-lit near the sunrise crescent, faded at the limb so it never
+// muddies the rim line. Cool grey on the dark side gives the warm palette
+// something to contrast against.
+const cloudVertex = /* glsl */ `
   varying vec2 vUv;
   varying vec3 vNw;
   varying vec3 vNv;
   void main() {
+    vUv = uv;
+    vNw = normalize(mat3(modelMatrix) * normal);
+    vNv = normalize(normalMatrix * normal);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+const cloudFragment = /* glsl */ `
+  precision highp float;
+  uniform sampler2D uClouds;
+  uniform vec3 uSunDir;
+  varying vec2 vUv;
+  varying vec3 vNw;
+  varying vec3 vNv;
+  void main() {
+    float c = texture2D(uClouds, vUv).r;
     float sun = dot(normalize(vNw), normalize(uSunDir));
-
-    // BROAD daylight: most of the camera-facing hemisphere shows the day
-    // albedo so real continents are visible, falling to darkness only near
-    // the limb/terminator — the reference is a full, lit planet, not a
-    // thin crescent.
-    float dayMix = smoothstep(-0.32, 0.4, sun);
-
-    // Day albedo, warm cinematic grade: deep navy oceans, warm tan land,
-    // brightening toward the sub-solar point but never blown out.
-    vec3 albedo = texture2D(uDay, vUv).rgb;
-    // darken oceans (blue-dominant) so land reads; warm the whole thing
-    float ocean = smoothstep(0.35, 0.55, albedo.b - albedo.r);
-    vec3 warm = albedo * vec3(1.18, 0.94, 0.62);
-    warm = mix(warm, warm * 0.35, ocean);
-    float lit = clamp(sun * 0.5 + 0.5, 0.0, 1.0);
-    vec3 day = warm * mix(0.05, 1.05, lit * lit);
-
-    // City lights: golden pinpoints. Brightest on the darker regions but
-    // still glowing over daylit land near the terminator (Black-Marble look
-    // composited onto the day globe).
-    vec3 nl = texture2D(uNight, vUv).rgb;
-    float lum = dot(nl, vec3(0.299, 0.587, 0.114));
-    vec3 city = vec3(1.0, 0.64, 0.3) * pow(lum, 1.3) * 5.5;
-    city += vec3(1.0, 0.92, 0.72) * pow(lum, 3.0) * 2.2;
-    float cityVis = 1.0 - dayMix * 0.55;
-
-    vec3 col = day + city * cityVis;
-
-    // soft light band sweeping pole-to-pole, wrapping every 7s
-    float sweepY = mod(uTime, 7.0) / 7.0 * 2.6 - 1.3;
-    float band = 1.0 - smoothstep(0.0, 0.05, abs(normalize(vNw).y - sweepY));
-    col += vec3(1.0, 0.92, 0.75) * band * 0.22;
-
-    // warm atmosphere rim around the lit limb
-    float fres = pow(1.0 - abs(dot(normalize(vNv), vec3(0.0, 0.0, 1.0))), 3.2);
-    col += vec3(1.0, 0.55, 0.28) * fres * 0.35;
-
-    gl_FragColor = vec4(col, 1.0);
+    float lit = 0.03 + 0.8 * smoothstep(0.0, 0.7, sun);
+    // neutral warm-grey on the night side (no blue cast), sunrise-gold when lit
+    vec3 col = mix(vec3(0.56, 0.53, 0.50), vec3(1.0, 0.78, 0.52), smoothstep(0.05, 0.6, sun));
+    // high threshold: only genuinely thick weather (fronts, hurricanes)
+    // survives — thin haze goes fully transparent so it never reads as a
+    // milky film painted on the surface
+    float alpha = smoothstep(0.32, 0.9, c) * lit * 0.3;
+    // fade at the limb so the silhouette edge stays crisp
+    float edge = abs(dot(normalize(vNv), vec3(0.0, 0.0, 1.0)));
+    alpha *= smoothstep(0.06, 0.35, edge);
+    gl_FragColor = vec4(col, alpha);
   }
 `;
 
@@ -199,20 +274,32 @@ const glowFragment = /* glsl */ `
   }
 `;
 
-const normalVertex = /* glsl */ `
+const atmoVertex = /* glsl */ `
   varying vec3 vNormal;
+  varying vec3 vNw;
   void main() {
     vNormal = normalize(normalMatrix * normal);
+    vNw = normalize(mat3(modelMatrix) * normal);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
-// Outer atmosphere halo (back side, alpha follows intensity)
+// Outer atmosphere halo — two-tone: cool cyan on the shadowed limb, warm
+// orange toward the sun (back side, alpha follows intensity).
 const atmoFragment = /* glsl */ `
   precision highp float;
+  uniform vec3 uSunDir;
   varying vec3 vNormal;
+  varying vec3 vNw;
   void main() {
-    float intensity = pow(0.66 - dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 3.6);
-    gl_FragColor = vec4(vec3(1.0, 0.5, 0.24), max(intensity, 0.0) * 0.4);
+    // Real atmosphere is a fraction of Earth's radius — a tight rind, not a
+    // second object. Steep falloff keeps it pixels-thin at the silhouette.
+    float intensity = max(pow(0.58 - dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)), 5.0), 0.0);
+    float sun = dot(normalize(vNw), normalize(uSunDir));
+    // spec atmosphere: rgba(255,190,90,0.12) — one warm tone, slightly
+    // stronger toward the sunrise, near-invisible on the shadow side
+    vec3 col = vec3(1.0, 0.745, 0.353);
+    float boost = 0.075 * (0.5 + 0.9 * smoothstep(0.0, 0.8, sun));
+    gl_FragColor = vec4(col, intensity * boost);
   }
 `;
 
@@ -230,36 +317,42 @@ const volumeFragment = /* glsl */ `
   void main() {
     float d = length(vUv - 0.5) * 2.0;
     float fall = smoothstep(1.0, 0.0, d);
-    gl_FragColor = vec4(vec3(1.0, 0.44, 0.2), fall * fall * 0.06);
+    // volumetric sunrise back-glow — brand #FF9B42, barely there
+    gl_FragColor = vec4(vec3(1.0, 0.608, 0.259), fall * fall * 0.04);
   }
 `;
 
 // ---------------------------------------------------------------------
 
 const ARC_SEG = 36;
-const PULSE_COLORS = ["#ff6a3d", "#ffffff", "#ffd37a"];
+// spec palette: arc orange, city-core warm white, city-glow gold
+const PULSE_COLORS = ["#FF9A3C", "#FFF7E6", "#FFC76A"];
 const FLASH_DUR = 1.1; // seconds a hub node takes to flash orange -> white -> orange
-// Sun sits roughly toward the camera (slightly upper-left) so the whole
-// visible hemisphere is daylit — real continents show, with the limb and
-// far-left edge falling into golden-city-light night. Matches the reference
-// full, lit globe.
-const SUN_DIR = new THREE.Vector3(-0.28, 0.22, 0.93).normalize();
+// Sun sits behind the planet's upper-RIGHT shoulder, so the camera-facing
+// hemisphere stays in night (golden city lights) with a hot sunrise crescent
+// blooming along the RIGHT limb — the Black-Marble reference composition.
+// z is strongly negative: the sun is almost directly BEHIND the planet, so
+// the camera-facing hemisphere gets no daylight at all — only the upper-right
+// limb catches the sunrise, exactly like the reference.
+const SUN_DIR = new THREE.Vector3(0.42, 0.3, -0.86).normalize();
 
 function Earth({ animate }: { animate: boolean }) {
   const group = useRef<THREE.Group>(null);
+  const cloudsRef = useRef<THREE.Mesh>(null);
   const pulsesGeo = useRef<THREE.BufferGeometry>(null);
   const hubsGeo = useRef<THREE.BufferGeometry>(null);
 
-  const [dayMap, nightMap] = useLoader(THREE.TextureLoader, [
+  const [dayMap, nightMap, cloudMap] = useLoader(THREE.TextureLoader, [
     "/textures/earth_day.jpg",
-    "/textures/earth_lights.png",
+    "/textures/earth_lights.jpg",
+    "/textures/earth_clouds.jpg",
   ]);
   useMemo(() => {
-    for (const t of [dayMap, nightMap]) {
+    for (const t of [dayMap, nightMap, cloudMap]) {
       t.anisotropy = 16;
       t.wrapS = THREE.RepeatWrapping;
     }
-  }, [dayMap, nightMap]);
+  }, [dayMap, nightMap, cloudMap]);
 
   const graticule = useMemo(() => buildGraticule(R * 1.012), []);
 
@@ -270,12 +363,15 @@ function Earth({ animate }: { animate: boolean }) {
     const arcs: Float32Array[] = [];
     const linePos: number[] = [];
     const lineCol: number[] = [];
-    const lineColor = new THREE.Color("#ff8a3d");
+    // network arcs — spec Arc color #FF9A3C
+    const lineColor = new THREE.Color("#FF9A3C");
     for (const [i, j] of LINKS) {
       const a = hubs[i];
       const b = hubs[j];
       const angle = a.angleTo(b);
-      const lift = 0.04 + angle * 0.075;
+      // Bow the arcs just off the surface so they wrap the globe like the
+      // reference — thin orange great-circles hugging the planet.
+      const lift = 0.035 + angle * 0.075;
       const pts = new Float32Array((ARC_SEG + 1) * 3);
       const tmp = new THREE.Vector3();
       for (let s = 0; s <= ARC_SEG; s++) {
@@ -306,6 +402,7 @@ function Earth({ animate }: { animate: boolean }) {
     }
 
     // One pulse per arc
+    const rand = mulberry32(0x5eed);
     const pulseCount = arcs.length;
     const pulsePhase = new Float32Array(pulseCount);
     const pulseSpeed = new Float32Array(pulseCount);
@@ -313,9 +410,9 @@ function Earth({ animate }: { animate: boolean }) {
     const pulseSize = new Float32Array(pulseCount).fill(2.0);
     const tmpColor = new THREE.Color();
     for (let p = 0; p < pulseCount; p++) {
-      pulsePhase[p] = Math.random();
-      pulseSpeed[p] = 1 / (2.4 + Math.random() * 1.8);
-      tmpColor.set(PULSE_COLORS[Math.floor(Math.random() * PULSE_COLORS.length)]);
+      pulsePhase[p] = rand();
+      pulseSpeed[p] = 1 / (2.4 + rand() * 1.8);
+      tmpColor.set(PULSE_COLORS[Math.floor(rand() * PULSE_COLORS.length)]);
       pulseColor.set([tmpColor.r, tmpColor.g, tmpColor.b], p * 3);
     }
 
@@ -327,12 +424,13 @@ function Earth({ animate }: { animate: boolean }) {
     const hubFlashAt = new Float32Array(hubs.length);
     hubs.forEach((h, i) => {
       hubPos.set([h.x * R * 1.008, h.y * R * 1.008, h.z * R * 1.008], i * 3);
-      tmpColor.set(i === 0 ? "#ffe0a3" : Math.random() < 0.3 ? "#ffd37a" : "#ff8a3d");
+      // HQ = bright soft-white node, others = hot-spot gold or main-glow orange
+      tmpColor.set(i === 0 ? "#FFF7E6" : rand() < 0.3 ? "#FFC76A" : "#FF9A3C");
       hubColor.set([tmpColor.r, tmpColor.g, tmpColor.b], i * 3);
-      hubSize[i] = i === 0 ? 3.4 : 1.7 + Math.random() * 0.9;
-      hubPhase[i] = Math.random() * 10;
+      hubSize[i] = i === 0 ? 3.4 : 1.7 + rand() * 0.9;
+      hubPhase[i] = rand() * 10;
       // staggered so nodes never flash in sync — each reschedules itself
-      hubFlashAt[i] = 2 + Math.random() * 14;
+      hubFlashAt[i] = 2 + rand() * 14;
     });
 
     return {
@@ -345,6 +443,9 @@ function Earth({ animate }: { animate: boolean }) {
   }, []);
 
   const pulseCount = data.arcs.length;
+  // Stable per-frame buffers: created once, then mutated in place every frame
+  // by the render loop (the standard r3f pattern — bufferAttribute holds these
+  // exact arrays, so mutating their contents updates the GPU without churn).
   const pulsePosBuf = useMemo(() => new Float32Array(pulseCount * 3), [pulseCount]);
   const pulseBrightBuf = useMemo(() => new Float32Array(pulseCount), [pulseCount]);
   const hubBrightBuf = useMemo(
@@ -353,28 +454,37 @@ function Earth({ animate }: { animate: boolean }) {
   );
   // mutable per-frame color (base orange/gold, occasionally lerped to white)
   const hubColorBuf = useMemo(() => data.hubColor.slice(), [data.hubColor]);
+  // mutable next-flash schedule, copied out of the memoised `data`
+  const hubFlashAtBuf = useMemo(() => data.hubFlashAt.slice(), [data.hubFlashAt]);
 
   const earthUniforms = useMemo(
     () => ({
       uDay: { value: dayMap },
       uNight: { value: nightMap },
       uSunDir: { value: SUN_DIR },
-      uTime: { value: 0 },
     }),
     [dayMap, nightMap],
+  );
+  const atmoUniforms = useMemo(() => ({ uSunDir: { value: SUN_DIR } }), []);
+  const cloudUniforms = useMemo(
+    () => ({ uClouds: { value: cloudMap }, uSunDir: { value: SUN_DIR } }),
+    [cloudMap],
   );
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (group.current) {
-      // starts over India (HQ) then spins — one revolution every 120s
-      group.current.rotation.y = 3.32 + (animate ? t * SPIN : 0);
+      // frames Europe / Africa / Middle East / India toward the camera
+      // (~35°E at centre, India to the right toward the sunrise limb) then
+      // spins slowly — one revolution every 120s
+      group.current.rotation.y = -2.2 + (animate ? t * SPIN : 0);
       group.current.rotation.x = -0.18;
       // gentle breathing zoom: 100% -> 102% -> 100% every 8s
       const zoom = animate ? 1 + 0.01 * (1 - Math.cos((t / 8) * Math.PI * 2)) : 1;
       group.current.scale.setScalar(zoom);
     }
-    earthUniforms.uTime.value = t;
+    // clouds drift slowly relative to the ground — weather, not paint
+    if (cloudsRef.current) cloudsRef.current.rotation.y = animate ? t * 0.007 : 0;
     if (!animate) return;
 
     for (let p = 0; p < pulseCount; p++) {
@@ -402,11 +512,11 @@ function Earth({ animate }: { animate: boolean }) {
 
       // occasional random flash: base color -> white -> base color
       let flash = 0;
-      const flashAt = data.hubFlashAt[h];
+      const flashAt = hubFlashAtBuf[h];
       if (t >= flashAt && t < flashAt + FLASH_DUR) {
         flash = Math.sin(((t - flashAt) / FLASH_DUR) * Math.PI);
       } else if (t >= flashAt + FLASH_DUR) {
-        data.hubFlashAt[h] = t + 5 + Math.random() * 16;
+        hubFlashAtBuf[h] = t + 5 + Math.random() * 16;
       }
       const b = h * 3;
       hubColorBuf[b] = data.hubColor[b] + (1 - data.hubColor[b]) * flash;
@@ -431,12 +541,25 @@ function Earth({ animate }: { animate: boolean }) {
         />
       </mesh>
 
-      {/* atmosphere halo */}
-      <mesh renderOrder={0} scale={1.13}>
+      {/* real NASA cloud layer on its own sphere, drifting independently */}
+      <mesh ref={cloudsRef} renderOrder={1} scale={1.006}>
+        <sphereGeometry args={[R, 64, 64]} />
+        <shaderMaterial
+          vertexShader={cloudVertex}
+          fragmentShader={cloudFragment}
+          uniforms={cloudUniforms}
+          transparent
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* atmosphere halo — barely past the surface; a rind, not a ring */}
+      <mesh renderOrder={0} scale={1.028}>
         <sphereGeometry args={[R, 48, 48]} />
         <shaderMaterial
-          vertexShader={normalVertex}
+          vertexShader={atmoVertex}
           fragmentShader={atmoFragment}
+          uniforms={atmoUniforms}
           side={THREE.BackSide}
           transparent
           depthWrite={false}
@@ -444,16 +567,17 @@ function Earth({ animate }: { animate: boolean }) {
         />
       </mesh>
 
-      {/* glowing lat/long wireframe cage — front hemisphere only (globe
-          depth hides the back), the structured "engineered planet" look */}
-      <lineSegments renderOrder={1}>
+      {/* lat/long graticule hidden — the reference has no wireframe grid on
+          the globe; the external network arcs carry the structure instead.
+          (opacity 0 keeps the geometry ready to re-enable if wanted.) */}
+      <lineSegments renderOrder={1} visible={false}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[graticule, 3]} />
         </bufferGeometry>
         <lineBasicMaterial
-          color="#ff9a45"
+          color="#FF8A2B"
           transparent
-          opacity={0.07}
+          opacity={0}
           blending={THREE.AdditiveBlending}
         />
       </lineSegments>
@@ -467,7 +591,7 @@ function Earth({ animate }: { animate: boolean }) {
         <lineBasicMaterial
           vertexColors
           transparent
-          opacity={0.5}
+          opacity={0.28}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
@@ -512,8 +636,8 @@ function Earth({ animate }: { animate: boolean }) {
 
 // Two faint orbital rings with a few small lights
 const RING_DEFS = [
-  { r: R * 1.2, tiltX: 1.18, tiltZ: 0.22, speed: 0.12, particles: 7, opacity: 0.4 },
-  { r: R * 1.32, tiltX: 1.42, tiltZ: -0.12, speed: -0.07, particles: 9, opacity: 0.3 },
+  { r: R * 1.2, tiltX: 1.18, tiltZ: 0.22, speed: 0.12, particles: 7, opacity: 0.26 },
+  { r: R * 1.32, tiltX: 1.42, tiltZ: -0.12, speed: -0.07, particles: 9, opacity: 0.18 },
 ];
 
 function OrbitalRing({
@@ -532,6 +656,7 @@ function OrbitalRing({
       const a = (i / SEGS) * Math.PI * 2;
       circle.set([Math.cos(a) * def.r, Math.sin(a) * def.r, 0], i * 3);
     }
+    const rand = mulberry32(0xa11 + def.particles);
     const n = def.particles;
     const pos = new Float32Array(n * 3);
     const col = new Float32Array(n * 3);
@@ -539,13 +664,13 @@ function OrbitalRing({
     const brightArr = new Float32Array(n);
     const tmp = new THREE.Color();
     for (let i = 0; i < n; i++) {
-      const a = (i / n) * Math.PI * 2 + Math.random() * 0.3;
+      const a = (i / n) * Math.PI * 2 + rand() * 0.3;
       pos.set([Math.cos(a) * def.r, Math.sin(a) * def.r, 0], i * 3);
       const comet = i === 0;
-      tmp.set(comet ? "#ffffff" : "#ffb35c");
+      tmp.set(comet ? "#FFF7E6" : "#FFC76A"); // bright node / gold particle
       col.set([tmp.r, tmp.g, tmp.b], i * 3);
-      size[i] = comet ? 1.6 : 0.4 + Math.random() * 0.4;
-      brightArr[i] = comet ? 1.3 : 0.6 + Math.random() * 0.4;
+      size[i] = comet ? 1.6 : 0.4 + rand() * 0.4;
+      brightArr[i] = comet ? 1.3 : 0.6 + rand() * 0.4;
     }
     return { circle, pos, col, size, brightArr };
   }, [def]);
@@ -562,7 +687,7 @@ function OrbitalRing({
             <bufferAttribute attach="attributes-position" args={[geo.circle, 3]} />
           </bufferGeometry>
           <lineBasicMaterial
-            color="#ffab5c"
+            color="#FFC76A"
             transparent
             opacity={def.opacity}
             depthWrite={false}
@@ -596,20 +721,21 @@ function FloatingSparks({ animate }: { animate: boolean }) {
   const N = mobile ? 18 : 34;
 
   const geo = useMemo(() => {
+    const rand = mulberry32(0x50a7 + N);
     const pos = new Float32Array(N * 3);
     const col = new Float32Array(N * 3);
     const size = new Float32Array(N);
     const brightArr = new Float32Array(N);
     const tmp = new THREE.Color();
     for (let i = 0; i < N; i++) {
-      const th = Math.random() * Math.PI * 2;
-      const rad = R * (1.18 + Math.random() * 0.14);
-      const y = (Math.random() - 0.5) * R * 1.7;
+      const th = rand() * Math.PI * 2;
+      const rad = R * (1.18 + rand() * 0.14);
+      const y = (rand() - 0.5) * R * 1.7;
       pos.set([Math.cos(th) * rad, y, Math.sin(th) * rad], i * 3);
-      tmp.set(Math.random() < 0.25 ? "#ffd37a" : "#ff8a3d");
+      tmp.set(rand() < 0.25 ? "#FF9A3C" : "#FFC76A"); // arc orange / glow gold
       col.set([tmp.r, tmp.g, tmp.b], i * 3);
-      size[i] = 0.08 + Math.random() * 0.16;
-      brightArr[i] = 0.3 + Math.random() * 0.4;
+      size[i] = 0.08 + rand() * 0.16;
+      brightArr[i] = 0.2 + rand() * 0.28;
     }
     return { pos, col, size, brightArr };
   }, [N]);
@@ -703,16 +829,111 @@ function CameraDolly({ enabled }: { enabled: boolean }) {
   return null;
 }
 
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
+// User rotation: click-drag adds yaw/pitch, page scroll adds yaw. Layers on
+// top of the slow idle spin and eases toward the target so it feels weighty.
+function GlobeControls({
+  children,
+  enabled,
+}: {
+  children: React.ReactNode;
+  enabled: boolean;
+}) {
+  const grp = useRef<THREE.Group>(null);
+  const gl = useThree((s) => s.gl);
+  const invalidate = useThree((s) => s.invalidate);
+  const s = useRef({
+    yaw: 0,
+    pitch: 0,
+    tYaw: 0,
+    tPitch: 0,
+    scrollYaw: 0,
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
+  });
+
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return reduced;
+    if (!enabled) return;
+    const el = gl.domElement;
+    const st = s.current;
+
+    const onDown = (e: PointerEvent) => {
+      st.dragging = true;
+      st.lastX = e.clientX;
+      st.lastY = e.clientY;
+      el.setPointerCapture?.(e.pointerId);
+      el.style.cursor = "grabbing";
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!st.dragging) return;
+      st.tYaw += (e.clientX - st.lastX) * 0.006;
+      st.tPitch += (e.clientY - st.lastY) * 0.006;
+      st.tPitch = Math.max(-0.6, Math.min(0.6, st.tPitch)); // clamp tilt
+      st.lastX = e.clientX;
+      st.lastY = e.clientY;
+      invalidate();
+    };
+    const onUp = (e: PointerEvent) => {
+      st.dragging = false;
+      try {
+        el.releasePointerCapture?.(e.pointerId);
+      } catch {
+        /* pointer already released */
+      }
+      el.style.cursor = "grab";
+    };
+    const onScroll = () => {
+      st.scrollYaw = window.scrollY * 0.0025;
+      invalidate();
+    };
+
+    el.style.cursor = "grab";
+    el.style.touchAction = "pan-y"; // let vertical page scroll through on touch
+    el.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerup", onUp, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("scroll", onScroll);
+      el.style.cursor = "";
+    };
+  }, [gl, invalidate, enabled]);
+
+  useFrame(() => {
+    const st = s.current;
+    const targetYaw = st.tYaw + st.scrollYaw;
+    st.yaw += (targetYaw - st.yaw) * 0.12;
+    st.pitch += (st.tPitch - st.pitch) * 0.12;
+    if (grp.current) {
+      grp.current.rotation.y = st.yaw;
+      grp.current.rotation.x = st.pitch;
+    }
+  });
+
+  return <group ref={grp}>{children}</group>;
+}
+
+// Subscribes to the reduced-motion media query via useSyncExternalStore —
+// the idiomatic way to read an external store, with no synchronous setState
+// inside an effect. Server snapshot is `false` (motion on) to match the
+// pre-hydration default.
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+function subscribeReducedMotion(onChange: () => void) {
+  const mq = window.matchMedia(REDUCED_MOTION_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+function usePrefersReducedMotion() {
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    () => false,
+  );
 }
 
 export default function GlobeScene() {
@@ -734,19 +955,24 @@ export default function GlobeScene() {
   const animate = !reduced;
   const frameloop = reduced ? "demand" : inView ? "always" : "never";
 
+  // The Canvas is client-only (HeroGlobe imports this with ssr:false), so it
+  // always mounts here — three.js manages its own WebGL context. No support
+  // gate: probing a throwaway context false-negatived under the browser's
+  // per-process context cap and hid the globe.
   return (
-    <div ref={wrap} className="h-full w-full">
+    <div ref={wrap} className="pointer-events-auto h-full w-full">
       <Canvas
         frameloop={frameloop}
         camera={{ fov: 45, near: 0.1, far: 50, position: [0, 0.1, 3.8] }}
-        dpr={[1, 1.75]}
+        dpr={[1, 2]}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         style={{ background: "transparent" }}
       >
         <CameraDolly enabled={animate} />
         <Suspense fallback={null}>
           <ParallaxRig enabled={animate}>
-            <mesh position={[0, 0, -0.9]} renderOrder={-1}>
+            {/* volumetric sunrise back-glow, behind the upper-right shoulder */}
+            <mesh position={[0.55, 0.35, -0.9]} renderOrder={-1}>
               <planeGeometry args={[6.4, 6.4]} />
               <shaderMaterial
                 vertexShader={volumeVertex}
@@ -756,13 +982,21 @@ export default function GlobeScene() {
                 blending={THREE.AdditiveBlending}
               />
             </mesh>
-            <Earth animate={animate} />
-            {RING_DEFS.map((def, i) => (
-              <OrbitalRing key={i} def={def} animate={animate} />
-            ))}
-            <FloatingSparks animate={animate} />
+            {/* Drag to rotate + page-scroll to rotate the whole globe */}
+            <GlobeControls enabled={animate}>
+              <Earth animate={animate} />
+              {RING_DEFS.map((def, i) => (
+                <OrbitalRing key={i} def={def} animate={animate} />
+              ))}
+              <FloatingSparks animate={animate} />
+            </GlobeControls>
           </ParallaxRig>
         </Suspense>
+
+        {/* No post-processing: an EffectComposer renders into an opaque
+            buffer, which paints the whole square canvas black over the page
+            background. The glow sprites carry their own soft falloff, so
+            bloom isn't needed — and the canvas stays truly transparent. */}
       </Canvas>
     </div>
   );

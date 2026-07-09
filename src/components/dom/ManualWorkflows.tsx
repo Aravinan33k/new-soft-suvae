@@ -106,7 +106,8 @@ export default function ManualWorkflows({ className }: { className?: string }) {
         const vx = rx + 6 * dpr + (i / (line.length - 1)) * (w * 0.23 - 12 * dpr);
         const wob = v + 0.25 * Math.sin(t * 1.4 + i);
         const vy = h * 0.2 - wob * h * 0.11;
-        i === 0 ? ctx.moveTo(vx, vy) : ctx.lineTo(vx, vy);
+        if (i === 0) ctx.moveTo(vx, vy);
+        else ctx.lineTo(vx, vy);
       });
       ctx.stroke();
 

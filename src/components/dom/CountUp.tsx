@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 // Animated statistic: counts 0 → target with ease-out once the element
 // scrolls into view. Takes the display string as-is ("50+", "99.9%",
@@ -18,16 +19,13 @@ export default function CountUp({
   const target = match ? parseFloat(match[1]) : null;
   const suffix = match ? match[2] : "";
   const decimals = match && match[1].includes(".") ? match[1].split(".")[1].length : 0;
+  const reduced = useReducedMotion();
   const [display, setDisplay] = useState(target === null ? value : "0" + suffix);
 
   useEffect(() => {
-    if (target === null) return;
+    if (target === null || reduced) return; // reduced-motion shows final below
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setDisplay(value);
-      return;
-    }
 
     let raf = 0;
     const observer = new IntersectionObserver(
@@ -51,7 +49,9 @@ export default function CountUp({
       cancelAnimationFrame(raf);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reduced]);
 
-  return <span ref={ref}>{display}</span>;
+  // reduced-motion: show the final value straight away (derived in render)
+  const shown = reduced && target !== null ? value : display;
+  return <span ref={ref}>{shown}</span>;
 }

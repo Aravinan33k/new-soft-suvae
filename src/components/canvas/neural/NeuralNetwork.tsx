@@ -4,7 +4,6 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { scrollState } from "@/lib/scrollState";
-import { COLORS } from "@/config/theme";
 
 // The heart of the "Complexity → Intelligence" story. Every node starts as a
 // random particle in a chaotic cloud and, as the scroll progresses, migrates
@@ -36,6 +35,8 @@ const nodeFragment = /* glsl */ `
     float soft = smoothstep(0.5, 0.0, d);
     float core = smoothstep(0.18, 0.0, d);
     vec3 col = mix(uColorA, uColorB, clamp(vBright, 0.0, 1.0));
+    // hottest nodes ignite toward white as they finish assembling
+    col = mix(col, vec3(1.0), smoothstep(0.72, 1.0, vBright) * 0.6);
     float intensity = (soft * 0.6 + core * 0.9) * vBright;
     gl_FragColor = vec4(col * intensity, 1.0);
   }
@@ -165,20 +166,25 @@ export default function NeuralNetwork() {
 
   const uniformsNode = useMemo(
     () => ({
-      uColorA: { value: new THREE.Color(COLORS.accent) }, // violet, forming
-      uColorB: { value: new THREE.Color(COLORS.ring) }, // cyan, alive
+      // heat-ignition ramp mapped to assembly brightness: cool violet while a
+      // node is chaotic/dim ("complexity") -> warm gold as it assembles and
+      // brightens ("intelligence"); the hottest cores bloom to white in-shader
+      uColorA: { value: new THREE.Color("#5B3A9E") }, // violet, forming
+      uColorB: { value: new THREE.Color("#FFD56A") }, // gold, alive
     }),
     []
   );
   const uniformsPulse = useMemo(
     () => ({
-      uColorA: { value: new THREE.Color("#ffe0a3") },
-      uColorB: { value: new THREE.Color("#ffffff") },
+      uColorA: { value: new THREE.Color("#FFD56A") }, // gold
+      uColorB: { value: new THREE.Color("#FFF6E5") }, // bright-node warm white
     }),
     []
   );
   const uniformsLine = useMemo(
-    () => ({ uColor: { value: new THREE.Color(COLORS.coreEmissive) } }),
+    // connection orange, matched to the globe's network arcs (#3 pushes these
+    // dimmer than the nodes so structure recedes and energy advances)
+    () => ({ uColor: { value: new THREE.Color("#F57C22") } }),
     []
   );
 
@@ -223,7 +229,7 @@ export default function NeuralNetwork() {
     for (let e = 0; e < E; e++) {
       const a0 = edges[e * 2];
       const b0 = edges[e * 2 + 1];
-      const vb = Math.min(assemble[a0], assemble[b0]) * 0.4 * dim;
+      const vb = Math.min(assemble[a0], assemble[b0]) * 0.3 * dim;
       const o = e * 6;
       linePos[o] = nodePos[a0 * 3];
       linePos[o + 1] = nodePos[a0 * 3 + 1];

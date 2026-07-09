@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" fill="none">
+  <defs>
+    <linearGradient id="bg5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a1a1c"/><stop offset="0.5" stop-color="#0a1518"/><stop offset="1" stop-color="#080d0f"/></linearGradient>
+    <linearGradient id="acc5" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2ed3b7"/><stop offset="1" stop-color="#ff9440"/></linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2ed3b7"/><stop offset="1" stop-color="#37c0d9"/></linearGradient>
+    <linearGradient id="phone5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12242a"/><stop offset="1" stop-color="#0d1a1e"/></linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2ed3b7" stop-opacity="0.5"/><stop offset="1" stop-color="#2ed3b7" stop-opacity="0"/></linearGradient>
+    <radialGradient id="glow5" cx="0.75" cy="0.25" r="0.7"><stop offset="0" stop-color="#2ed3b7" stop-opacity="0.2"/><stop offset="1" stop-color="#2ed3b7" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glow5b" cx="0.2" cy="0.85" r="0.6"><stop offset="0" stop-color="#ff8a3d" stop-opacity="0.16"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg5)"/><rect width="1280" height="720" fill="url(#glow5)"/><rect width="1280" height="720" fill="url(#glow5b)"/>
+  <text x="80" y="150" fill="#e6f6f2" font-family="Segoe UI,Arial" font-size="40" font-weight="800">Beautiful <tspan fill="#3fe0c6">Mind</tspan></text>
+  <text x="80" y="192" fill="#8fb0aa" font-family="Segoe UI,Arial" font-size="18">A safe space for peer support &amp; wellbeing.</text>
+  <!-- mood chart card -->
+  <rect x="80" y="240" width="620" height="240" rx="20" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.07"/>
+  <text x="108" y="282" fill="#e6f6f2" font-family="Segoe UI,Arial" font-size="18" font-weight="700">Mood This Week</text>
+  <path d="M108 430 C168 390 208 400 268 360 S388 320 448 350 S568 300 672 320" fill="none" stroke="url(#teal)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M108 430 C168 390 208 400 268 360 S388 320 448 350 S568 300 672 320 L672 456 L108 456 Z" fill="url(#wave)"/>
+  <g fill="#3fe0c6"><circle cx="268" cy="360" r="5"/><circle cx="448" cy="350" r="5"/><circle cx="672" cy="320" r="5"/></g>
+  <!-- community feed -->
+  <rect x="80" y="504" width="620" height="176" rx="20" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.07"/>
+  <text x="108" y="544" fill="#e6f6f2" font-family="Segoe UI,Arial" font-size="18" font-weight="700">Community Feed</text>
+  <g font-family="Segoe UI,Arial" font-size="14" fill="#bfe0d9">
+    <g transform="translate(108,560)"><rect width="564" height="46" rx="12" fill="#ffffff" fill-opacity="0.04"/><circle cx="26" cy="23" r="14" fill="url(#teal)"/><text x="52" y="28">“Today was a good day. Thank you all 💚”</text></g>
+    <g transform="translate(108,614)"><rect width="564" height="46" rx="12" fill="#ffffff" fill-opacity="0.04"/><circle cx="26" cy="23" r="14" fill="url(#acc5)"/><text x="52" y="28">“Grateful for this community's support.”</text></g>
+  </g>
+  <!-- phone mockup: chat -->
+  <g transform="translate(760,120)">
+    <rect x="0" y="0" width="360" height="560" rx="46" fill="url(#phone5)" stroke="#ffffff" stroke-opacity="0.1" stroke-width="2"/>
+    <rect x="140" y="22" width="80" height="14" rx="7" fill="#080d0f"/>
+    <circle cx="52" cy="82" r="20" fill="url(#teal)"/><text x="84" y="78" fill="#e6f6f2" font-family="Segoe UI,Arial" font-size="17" font-weight="700">Support Circle</text><text x="84" y="98" fill="#7fb0a8" font-family="Segoe UI,Arial" font-size="13">4 members · online</text>
+    <!-- chat bubbles -->
+    <g font-family="Segoe UI,Arial" font-size="14">
+      <rect x="34" y="140" width="220" height="56" rx="18" fill="#ffffff" fill-opacity="0.07"/><text x="52" y="164" fill="#cfe9e3">You're not alone in this.</text><text x="52" y="184" fill="#7fb0a8" font-size="12">Mentor · 9:02</text>
+      <rect x="106" y="212" width="220" height="56" rx="18" fill="url(#teal)"/><text x="124" y="236" fill="#04201b">Thank you, that helps 🙏</text><text x="124" y="256" fill="#04322a" font-size="12">You · 9:03</text>
+      <rect x="34" y="284" width="250" height="76" rx="18" fill="#ffffff" fill-opacity="0.07"/><text x="52" y="308" fill="#cfe9e3">Want to try today's</text><text x="52" y="330" fill="#cfe9e3">2-minute breathing?</text><text x="52" y="350" fill="#7fb0a8" font-size="12">Mentor · 9:04</text>
+      <rect x="34" y="376" width="292" height="70" rx="18" fill="#ffffff" fill-opacity="0.05"/><text x="52" y="404" fill="#e6f6f2" font-weight="700">Daily check-in</text><rect x="52" y="416" width="180" height="10" rx="5" fill="#ffffff" fill-opacity="0.12"/><rect x="52" y="416" width="130" height="10" rx="5" fill="url(#teal)"/>
+    </g>
+    <rect x="34" y="470" width="292" height="44" rx="22" fill="#ffffff" fill-opacity="0.06"/><text x="56" y="497" fill="#7fb0a8" font-family="Segoe UI,Arial" font-size="14">Share how you feel…</text><circle cx="304" cy="492" r="16" fill="url(#teal)"/>
+  </g>
+</svg>

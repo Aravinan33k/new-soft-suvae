@@ -187,7 +187,8 @@ export default function SlowDecisions({ className }: { className?: string }) {
       trend.forEach((v, i) => {
         const vx = cpX + cpW * 0.06 + (i / (trend.length - 1)) * cpW * 0.88;
         const vy = chartY + chartH * (0.85 - 0.55 * (v * 0.6 + 0.4 * (0.5 + 0.5 * Math.sin(t * 0.3 + i * 0.7))));
-        i === 0 ? ctx.moveTo(vx, vy) : ctx.lineTo(vx, vy);
+        if (i === 0) ctx.moveTo(vx, vy);
+        else ctx.lineTo(vx, vy);
       });
       ctx.stroke();
       // sparkline row
@@ -203,7 +204,8 @@ export default function SlowDecisions({ className }: { className?: string }) {
         for (let i = 0; i <= 20; i++) {
           const vx = sx + (i / 20) * sw;
           const vy = sy + sh * (0.5 - 0.32 * Math.sin(i * (0.5 + sIdx * 0.2) + t * (0.6 + sIdx * 0.3)));
-          i === 0 ? ctx.moveTo(vx, vy) : ctx.lineTo(vx, vy);
+          if (i === 0) ctx.moveTo(vx, vy);
+          else ctx.lineTo(vx, vy);
         }
         ctx.stroke();
       }

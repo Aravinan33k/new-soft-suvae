@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FiPause, FiPlay } from "react-icons/fi";
 import { scrollState } from "@/lib/scrollState";
+import ExperienceScenes from "@/components/dom/ExperienceScenes";
+import SplineScene from "@/components/dom/SplineScene";
 
-// Lazy-loaded client-only: three.js never blocks first paint.
-const CanvasRoot = dynamic(() => import("@/components/canvas/CanvasRoot"), {
-  ssr: false,
-  loading: () => <div className="absolute inset-0 bg-[#0a0a0c]" aria-hidden />,
-});
+// Real WebGL 3D scenes live in src/components/canvas/AiCoreScene.tsx and
+// CloudNetworkScene.tsx. They're currently OFF — every chapter uses the
+// built-in 2D canvas story. To switch a chapter back to its 3D scene, import
+// it via next/dynamic (ssr:false) and add it to an R3F_SCENES map here.
 
 type Slide = {
   label: string;
@@ -19,44 +19,106 @@ type Slide = {
   index?: string;
   title: string;
   body: string;
+  tags?: string[];
+  image?: string;
   button?: string;
 };
 
 const SLIDES: Slide[] = [
   {
-    label: "Complexity",
-    eyebrow: "Soft Suave",
-    title: "From Complexity to Intelligence",
-    body: "Disconnected data, systems, and processes — analyzed, connected, and transformed into one intelligent digital ecosystem.",
-  },
-  {
-    label: "Awaken",
+    label: "Custom AI",
+    image: "/services/custom-ai.jpg",
+    eyebrow: "AI Systems",
     index: "01",
-    title: "Intelligence awakens at the core",
-    body: "A single AI ignites at the center — scanning the noise, pulsing light outward, giving scattered data its first sense of purpose.",
+    title: "Custom AI Solutions",
+    body: "Production-ready AI systems built on LLMs, RAG, agents, and predictive models — engineered to automate decisions at scale.",
+    tags: ["LLM", "RAG", "Agents"],
   },
   {
-    label: "Connect",
+    label: "Automation",
+    image: "/services/automation.jpg",
+    eyebrow: "Automation",
     index: "02",
-    title: "Connections form an intelligent web",
-    body: "Thousands of glowing pathways link every particle. Data flows through neural networks, APIs, and pipelines. Nothing is random anymore — everything has purpose.",
+    title: "AI Integrations & Workflow Automation",
+    body: "Wire AI into the tools you already use and automate the busywork that slows your team down.",
+    tags: ["Workflows", "Integrations", "Ops"],
   },
   {
-    label: "Build",
+    label: "Chatbots",
+    image: "/services/chatbots.jpg",
+    eyebrow: "AI Systems",
     index: "03",
-    title: "Solutions built from the network",
-    body: "Websites, mobile apps, AI assistants, cloud platforms, dashboards, automation — each one constructed from the same living network.",
+    title: "AI Chatbots & AI Agents",
+    body: "Conversational agents for support, sales, HR, and internal ops — always on, always learning.",
+    tags: ["Chatbots", "Support", "NLP"],
   },
   {
-    label: "Start",
-    title: "Transforming complexity into intelligence",
-    body: "Tell us where your business is heading — we'll engineer the intelligence that takes it there.",
+    label: "Software",
+    image: "/services/software.jpg",
+    eyebrow: "Development",
+    index: "04",
+    title: "Custom Software Development",
+    body: "Secure, scalable software engineered with AI-assisted development for faster delivery.",
+    tags: ["Full-Stack", "APIs", "Scale"],
+  },
+  {
+    label: "Mobile",
+    image: "/services/mobile.jpg",
+    eyebrow: "Mobile",
+    index: "05",
+    title: "Mobile App Development",
+    body: "Native-quality iOS and Android apps with intuitive design and AI-enhanced features.",
+    tags: ["iOS", "Android", "Cross-Platform"],
+  },
+  {
+    label: "Web Apps",
+    image: "/services/web.jpg",
+    eyebrow: "Development",
+    index: "06",
+    title: "Web App Development",
+    body: "Fast, AI-enabled web apps that simplify workflows and turn visitors into customers.",
+    tags: ["Web Apps", "UX", "Performance"],
+  },
+  {
+    label: "Modernization",
+    image: "/services/modernization.jpg",
+    eyebrow: "Cloud & Infra",
+    index: "07",
+    title: "Enterprise Modernization",
+    body: "Modernize legacy systems with cloud, automation, and AI — without disrupting the business.",
+    tags: ["Cloud", "Legacy", "Security"],
+  },
+  {
+    label: "GCC",
+    image: "/services/gcc.jpg",
+    eyebrow: "Cloud & Infra",
+    index: "08",
+    title: "Global Capability Center (GCC)",
+    body: "Stand up an AI-powered GCC with smarter workflows, analytics, and teams built to scale.",
+    tags: ["Teams", "Analytics", "Scale"],
     button: "Start a conversation",
   },
 ];
 
+// ── Spline 3D scenes ────────────────────────────────────────────────
+// Paste a Spline "Viewer" URL (…/scene.splinecode) for any chapter to
+// replace its built-in canvas story with a live 3D Spline scene. Leave
+// undefined to keep the canvas. Index matches SLIDES order.
+// The first entry is a public Spline DEMO so you can confirm the pipeline
+// works immediately — replace it (and add more) with your own exports.
+const SPLINE_SCENES: (string | undefined)[] = [
+  undefined, // 01 Custom AI — uses the built-in WebGL AiCoreScene (below)
+  undefined, // 02 Automation
+  undefined, // 03 Chatbots
+  undefined, // 04 Software
+  undefined, // 05 Mobile
+  undefined, // 06 Web Apps
+  undefined, // 07 Modernization
+  undefined, // 08 GCC
+];
+
 const N = SLIDES.length;
-const SLIDE_MS = 5200; // time each chapter is shown before auto-advancing
+const SLIDE_MS = 12000; // each chapter's story plays ~12s before auto-advancing
 
 // Anthropic-style scroll expand: contained rounded card -> true full-bleed
 const CARD_START = { maxWidth: "58rem", height: "80vh", borderRadius: "24px" };
@@ -85,6 +147,9 @@ export default function ExperienceStage() {
     if (i === activeRef.current) return;
     activeRef.current = i;
     elapsedRef.current = 0;
+    // scrollState is an intentional mutable singleton bridge, read by the
+    // canvas useFrame loops — mutating it here is the designed data flow.
+    // eslint-disable-next-line react-hooks/immutability
     scrollState.transition = 1; // kick the camera: rotate + zoom dip
     setActive(i);
   };
@@ -180,8 +245,12 @@ export default function ExperienceStage() {
   // Copy transition sequencing: fade the old text out (300ms), then mount
   // the new text which slides in (500ms) — ~800ms total, in sync with the
   // camera's transition pulse.
+  // Timed cross-fade: when the active chapter changes, fade the old copy out
+  // then swap in the new. This is a genuine sequenced transition (setState →
+  // wait 300ms → setState), which is exactly what an effect is for.
   useEffect(() => {
     if (active === displayed) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLeaving(true);
     const t = setTimeout(() => {
       setDisplayed(active);
@@ -194,29 +263,34 @@ export default function ExperienceStage() {
 
   return (
     <section ref={sectionRef} className="relative w-full py-10">
-      {/* Layer 4: soft warm glow under the browser mockup */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto h-48 w-full max-w-5xl bg-[radial-gradient(ellipse,rgba(255,138,61,0.14),transparent_70%)] blur-[50px]" />
-
       <div
         ref={cardRef}
-        className="relative mx-auto flex min-h-[560px] w-full flex-col overflow-hidden border border-white/[0.08] bg-[#0a0a0c] shadow-[0_0_80px_-20px_rgba(255,138,61,0.35)]"
+        className="relative mx-auto flex min-h-[560px] w-full flex-col overflow-hidden bg-(--showcase) shadow-[var(--showcase-shadow)]"
         style={CARD_START}
       >
-        {/* Window chrome bar */}
-        <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.08] bg-[#111827] px-4 py-3">
-          <span className="h-3 w-3 rounded-full bg-red-500/70" />
-          <span className="h-3 w-3 rounded-full bg-yellow-500/70" />
-          <span className="h-3 w-3 rounded-full bg-green-500/70" />
-          <span className="ml-3 flex-1 truncate rounded-md bg-slate-900/80 px-3 py-1 text-center text-[11px] text-slate-500">
-            softsuave.com — the AI experience
-          </span>
-        </div>
-
         {/* Content area: neural scene + left slider + chapter copy */}
         <div className="relative min-h-0 flex-1">
-          {/* Neural scene runs automatically behind everything */}
-          <div className="absolute inset-0 z-0">
-            <CanvasRoot />
+          {/* The navy backdrop is painted here on the full card so its colour
+              never varies; the transparent canvas above it only draws the
+              animation content, centered in the right half on large screens */}
+          <div
+            className="absolute inset-0 z-0"
+            style={{ backgroundImage: "var(--showcase-grad)" }}
+          >
+            {/* one cinematic story scene per service chapter (2D canvas) */}
+            <ExperienceScenes
+              active={active}
+              className="absolute inset-0 lg:left-[38%]"
+            />
+            {/* live 3D Spline scene overlays the canvas for chapters that
+                have a URL set in SPLINE_SCENES; others keep the canvas */}
+            {SPLINE_SCENES[active] && (
+              <SplineScene
+                scene={SPLINE_SCENES[active]}
+                className="absolute inset-0 lg:left-[38%]"
+              />
+            )}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(10,10,12,0.8)_100%)]" />
           </div>
 
           {/* Left timeline / chapter navigation: a vertical rail where the
@@ -231,7 +305,7 @@ export default function ExperienceStage() {
                   type="button"
                   onClick={() => select(i)}
                   aria-current={isActive}
-                  className="group relative flex items-center gap-3 py-2.5 pl-4 text-left"
+                  className="group relative flex items-center gap-3 py-2.5 pl-4 pr-6 text-left"
                 >
                   {/* rail track */}
                   <span className="absolute left-0 top-0 h-full w-px bg-zinc-700/60" />
@@ -243,8 +317,34 @@ export default function ExperienceStage() {
                     className="absolute left-[-0.5px] top-0 w-[2px] rounded-full bg-gradient-to-b from-[#FFB057] to-[#FF6A3D] shadow-[0_0_10px_rgba(255,138,61,0.9)]"
                     style={{ height: "0%" }}
                   />
+
+                  {/* active state: frosted glass pill with a soft orange
+                      glow behind the label */}
                   <span
-                    className={`inline-block origin-left font-mono text-xs tabular-nums transition-all duration-300 ease-out ${
+                    aria-hidden
+                    className={`absolute inset-y-1 left-2.5 right-0 rounded-lg border backdrop-blur-md transition-all duration-500 ease-out ${
+                      isActive
+                        ? "border-[#FF8A3D]/25 bg-[#FF8A3D]/[0.08] opacity-100 shadow-[0_0_26px_-6px_rgba(255,138,61,0.55),inset_0_1px_10px_rgba(255,138,61,0.08)]"
+                        : "border-transparent bg-transparent opacity-0"
+                    }`}
+                  />
+                  {/* vertical accent line on the pill's edge */}
+                  <span
+                    aria-hidden
+                    className={`absolute left-2.5 top-1/2 w-[3px] -translate-y-1/2 rounded-full bg-gradient-to-b from-[#FFB057] to-[#FF6A3D] shadow-[0_0_10px_rgba(255,138,61,0.9)] transition-all duration-500 ease-out ${
+                      isActive ? "h-6 opacity-100" : "h-0 opacity-0"
+                    }`}
+                  />
+                  {/* animated indicator: breathing dot at the pill's end */}
+                  <span
+                    aria-hidden
+                    className={`absolute right-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#FF8A3D] shadow-[0_0_8px_2px_rgba(255,138,61,0.7)] transition-opacity duration-500 ${
+                      isActive ? "animate-pulse opacity-100" : "opacity-0"
+                    }`}
+                  />
+
+                  <span
+                    className={`relative inline-block origin-left pl-2 font-mono text-sm tabular-nums transition-all duration-300 ease-out ${
                       isActive
                         ? "scale-[1.2] text-[#FF8A3D]"
                         : "scale-100 text-zinc-600 group-hover:text-zinc-400"
@@ -253,10 +353,10 @@ export default function ExperienceStage() {
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span
-                    className={`inline-block text-sm font-medium transition-all duration-300 ease-out ${
+                    className={`relative inline-block text-base font-medium transition-all duration-300 ease-out md:text-lg ${
                       isActive
                         ? "translate-x-[5px] text-white [text-shadow:0_0_14px_rgba(255,138,61,0.55)]"
-                        : "translate-x-0 text-zinc-500 group-hover:text-zinc-300"
+                        : "translate-x-0 text-zinc-400 group-hover:text-zinc-200"
                     }`}
                   >
                     {s.label}
@@ -266,43 +366,54 @@ export default function ExperienceStage() {
             })}
           </nav>
 
-          {/* Chapter copy (offset right of the slider) */}
-          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-6 pl-32 text-center md:pl-56">
-            <div
-              key={displayed}
-              className={`max-w-2xl transition-all duration-300 ease-in ${
-                leaving
-                  ? "-translate-y-3 opacity-0"
-                  : "animate-[fadeUp_0.55s_cubic-bezier(0.22,1,0.36,1)]"
-              }`}
-            >
-              <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_55%_45%_at_55%_50%,rgba(1,2,8,0.55),transparent_70%)]" />
-              {slide.eyebrow && (
-                <p className="mb-5 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D]/90 md:text-sm">
-                  {slide.eyebrow}
-                </p>
-              )}
-              {slide.index && (
-                <p className="mb-4 font-mono text-sm text-[#FF8A3D]/70">
-                  {slide.index}
-                </p>
-              )}
-              {active === 0 ? (
-                <h2 className="bg-gradient-to-r from-[#FF9440] via-[#FB5A38] to-[#F92B4E] bg-clip-text text-4xl font-semibold leading-[1.05] tracking-tight text-transparent md:text-6xl">
-                  {slide.title}
-                </h2>
-              ) : (
-                <h2 className="text-3xl font-semibold tracking-tight text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.95)] md:text-5xl">
-                  {slide.title}
-                </h2>
-              )}
-              <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.9)] md:text-lg">
+          {/* Chapter copy: one left-aligned column beside the nav rail —
+              the animated scene owns the right half of the card */}
+          <div
+            key={displayed}
+            className={`pointer-events-none absolute inset-y-0 left-0 z-10 flex w-full flex-col justify-center px-6 pl-28 md:pl-72 lg:w-[56%] lg:pr-0 transition-all duration-300 ease-in ${
+              leaving
+                ? "-translate-y-3 opacity-0"
+                : "animate-[fadeUp_0.55s_cubic-bezier(0.22,1,0.36,1)]"
+            }`}
+          >
+            <div className="relative max-w-xl text-left">
+              <div className="flex items-baseline gap-3">
+                {slide.index && (
+                  <p className="font-mono text-sm text-[#FF8A3D]/70">
+                    {slide.index}
+                  </p>
+                )}
+                {slide.eyebrow && (
+                  <p className="text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D]/90 md:text-sm">
+                    {slide.eyebrow}
+                  </p>
+                )}
+              </div>
+              <h2 className="mt-4 text-2xl font-semibold leading-[1.1] tracking-tight text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.95)] md:text-4xl">
+                {slide.title}
+              </h2>
+              <p className="mt-6 max-w-[520px] text-base leading-relaxed text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.95)] md:text-lg">
                 {slide.body}
               </p>
+              {slide.tags && (
+                <div className="mt-6 flex flex-wrap gap-2.5">
+                  {/* glass chips: gradient glass fill, glowing dot marker,
+                      soft outer glow — premium, not flat */}
+                  {slide.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-2 rounded-full border border-[#FF8A3D]/35 bg-[linear-gradient(135deg,rgba(255,138,61,0.16),rgba(255,255,255,0.04)_55%,rgba(255,138,61,0.07))] px-4 py-1.5 text-xs font-medium text-zinc-100 shadow-[0_0_16px_-4px_rgba(255,138,61,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#FF9E55] shadow-[0_0_6px_rgba(255,158,85,0.9)]" />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
               {slide.button && (
                 <a
-                  href="#contact"
-                  className="btn-primary pointer-events-auto mt-10 inline-block rounded-full px-8 py-3.5 text-sm font-semibold text-[#1a0a04]"
+                  href="mailto:softsuave.ai@gmail.com"
+                  className="btn-primary pointer-events-auto mt-8 inline-block rounded-full px-8 py-3.5 text-sm font-semibold text-[#1a0a04]"
                 >
                   {slide.button}
                 </a>
