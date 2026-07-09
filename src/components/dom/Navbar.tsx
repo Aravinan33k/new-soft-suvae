@@ -118,7 +118,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-center">
       <nav
-        className={`flex items-center transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`flex items-center backdrop-blur-xl transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           scrolled
             ? "h-12 w-[min(94%,84rem)] rounded-2xl border shadow-[0_8px_32px_-10px_var(--shadow-strong)]"
             : "h-16 w-full rounded-none border-x-0 border-t-0 border-b"
