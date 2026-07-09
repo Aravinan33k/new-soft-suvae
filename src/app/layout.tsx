@@ -1,24 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Manrope } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Preloader from "@/components/dom/Preloader";
 import AiAssistant from "@/components/dom/AiAssistant";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// Satoshi — the site's primary typeface (self-hosted variable font, all
+// weights 300–900). Exposed as --font-satoshi and mapped to --font-sans in
+// globals.css so every element uses it by default.
+const satoshi = localFont({
+  src: "./fonts/Satoshi-Variable.woff2",
+  variable: "--font-satoshi",
+  weight: "300 900",
+  display: "swap",
+  fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
 });
 
+// Geist Mono is kept only for the handful of tabular-numeral / index labels
+// that intentionally use a monospace face.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-// Manrope — clean, elegant wordmark face for the "Soft Suave" brand name
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -28,8 +30,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0c",
+  themeColor: "#f8fafc",
 };
+
+// Runs before paint: restores the saved theme (light = Warm Ivory default,
+// dark = the original Enterprise AI look) so there's no flash of the wrong
+// theme on load. The navbar toggle writes the same localStorage key.
+const themeInit = `try{var t=localStorage.getItem("theme");if(t==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}`;
 
 export default function RootLayout({
   children,
@@ -39,9 +46,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${satoshi.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#0a0a0c] text-zinc-400">
+      <body className="min-h-full">
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <Preloader />
         {children}
         <AiAssistant />

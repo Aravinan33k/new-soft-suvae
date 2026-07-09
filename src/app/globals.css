@@ -1,19 +1,144 @@
 @import "tailwindcss";
 
+/* ── Two themes, one token set ─────────────────────────────────────
+   LIGHT (default) = "Warm Ivory": elegant, luxury, professional.
+   DARK  = "Enterprise AI": the original navy/orange look.
+   The navbar toggle flips data-theme on <html>; every themed element
+   reads these variables, so no component carries per-theme classes. */
+/* DEFAULT = "Warm Atelier" — a premium enterprise LIGHT system tuned so the
+   orange brand feels native, not fighting a cold field. Neutrals are a warm
+   paper family (stone, faint amber undertone) instead of blue-slate; the
+   accent orange is deepened to #EA580C for text (richer, less candy) while
+   buttons keep a vibrant orange gradient; a deep #2563EB blue is the sparing
+   cool counter-accent. Cards get real, warm-tinted depth. */
 :root {
-  --background: #0b0909;
-  --foreground: #e8e8ea;
+  --background: #faf9f7;
+  --background-alt: #f3f1ec;
+  --card: rgba(255, 255, 255, 0.86);
+  --panel: rgba(255, 255, 255, 0.94);
+  --border: #e9e4db;
+  --heading: #1c1917;
+  --foreground: #57534e;
+  --text-secondary: #837b70;
+  --brand-orange: #ea580c;
+  --brand-orange-hover: #c2410c;
+  --brand-orange-soft: #f97316;
+  --brand-blue: #2563eb;
+  --brand-purple: #7c3aed;
+  --nav-bg: rgba(250, 249, 247, 0.82);
+  /* Anthropic-style flat nav: solid warm-cream surface + black CTA */
+  --nav-surface: #f4f2ec;
+  --nav-cta-bg: #1c1917;
+  --nav-cta-fg: #faf9f7;
+  --nav-cta-hover: #33302b;
+  --grid-line: rgba(28, 25, 23, 0.45);
+  --shadow-soft: rgba(28, 25, 23, 0.09);
+  --shadow-strong: rgba(28, 25, 23, 0.16);
+  --glow-orange: rgba(234, 88, 12, 0.13);
+  --glow-blue: rgba(37, 99, 235, 0.09);
+  --btn-a: #f97316;
+  --btn-b: #ea580c;
+  --btn-glow: rgba(234, 88, 12, 0.22);
+  --wash-warm: rgba(234, 88, 12, 0.1);
+  --wash-cool: rgba(37, 99, 235, 0.07);
+  --grad-1: #fb923c;
+  --grad-2: #f97316;
+  --grad-3: #ea580c;
+  /* full-bleed alternating section band — a warm stone that's visible but soft */
+  --section-alt: #f3f1ec;
+  /* dark showcase card — slate-navy so it reads as an intentional highlight
+     against the warm-light page, not a pasted-on black block */
+  --showcase: #111827;
+  --showcase-grad: radial-gradient(
+    circle at center,
+    #1e293b 0%,
+    #172033 55%,
+    #111827 100%
+  );
+  --showcase-shadow: 0 30px 80px rgba(28, 25, 23, 0.16);
+}
+
+/* DARK = the site's ORIGINAL look (pre-redesign): warm near-black,
+   #FF8A3D orange accents, the signature orange→red gradient, #111113
+   cards with white-alpha hairline borders. */
+[data-theme="dark"] {
+  --background: #0a0a0c;
+  --background-alt: #0d0d10;
+  --card: #111113;
+  --panel: rgba(17, 17, 19, 0.95);
+  --border: rgba(255, 255, 255, 0.08);
+  --heading: #ffffff;
+  --foreground: #a1a1aa;
+  --text-secondary: #71717a;
+  --brand-purple: #8b5cf6;
+  --brand-orange: #ff8a3d;
+  --brand-orange-hover: #ffb057;
+  --brand-orange-soft: #ffb868;
+  --brand-blue: #4fa3ff;
+  --nav-bg: rgba(10, 10, 20, 0.5);
+  /* dark theme inverts the CTA to white-on-dark so it still reads */
+  --nav-surface: #0b0b0e;
+  --nav-cta-bg: #ffffff;
+  --nav-cta-fg: #0a0a0c;
+  --nav-cta-hover: #e6e6e6;
+  --grid-line: rgba(255, 255, 255, 0.6);
+  --shadow-soft: rgba(0, 0, 0, 0.5);
+  --shadow-strong: rgba(0, 0, 0, 0.65);
+  --glow-orange: rgba(255, 138, 61, 0.3);
+  --glow-blue: rgba(79, 163, 255, 0.09);
+  --btn-a: #ff9440;
+  --btn-b: #f92b4e;
+  --btn-glow: rgba(255, 106, 61, 0.5);
+  --wash-warm: rgba(255, 138, 61, 0.1);
+  --wash-cool: rgba(249, 43, 78, 0.08);
+  --grad-1: #ff9440;
+  --grad-2: #fb5a38;
+  --grad-3: #f92b4e;
+  --section-alt: rgba(255, 255, 255, 0.02);
+  --showcase: #0a0a0c;
+  --showcase-grad: radial-gradient(
+    circle at center,
+    #0b1426 0%,
+    #08101e 55%,
+    #0a0a0c 100%
+  );
+  --showcase-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-satoshi);
   --font-mono: var(--font-geist-mono);
+}
+
+/* Navbar CTA — the Soft Suave brand gradient so the button harmonises with
+   the warm nav surface and reinforces the brand (orange on cream in light,
+   orange→red on the dark bar in dark theme). */
+.nav-cta {
+  background: linear-gradient(135deg, var(--btn-a), var(--btn-b));
+  color: #fff;
+  box-shadow: 0 2px 10px -4px var(--btn-glow);
+  transition:
+    filter 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+.nav-cta:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 8px 22px -8px var(--btn-glow);
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Satoshi is the site-wide default face; the mono utility (Geist Mono) still
+   wins where it's applied for tabular numerals. */
+html,
+body {
+  font-family: var(--font-satoshi), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
 }
 
 @keyframes fadeUp {
@@ -281,6 +406,135 @@ html {
   will-change: transform, opacity;
 }
 
+/* ── Cinematic lighting: moving accent light rays ─────────────────
+   Soft diagonal beams (in the active section's accent) that drift
+   slowly across and breathe in opacity — the "hidden spotlight behind
+   the scene" look. Each ray carries its own angle/speed/delay. */
+@keyframes siteRay {
+  0%,
+  100% {
+    opacity: 0.03;
+    transform: translateX(-24%) rotate(var(--ray-a, 18deg));
+  }
+  50% {
+    opacity: 0.13;
+    transform: translateX(24%) rotate(var(--ray-a, 18deg));
+  }
+}
+.site-ray {
+  animation: siteRay var(--ray-d, 22s) ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Thin holographic fog that drifts left↔right — almost invisible, but
+   without it the field reads empty. */
+@keyframes siteFog {
+  0%,
+  100% {
+    transform: translate3d(-4%, 0, 0);
+  }
+  50% {
+    transform: translate3d(4%, -1.5%, 0);
+  }
+}
+.site-fog {
+  animation: siteFog 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-ray,
+  .site-fog {
+    animation: none;
+  }
+}
+
+/* ── Testimonials: infinite horizontal marquee ────────────────────
+   Two identical copies of the card list sit side by side; the track
+   slides left by exactly one copy's width and loops seamlessly. Each
+   card carries its own trailing margin so the -50% offset lands the
+   second copy precisely where the first began (no half-gap jump).
+   Hovering the viewport pauses the scroll so a card can be read. */
+@keyframes marqueeScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  animation: marqueeScroll 32s linear infinite;
+  will-change: transform;
+}
+
+.marquee-viewport:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* ── Testimonials showcase: "living story" transitions ────────────
+   Story-style progress bars drive the autoplay (the active bar fills over
+   the hold duration, then its animationend advances the hero); each hero
+   change plays an orange gradient wipe and a staggered content rise. */
+@keyframes storyProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.story-progress {
+  transform-origin: left;
+  animation: storyProgress linear forwards;
+}
+
+@keyframes storyWipe {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+.story-wipe {
+  animation: storyWipe 0.9s ease-out both;
+}
+
+@keyframes storyRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+.story-rise {
+  animation: storyRise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-progress,
+  .story-wipe,
+  .story-rise {
+    animation: none;
+  }
+  /* keep the completed-portion visible so reduced-motion still reads state */
+  .story-progress {
+    transform: scaleX(1);
+  }
+}
+
 /* ── Services: glass cards over a living neural mesh ─────────── */
 @keyframes neuralWash {
   0%,
@@ -370,6 +624,7 @@ main svg {
   .hero-gradient-drift,
   .site-wash,
   .site-aurora,
+  .marquee-track,
   main svg {
     animation: none;
   }
@@ -477,47 +732,51 @@ main svg {
   }
 }
 
-/* ── Buttons: animated gradient, growing shadow, press-scale ──── */
+/* ── Buttons: orange gradient (theme-aware), lift + glow on hover ── */
 .btn-primary {
   background-image: linear-gradient(
     110deg,
-    #ff9440 0%,
-    #ff6a3d 28%,
-    #f92b4e 52%,
-    #ff6a3d 76%,
-    #ff9440 100%
+    var(--btn-a) 0%,
+    var(--btn-b) 50%,
+    var(--btn-a) 100%
   );
   background-size: 220% 100%;
   background-position: 0% 50%;
-  /* orange core glow + subtle red edge glow — pulls the eye to the CTA */
-  box-shadow:
-    0 10px 24px -10px rgba(255, 106, 61, 0.65),
-    0 0 22px -4px rgba(255, 138, 61, 0.45),
-    0 0 34px -6px rgba(249, 43, 78, 0.35);
+  /* Soft, diffuse glow that sits under the button rather than a hard edge. */
+  box-shadow: 0 10px 32px -8px var(--btn-glow);
   transition:
     background-position 0.6s ease,
     box-shadow 0.35s ease,
-    transform 0.12s ease;
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .btn-primary:hover {
   background-position: 100% 50%;
-  box-shadow:
-    0 18px 44px -10px rgba(255, 106, 61, 0.85),
-    0 0 30px -4px rgba(255, 138, 61, 0.6),
-    0 0 48px -6px rgba(249, 43, 78, 0.5);
+  /* Lift + gentle expand so the button feels like it grows toward you. */
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 20px 44px -8px var(--btn-glow),
+    0 0 34px -2px var(--btn-glow);
 }
 .btn-primary:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.98);
 }
 
+/* Glass secondary — frosted panel over the dark hero. */
 .btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
   transition:
+    background 0.3s ease,
     border-color 0.3s ease,
     color 0.3s ease,
     box-shadow 0.35s ease,
-    transform 0.12s ease;
+    transform 0.2s ease;
 }
 .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
   box-shadow: 0 12px 30px -12px rgba(255, 138, 61, 0.4);
 }
 .btn-secondary:active {
@@ -534,7 +793,7 @@ main svg {
   align-items: center;
   justify-content: center;
   gap: 1.75rem;
-  background: radial-gradient(ellipse 60% 50% at 50% 45%, #14110e 0%, #0b0909 70%);
+  background: radial-gradient(ellipse 60% 50% at 50% 45%, var(--card) 0%, var(--background) 70%);
   transition:
     opacity 0.6s ease,
     transform 0.6s ease,
@@ -620,7 +879,7 @@ main svg {
   animation: plWordIn 0.6s ease 1.3s forwards;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #fff;
+  color: var(--heading);
   font-size: 1.25rem;
 }
 @keyframes plWordIn {
@@ -634,7 +893,7 @@ main svg {
   width: 150px;
   height: 2px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border);
   overflow: hidden;
 }
 .pl-bar > span {
@@ -643,7 +902,7 @@ main svg {
   width: 100%;
   transform-origin: left;
   transform: scaleX(0);
-  background: linear-gradient(90deg, #ff9440, #f92b4e);
+  background: linear-gradient(90deg, var(--btn-b), var(--btn-a));
   animation: plBar 1.9s ease forwards;
 }
 @keyframes plBar {
@@ -666,26 +925,27 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   overflow-x: hidden;
+  transition: background-color 0.45s ease, color 0.45s ease;
 }
 
 ::selection {
-  background: rgba(255, 106, 61, 0.3);
-  color: #fff5ee;
+  background: rgba(234, 88, 12, 0.25);
+  color: var(--heading);
 }
 
-/* Thin dark scrollbar to match the theme */
+/* Thin scrollbar that follows the theme */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0909;
+  background: var(--background-alt);
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a2a2e;
+  background: var(--border);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: var(--text-secondary);
 }
 
 /* ── Tech ecosystem flow (stack layers) ─────────────────────────
@@ -735,6 +995,32 @@ body {
   }
   .flow-particle {
     display: none;
+  }
+}
+
+/* ── Ecosystem stat-card landing pulse ──────────────────────────
+   A glow blooms at a card's top edge as a data particle arrives from
+   the AI brain. Peaks late in the 2.2s cycle to match the connector
+   particle reaching the card; per-card delay staggers the arrivals. */
+@keyframes ecoCardLand {
+  0%,
+  80% {
+    opacity: 0;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.eco-card-land {
+  opacity: 0;
+  animation: ecoCardLand 2.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eco-card-land {
+    animation: none;
   }
 }
 
@@ -1111,4 +1397,482 @@ body {
   .eco-flame-2 {
     display: none;
   }
+}
+
+/* ── Industry scenes (IndustriesShowcase visual panel) ──────────
+   In-house animated glyphs replacing stock photography: a shared
+   breathing halo behind each industry's icon, plus one bespoke motion
+   per industry — orbiting satellites, a scrolling ECG line, a truck
+   traveling a route, breathing chart bars, rising coins, and meshing
+   gears with a moving conveyor. */
+@keyframes indBreathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
+  }
+}
+.ind-breathe {
+  animation: indBreathe 4.5s ease-in-out infinite;
+}
+
+@keyframes indOrbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ind-orbit {
+  animation: indOrbit linear infinite;
+}
+
+@keyframes indOrbitCounter {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+.ind-orbit-counter {
+  animation: indOrbitCounter linear infinite;
+}
+
+@keyframes indEcgScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ind-ecg-scroll {
+  animation: indEcgScroll 2.4s linear infinite;
+}
+
+@keyframes indBlink {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.ind-blink {
+  animation: indBlink 1.6s ease-in-out infinite;
+}
+
+@keyframes indRouteDot {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+.ind-route-dot {
+  offset-rotate: 0deg;
+  animation: indRouteDot 4.5s linear infinite;
+}
+
+@keyframes indBar {
+  0%,
+  100% {
+    transform: scaleY(0.55);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.ind-bar {
+  transform-origin: bottom;
+  animation: indBar 2.6s ease-in-out infinite;
+}
+
+@keyframes indRise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-60px);
+    opacity: 0;
+  }
+}
+.ind-rise {
+  animation: indRise 3.6s ease-in infinite;
+}
+
+@keyframes indSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ind-spin {
+  animation: indSpin linear infinite;
+}
+
+@keyframes indSpinRev {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+.ind-spin-rev {
+  animation: indSpinRev linear infinite;
+}
+
+@keyframes indConveyor {
+  from {
+    left: -8%;
+  }
+  to {
+    left: 108%;
+  }
+}
+.ind-conveyor {
+  animation: indConveyor 4.5s linear infinite;
+}
+
+/* ── Richer storytelling scenes (Logistics map, DNA helix, AI scan) ── */
+
+/* Any element (SVG <g> or HTML) that rides along an offset-path; the truck
+   rotates to face its direction of travel. Duration set inline per rider. */
+.ind-travel {
+  offset-rotate: auto;
+  animation: indRouteDot linear infinite;
+}
+
+/* Flowing dashes along a GPS route — the dash pattern marches forward. */
+@keyframes indDash {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+.ind-dash {
+  animation: indDash 1.1s linear infinite;
+}
+
+/* Live-tracking ping: a ring that expands from a map node and fades.
+   transform-box keeps the scale centred on the SVG circle itself. */
+@keyframes indPing {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+.ind-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: indPing 2.6s ease-out infinite;
+}
+
+/* Vertical scroll that makes the DNA base-pairs appear to twist upward.
+   The helix pattern repeats every half of its height, so -50% loops seamlessly. */
+@keyframes indDnaScroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+.ind-dna {
+  animation: indDnaScroll 9s linear infinite;
+}
+
+/* AI-diagnostics scan bar sweeping down through the analysed region. */
+@keyframes indScan {
+  0% {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  20%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(220%);
+    opacity: 0;
+  }
+}
+.ind-scan {
+  animation: indScan 3s ease-in-out infinite;
+}
+
+/* Gentle bob for floating glass AI chips. */
+@keyframes indHover {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.ind-hover {
+  animation: indHover 4s ease-in-out infinite;
+}
+
+/* ── Ambient depth behind the industry illustration ───────────────── */
+
+/* Grid drifts diagonally by exactly one tile so it loops seamlessly. */
+@keyframes indGridPan {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 38px 38px, 38px 38px;
+  }
+}
+.ind-grid-pan {
+  animation: indGridPan 8s linear infinite;
+}
+
+/* Blurred bokeh circles wander slowly to give the field parallax depth. */
+@keyframes indBlob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(14px, -18px) scale(1.14);
+  }
+}
+.ind-blob {
+  animation: indBlob 16s ease-in-out infinite;
+}
+
+/* Particles rise through the panel, fading in and out at the extremes. */
+@keyframes indParticle {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-180px) translateX(12px);
+    opacity: 0;
+  }
+}
+.ind-particle {
+  animation: indParticle linear infinite;
+}
+
+/* Pulsing aura behind the AI core — a breathing halo of light. */
+@keyframes indCorePulse {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.9;
+  }
+}
+.ind-core-pulse {
+  animation: indCorePulse 3.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ind-breathe,
+  .ind-orbit,
+  .ind-orbit-counter,
+  .ind-ecg-scroll,
+  .ind-blink,
+  .ind-route-dot,
+  .ind-bar,
+  .ind-rise,
+  .ind-spin,
+  .ind-spin-rev,
+  .ind-conveyor,
+  .ind-travel,
+  .ind-dash,
+  .ind-ping,
+  .ind-dna,
+  .ind-scan,
+  .ind-hover,
+  .ind-grid-pan,
+  .ind-blob,
+  .ind-particle,
+  .ind-core-pulse {
+    animation: none;
+  }
+}
+
+/* ── Industry tab transition (600–800ms) ─────────────────────────
+   On each tab switch the panel remounts illustration + caption via
+   React key, replaying these entrance moves; the per-industry glow
+   layers cross-fade underneath (opacity transition on the layer). */
+@keyframes indIllustrationIn {
+  0% {
+    opacity: 0;
+    transform: translateX(28px) scale(0.92) rotate(-4deg);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+}
+.ind-illustration-in {
+  animation: indIllustrationIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Text slides in from the left as the new industry settles. */
+@keyframes indCaptionIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.ind-caption-in {
+  animation: indCaptionIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.1s;
+}
+
+/* Exit: the outgoing illustration + caption fade and scale down slightly as
+   they drift left, before the React key swaps in the next industry. Paired
+   with the ~260ms JS timeout so out→in reads as one cinematic ~700ms cross. */
+@keyframes indSwapOut {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-22px) scale(0.94);
+  }
+}
+.ind-swap-out {
+  animation: indSwapOut 0.26s ease-in both;
+}
+
+/* Live metric widgets: stagger up + de-blur on entrance, then float gently.
+   Entrance rides the outer element; the perpetual float rides the inner card,
+   so the two transforms never fight. */
+@keyframes indMetricIn {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.9);
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+.ind-metric-in {
+  animation: indMetricIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes indMetricFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.ind-metric-float {
+  animation: indMetricFloat 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ind-illustration-in,
+  .ind-caption-in,
+  .ind-swap-out,
+  .ind-metric-in,
+  .ind-metric-float {
+    animation: none;
+  }
+}
+
+/* ── Ecommerce storyboard scene ("Visitor → Loyal Customer") ──────
+   A 5-beat looping story; each beat is a crossfading layer whose inner
+   elements carry their own looping motion. */
+@keyframes ecoParticle {
+  0% { transform: translateX(0); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateX(var(--eco-dist, 96px)); opacity: 0; }
+}
+.eco-particle { animation: ecoParticle 1.6s linear infinite; }
+
+@keyframes ecoScanBar {
+  0% { transform: translateY(-10%); opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translateY(210%); opacity: 0; }
+}
+.eco-scan { animation: ecoScanBar 1.8s ease-in-out infinite; }
+
+@keyframes ecoChipIn {
+  0% { opacity: 0; transform: translateY(8px) scale(0.92); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.eco-chip { animation: ecoChipIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes ecoFly {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  45% { opacity: 1; }
+  100% { opacity: 1; transform: var(--eco-fly) scale(1); }
+}
+.eco-fly { animation: ecoFly 1.5s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+
+@keyframes ecoGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 138, 61, 0); }
+  50% { box-shadow: 0 0 26px -6px rgba(255, 138, 61, 0.65); }
+}
+.eco-glow { animation: ecoGlowPulse 2.2s ease-in-out infinite; }
+
+@keyframes ecoTick {
+  0% { opacity: 0; transform: scale(0.4); }
+  60% { transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.eco-tick { animation: ecoTick 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .eco-particle,
+  .eco-scan,
+  .eco-chip,
+  .eco-fly,
+  .eco-glow,
+  .eco-tick {
+    animation: none;
+  }
+}
+
+/* progress bar fill — used by the Education storyboard's "Student learns" beat */
+@keyframes ecoFill {
+  0% { width: 0%; }
+  70%, 100% { width: 100%; }
+}
+.eco-fill { animation: ecoFill 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .eco-fill { animation: none; width: 100%; }
 }

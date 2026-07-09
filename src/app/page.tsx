@@ -1,5 +1,4 @@
 import { FiArrowRight, FiCheck } from "react-icons/fi";
-import { TbStarFilled } from "react-icons/tb";
 import ExperienceStage from "@/components/dom/ExperienceStage";
 // To revert to the neural brain, swap HeroGlobe back to HeroBrain below.
 // import HeroBrain from "@/components/dom/HeroBrain";
@@ -14,6 +13,7 @@ import SiteFooter from "@/components/dom/SiteFooter";
 import SectionHeading from "@/components/dom/SectionHeading";
 import TechEcosystemFlow from "@/components/dom/TechEcosystemFlow";
 import IndustriesShowcase from "@/components/dom/IndustriesShowcase";
+import ClientShowcase from "@/components/dom/ClientShowcase";
 
 const HERO_FEATURES = [
   "AI Agents",
@@ -28,29 +28,6 @@ const INDUSTRY_STATS = [
   { value: "100+", label: "Projects Delivered" },
   { value: "98%", label: "Client Satisfaction" },
 ];
-
-// Placeholder client voices — swap in real quotes when available
-const TESTIMONIALS = [
-  {
-    quote:
-      "Soft Suave built an AI workflow that cut our claims processing time by more than half. Their team felt like an extension of ours from day one.",
-    name: "Sarah Mitchell",
-    role: "VP of Operations, HealthTech",
-  },
-  {
-    quote:
-      "The recommendation engine they delivered lifted our conversion rate within the first quarter. Clear communication, on-time delivery, zero surprises.",
-    name: "Daniel Rodriguez",
-    role: "Head of Digital, Ecommerce",
-  },
-  {
-    quote:
-      "From fraud detection to reporting automation, every solution shipped production-ready. The most reliable engineering partner we've worked with.",
-    name: "Priya Raghavan",
-    role: "CTO, FinTech",
-  },
-];
-
 
 export default function Home() {
   return (
@@ -71,22 +48,28 @@ export default function Home() {
               heading) sit at the visual centre beside the globe */}
           <div className="lg:translate-y-5" data-parallax="2">
             <p
-              className="hero-reveal mb-6 text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D] md:text-sm"
+              className="hero-reveal mb-6 text-xs font-medium uppercase tracking-[0.35em] text-(--brand-orange) md:text-sm"
               style={{ animationDelay: "0.05s" }}
             >
               AI-Powered Digital Solutions
             </p>
             <h1
-              className="hero-reveal max-w-4xl text-3xl font-semibold leading-[1.1] tracking-tight text-white md:text-5xl lg:text-6xl"
+              className="hero-reveal max-w-4xl text-3xl font-extrabold leading-tight tracking-tight text-(--heading) md:text-5xl lg:text-6xl"
               style={{ animationDelay: "0.18s" }}
             >
-              Transform Your Business with AI,{" "}
-              <span className="bg-gradient-to-r from-[#FF9440] via-[#FB5A38] to-[#F92B4E] bg-clip-text text-transparent">
-                Automation &amp; Custom Software
+              <span className="block text-[1.12em]">Transform Your</span>
+              Business with{" "}
+              <span className="bg-gradient-to-r from-amber-200 to-(--grad-1) bg-clip-text text-transparent drop-shadow-[0_0_22px_var(--glow-orange)]">
+                AI
               </span>
+              ,{" "}
+              <span className="bg-gradient-to-r from-(--grad-1) via-(--grad-2) to-(--grad-3) bg-clip-text text-transparent">
+                Automation
+              </span>{" "}
+              &amp; Custom Software
             </h1>
             <p
-              className="hero-reveal mt-6 max-w-2xl text-base leading-relaxed text-zinc-400 md:text-lg"
+              className="hero-reveal mt-6 max-w-2xl text-base leading-relaxed text-(--foreground) md:text-lg"
               style={{ animationDelay: "0.28s" }}
             >
               We build AI-powered software, intelligent automation, and
@@ -99,14 +82,14 @@ export default function Home() {
             >
               <a
                 href="mailto:softsuave.ai@gmail.com"
-                className="btn-primary group inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold text-[#1a0a04]"
+                className="btn-primary group inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold text-white"
               >
                 Schedule a Free Consultation
-                <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                <FiArrowRight className="transition-transform duration-300 ease-out group-hover:translate-x-1.5" />
               </a>
               <a
                 href="#experience"
-                className="btn-secondary inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-6 py-2.5 text-sm font-semibold text-zinc-200 backdrop-blur hover:border-[#FF8A3D]/50 hover:text-[#FFB057]"
+                className="btn-secondary inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold text-(--foreground)"
               >
                 Explore Our Solutions
               </a>
@@ -118,9 +101,9 @@ export default function Home() {
               {HERO_FEATURES.map((feature) => (
                 <span
                   key={feature}
-                  className="inline-flex items-center gap-1.5 text-sm text-zinc-400"
+                  className="inline-flex items-center gap-1.5 text-sm text-(--foreground)"
                 >
-                  <FiCheck className="shrink-0 text-[#FF8A3D]" />
+                  <FiCheck className="shrink-0 text-(--brand-orange)" />
                   {feature}
                 </span>
               ))}
@@ -133,7 +116,10 @@ export default function Home() {
               className="hero-float pointer-events-none relative hidden aspect-square w-[90%] max-w-2xl md:block lg:-mr-16 lg:w-[95%] xl:-mr-20"
               data-parallax="4"
             >
-              <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle,rgba(255,138,61,0.05),transparent_66%)] blur-3xl" />
+              <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle,var(--glow-orange),transparent_66%)] blur-3xl" />
+              {/* small cool counterpoint: blue glow tucked behind the
+                  lower-left of the globe so the warm palette has contrast */}
+              <div className="absolute bottom-[6%] left-[4%] h-[45%] w-[45%] rounded-full bg-[radial-gradient(circle,var(--glow-blue),transparent_65%)] blur-3xl" />
               <div className="relative h-full w-full">
                 {/* <HeroBrain /> */}
                 <HeroGlobe />
@@ -158,6 +144,11 @@ export default function Home() {
         {/* (The services grid that used to sit here was removed — the eight
             services now live as chapters inside the ExperienceStage above.) */}
         <section id="industries" className="relative pt-24 lg:pt-30">
+          {/* full-bleed alternating band (#F1F5F9 in light) for section rhythm */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-1/2 -z-20 w-screen -translate-x-1/2 bg-(--section-alt)"
+          />
           {/* Subtle ambient depth: soft orange glow behind the heading + a
               faint dot grid across the section */}
           <div
@@ -165,8 +156,8 @@ export default function Home() {
             className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
             data-parallax="-5"
           >
-            <div className="absolute left-1/2 top-16 h-[420px] w-[760px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,138,61,0.10),transparent_70%)] blur-2xl" />
-            <div className="absolute inset-0 opacity-[0.035] [background-image:radial-gradient(circle,#FF8A3D_1px,transparent_1px)] [background-size:26px_26px]" />
+            <div className="absolute left-1/2 top-16 h-[420px] w-[760px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,var(--glow-orange),transparent_70%)] blur-2xl" />
+            <div className="absolute inset-0 opacity-[0.05] [background-image:radial-gradient(circle,var(--brand-orange)_1px,transparent_1px)] [background-size:26px_26px]" />
           </div>
 
           <div className="relative">
@@ -181,12 +172,12 @@ export default function Home() {
             <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-x-14 gap-y-6">
               {INDUSTRY_STATS.map((stat) => (
                 <div key={stat.label} className="text-center">
-                  <p className="text-3xl font-bold md:text-4xl">
-                    <span className="bg-gradient-to-r from-[#FF9440] to-[#F92B4E] bg-clip-text text-transparent">
+                  <p className="text-3xl font-extrabold md:text-4xl">
+                    <span className="bg-gradient-to-r from-(--grad-1) to-(--grad-3) bg-clip-text text-transparent">
                       <CountUp value={stat.value} />
                     </span>
                   </p>
-                  <p className="mt-1 text-xs uppercase tracking-wider text-zinc-500">
+                  <p className="mt-1 text-xs uppercase tracking-wider text-(--text-secondary)">
                     {stat.label}
                   </p>
                 </div>
@@ -206,27 +197,27 @@ export default function Home() {
         {/* ── CTA ───────────────────────────────────────────────────── */}
         <section id="contact" className="pt-24 lg:pt-30">
           <div
-            className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-[#111113] bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(255,106,61,0.14),transparent_70%)] px-6 py-20 text-center shadow-sm"
+            className="relative overflow-hidden rounded-3xl border border-(--border) bg-(--card) bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,var(--glow-orange),transparent_70%)] px-6 py-20 text-center shadow-[0_20px_50px_-20px_var(--shadow-soft)] backdrop-blur-xl"
             data-parallax="3"
           >
-            <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-white md:text-4xl">
+            <h2 className="mx-auto max-w-2xl text-3xl font-extrabold tracking-tight text-(--heading) md:text-4xl">
               Ready to Transform Your Business with AI?
             </h2>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-zinc-400">
+            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-(--foreground)">
               Book a free AI strategy session with our experts and discover
               where AI can create the biggest impact in your organization.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
                 href="mailto:softsuave.ai@gmail.com"
-                className="btn-primary group inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm font-semibold text-[#1a0a04]"
+                className="btn-primary group inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm font-semibold text-white"
               >
                 Book a Free Consultation
                 <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-0.5" />
               </a>
               <a
                 href="mailto:softsuave.ai@gmail.com"
-                className="btn-secondary inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-8 py-3.5 text-sm font-semibold text-zinc-200 hover:border-[#FF8A3D]/50 hover:text-[#FFB057]"
+                className="btn-secondary inline-flex items-center gap-2 rounded-full border border-(--border) bg-(--card) px-8 py-3.5 text-sm font-semibold text-(--foreground) hover:border-(--brand-orange)/50 hover:text-(--brand-orange)"
               >
                 Talk With AI Experts
               </a>
@@ -234,45 +225,20 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Testimonials ──────────────────────────────────────────── */}
-        <section id="testimonials" className="pb-24 pt-24 lg:pb-30 lg:pt-30">
+        {/* ── Testimonials / Reviews ────────────────────────────────── */}
+        {/* mt gap leaves clean page background between the CTA card and the
+            testimonials dashboard so they don't butt together */}
+        <section id="testimonials" className="relative mt-20 lg:mt-28">
           <SectionHeading
             eyebrow="Testimonials"
             title="What Our Clients Say About Us"
             body="We've empowered hundreds of clients globally to achieve their business goals. Hear firsthand how our expertise and AI-driven solutions have made a difference."
           />
-          <div
-            className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3"
-            data-parallax="2"
-          >
-            {TESTIMONIALS.map((t) => (
-              <figure
-                key={t.name}
-                className="flex flex-col rounded-2xl border border-white/[0.08] bg-[#111113] p-8 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#FF8A3D]/40 hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.6),0_0_36px_-10px_rgba(255,138,61,0.3)]"
-              >
-                <div className="flex gap-1 text-[#FF8A3D]">
-                  {Array.from({ length: 5 }).map((_, s) => (
-                    <TbStarFilled key={s} className="h-4 w-4" />
-                  ))}
-                </div>
-                <blockquote className="mt-5 flex-1 text-sm leading-relaxed text-zinc-300">
-                  &ldquo;{t.quote}&rdquo;
-                </blockquote>
-                <figcaption className="mt-7 flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#FF8A3D]/30 bg-[#FF8A3D]/10 text-sm font-bold text-[#FF9E55]">
-                    {t.name.charAt(0)}
-                  </span>
-                  <span>
-                    <span className="block text-sm font-semibold text-white">
-                      {t.name}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-zinc-500">
-                      {t.role}
-                    </span>
-                  </span>
-                </figcaption>
-              </figure>
-            ))}
+          {/* interactive testimonials dashboard: client list drives a featured,
+              auto-rotating quote; satisfaction donut + mini cards + metric
+              strip beneath. Reads the theme tokens, so it adapts light/dark. */}
+          <div className="mt-12">
+            <ClientShowcase />
           </div>
         </section>
       </div>

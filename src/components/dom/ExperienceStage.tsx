@@ -6,6 +6,12 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FiPause, FiPlay } from "react-icons/fi";
 import { scrollState } from "@/lib/scrollState";
 import ExperienceScenes from "@/components/dom/ExperienceScenes";
+import SplineScene from "@/components/dom/SplineScene";
+
+// Real WebGL 3D scenes live in src/components/canvas/AiCoreScene.tsx and
+// CloudNetworkScene.tsx. They're currently OFF — every chapter uses the
+// built-in 2D canvas story. To switch a chapter back to its 3D scene, import
+// it via next/dynamic (ssr:false) and add it to an R3F_SCENES map here.
 
 type Slide = {
   label: string;
@@ -94,6 +100,23 @@ const SLIDES: Slide[] = [
   },
 ];
 
+// ── Spline 3D scenes ────────────────────────────────────────────────
+// Paste a Spline "Viewer" URL (…/scene.splinecode) for any chapter to
+// replace its built-in canvas story with a live 3D Spline scene. Leave
+// undefined to keep the canvas. Index matches SLIDES order.
+// The first entry is a public Spline DEMO so you can confirm the pipeline
+// works immediately — replace it (and add more) with your own exports.
+const SPLINE_SCENES: (string | undefined)[] = [
+  undefined, // 01 Custom AI — uses the built-in WebGL AiCoreScene (below)
+  undefined, // 02 Automation
+  undefined, // 03 Chatbots
+  undefined, // 04 Software
+  undefined, // 05 Mobile
+  undefined, // 06 Web Apps
+  undefined, // 07 Modernization
+  undefined, // 08 GCC
+];
+
 const N = SLIDES.length;
 const SLIDE_MS = 12000; // each chapter's story plays ~12s before auto-advancing
 
@@ -124,6 +147,9 @@ export default function ExperienceStage() {
     if (i === activeRef.current) return;
     activeRef.current = i;
     elapsedRef.current = 0;
+    // scrollState is an intentional mutable singleton bridge, read by the
+    // canvas useFrame loops — mutating it here is the designed data flow.
+    // eslint-disable-next-line react-hooks/immutability
     scrollState.transition = 1; // kick the camera: rotate + zoom dip
     setActive(i);
   };
@@ -219,8 +245,12 @@ export default function ExperienceStage() {
   // Copy transition sequencing: fade the old text out (300ms), then mount
   // the new text which slides in (500ms) — ~800ms total, in sync with the
   // camera's transition pulse.
+  // Timed cross-fade: when the active chapter changes, fade the old copy out
+  // then swap in the new. This is a genuine sequenced transition (setState →
+  // wait 300ms → setState), which is exactly what an effect is for.
   useEffect(() => {
     if (active === displayed) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLeaving(true);
     const t = setTimeout(() => {
       setDisplayed(active);
@@ -235,7 +265,7 @@ export default function ExperienceStage() {
     <section ref={sectionRef} className="relative w-full py-10">
       <div
         ref={cardRef}
-        className="relative mx-auto flex min-h-[560px] w-full flex-col overflow-hidden bg-[#0a0a0c]"
+        className="relative mx-auto flex min-h-[560px] w-full flex-col overflow-hidden bg-(--showcase) shadow-[var(--showcase-shadow)]"
         style={CARD_START}
       >
         {/* Content area: neural scene + left slider + chapter copy */}
@@ -243,12 +273,23 @@ export default function ExperienceStage() {
           {/* The navy backdrop is painted here on the full card so its colour
               never varies; the transparent canvas above it only draws the
               animation content, centered in the right half on large screens */}
-          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,#0B1426_0%,#08101e_55%,#0a0a0c_100%)]">
-            {/* one cinematic story scene per service chapter */}
+          <div
+            className="absolute inset-0 z-0"
+            style={{ backgroundImage: "var(--showcase-grad)" }}
+          >
+            {/* one cinematic story scene per service chapter (2D canvas) */}
             <ExperienceScenes
               active={active}
               className="absolute inset-0 lg:left-[38%]"
             />
+            {/* live 3D Spline scene overlays the canvas for chapters that
+                have a URL set in SPLINE_SCENES; others keep the canvas */}
+            {SPLINE_SCENES[active] && (
+              <SplineScene
+                scene={SPLINE_SCENES[active]}
+                className="absolute inset-0 lg:left-[38%]"
+              />
+            )}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(10,10,12,0.8)_100%)]" />
           </div>
 
@@ -303,7 +344,7 @@ export default function ExperienceStage() {
                   />
 
                   <span
-                    className={`relative inline-block origin-left pl-2 font-mono text-xs tabular-nums transition-all duration-300 ease-out ${
+                    className={`relative inline-block origin-left pl-2 font-mono text-sm tabular-nums transition-all duration-300 ease-out ${
                       isActive
                         ? "scale-[1.2] text-[#FF8A3D]"
                         : "scale-100 text-zinc-600 group-hover:text-zinc-400"
@@ -312,10 +353,10 @@ export default function ExperienceStage() {
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span
-                    className={`relative inline-block text-sm font-medium transition-all duration-300 ease-out ${
+                    className={`relative inline-block text-base font-medium transition-all duration-300 ease-out md:text-lg ${
                       isActive
                         ? "translate-x-[5px] text-white [text-shadow:0_0_14px_rgba(255,138,61,0.55)]"
-                        : "translate-x-0 text-zinc-500 group-hover:text-zinc-300"
+                        : "translate-x-0 text-zinc-400 group-hover:text-zinc-200"
                     }`}
                   >
                     {s.label}
@@ -329,7 +370,7 @@ export default function ExperienceStage() {
               the animated scene owns the right half of the card */}
           <div
             key={displayed}
-            className={`pointer-events-none absolute inset-y-0 left-0 z-10 flex w-full flex-col justify-start pt-24 md:pt-32 px-6 pl-28 md:pl-104 lg:w-[60%] lg:pr-0 transition-all duration-300 ease-in ${
+            className={`pointer-events-none absolute inset-y-0 left-0 z-10 flex w-full flex-col justify-center px-6 pl-28 md:pl-72 lg:w-[56%] lg:pr-0 transition-all duration-300 ease-in ${
               leaving
                 ? "-translate-y-3 opacity-0"
                 : "animate-[fadeUp_0.55s_cubic-bezier(0.22,1,0.36,1)]"
@@ -348,7 +389,7 @@ export default function ExperienceStage() {
                   </p>
                 )}
               </div>
-              <h2 className="mt-4 text-3xl font-semibold leading-[1.05] tracking-tight text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.95)] md:text-5xl">
+              <h2 className="mt-4 text-2xl font-semibold leading-[1.1] tracking-tight text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.95)] md:text-4xl">
                 {slide.title}
               </h2>
               <p className="mt-6 max-w-[520px] text-base leading-relaxed text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.95)] md:text-lg">

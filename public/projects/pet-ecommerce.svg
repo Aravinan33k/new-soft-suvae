@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" fill="none">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#161020"/><stop offset="0.5" stop-color="#120e1c"/><stop offset="1" stop-color="#0a0a0f"/></linearGradient>
+    <linearGradient id="acc4" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff9440"/><stop offset="1" stop-color="#ff6a3d"/></linearGradient>
+    <linearGradient id="phone" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b1830"/><stop offset="1" stop-color="#14121f"/></linearGradient>
+    <radialGradient id="glow4" cx="0.7" cy="0.3" r="0.7"><stop offset="0" stop-color="#ff8a3d" stop-opacity="0.22"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glow4b" cx="0.2" cy="0.8" r="0.6"><stop offset="0" stop-color="#b57bff" stop-opacity="0.2"/><stop offset="1" stop-color="#b57bff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg4)"/><rect width="1280" height="720" fill="url(#glow4)"/><rect width="1280" height="720" fill="url(#glow4b)"/>
+  <text x="80" y="150" fill="#f0eafb" font-family="Segoe UI,Arial" font-size="40" font-weight="800">Perky<tspan fill="#ff9d55">Store</tspan></text>
+  <text x="80" y="192" fill="#9a90b5" font-family="Segoe UI,Arial" font-size="18">Everything your pet loves — delivered.</text>
+  <g font-family="Segoe UI,Arial">
+    <rect x="80" y="240" width="150" height="96" rx="16" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.07"/><text x="100" y="284" fill="#9a90b5" font-size="13">Orders</text><text x="100" y="316" fill="#fff" font-size="26" font-weight="800">4.2M</text>
+    <rect x="248" y="240" width="150" height="96" rx="16" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.07"/><text x="268" y="284" fill="#9a90b5" font-size="13">Sales</text><text x="268" y="316" fill="#ff9d55" font-size="26" font-weight="800">+28%</text>
+  </g>
+  <!-- left product cards -->
+  <g font-family="Segoe UI,Arial">
+    <g transform="translate(80,368)"><rect width="318" height="120" rx="16" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.06"/><rect x="16" y="16" width="88" height="88" rx="14" fill="url(#acc4)" fill-opacity="0.85"/><circle cx="46" cy="52" r="12" fill="#fff" fill-opacity="0.9"/><circle cx="74" cy="52" r="12" fill="#fff" fill-opacity="0.9"/><path d="M44 78 q16 14 32 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/><text x="122" y="48" fill="#efeafb" font-size="17" font-weight="700">Chew Toy Bundle</text><text x="122" y="74" fill="#9a90b5" font-size="14">Best seller</text><text x="122" y="100" fill="#ff9d55" font-size="18" font-weight="800">$24.00</text></g>
+    <g transform="translate(80,504)"><rect width="318" height="120" rx="16" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.06"/><rect x="16" y="16" width="88" height="88" rx="14" fill="#b57bff" fill-opacity="0.7"/><path d="M40 86 l20 -40 l20 40 z" fill="#fff" fill-opacity="0.9"/><text x="122" y="48" fill="#efeafb" font-size="17" font-weight="700">Grain-free Food</text><text x="122" y="74" fill="#9a90b5" font-size="14">Subscribe &amp; save</text><text x="122" y="100" fill="#ff9d55" font-size="18" font-weight="800">$39.00</text></g>
+  </g>
+  <!-- phone mockup -->
+  <g transform="translate(760,120)">
+    <rect x="0" y="0" width="360" height="560" rx="46" fill="url(#phone)" stroke="#ffffff" stroke-opacity="0.1" stroke-width="2"/>
+    <rect x="140" y="22" width="80" height="14" rx="7" fill="#0a0a0f"/>
+    <text x="34" y="90" fill="#efeafb" font-family="Segoe UI,Arial" font-size="22" font-weight="800">Shop</text>
+    <circle cx="326" cy="80" r="16" fill="url(#acc4)"/><path d="M319 80 h14 M326 73 v14" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <rect x="34" y="112" width="292" height="40" rx="20" fill="#ffffff" fill-opacity="0.06"/><circle cx="58" cy="132" r="7" fill="none" stroke="#9a90b5" stroke-width="2"/><text x="78" y="138" fill="#8a80a5" font-family="Segoe UI,Arial" font-size="14">Search products…</text>
+    <!-- product grid -->
+    <g>
+      <rect x="34" y="172" width="138" height="150" rx="18" fill="#ffffff" fill-opacity="0.05"/><rect x="34" y="172" width="138" height="96" rx="18" fill="url(#acc4)" fill-opacity="0.85"/><text x="48" y="292" fill="#efeafb" font-family="Segoe UI,Arial" font-size="14" font-weight="700">Cozy Bed</text><text x="48" y="312" fill="#ff9d55" font-family="Segoe UI,Arial" font-size="13" font-weight="800">$32</text>
+      <rect x="188" y="172" width="138" height="150" rx="18" fill="#ffffff" fill-opacity="0.05"/><rect x="188" y="172" width="138" height="96" rx="18" fill="#b57bff" fill-opacity="0.7"/><text x="202" y="292" fill="#efeafb" font-family="Segoe UI,Arial" font-size="14" font-weight="700">Leash Pro</text><text x="202" y="312" fill="#ff9d55" font-family="Segoe UI,Arial" font-size="13" font-weight="800">$18</text>
+      <rect x="34" y="336" width="138" height="150" rx="18" fill="#ffffff" fill-opacity="0.05"/><rect x="34" y="336" width="138" height="96" rx="18" fill="#39d98a" fill-opacity="0.6"/><text x="48" y="456" fill="#efeafb" font-family="Segoe UI,Arial" font-size="14" font-weight="700">Treats</text><text x="48" y="476" fill="#ff9d55" font-family="Segoe UI,Arial" font-size="13" font-weight="800">$12</text>
+      <rect x="188" y="336" width="138" height="150" rx="18" fill="#ffffff" fill-opacity="0.05"/><rect x="188" y="336" width="138" height="96" rx="18" fill="url(#acc4)" fill-opacity="0.6"/><text x="202" y="456" fill="#efeafb" font-family="Segoe UI,Arial" font-size="14" font-weight="700">Collar</text><text x="202" y="476" fill="#ff9d55" font-family="Segoe UI,Arial" font-size="13" font-weight="800">$16</text>
+    </g>
+    <rect x="34" y="504" width="292" height="34" rx="17" fill="url(#acc4)"/><text x="180" y="526" fill="#fff" font-family="Segoe UI,Arial" font-size="14" font-weight="700" text-anchor="middle">Add to Cart</text>
+  </g>
+</svg>

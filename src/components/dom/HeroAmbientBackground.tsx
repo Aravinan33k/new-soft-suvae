@@ -76,11 +76,24 @@ export default function HeroAmbientBackground() {
       const now = performance.now() * 0.001;
       ctx!.clearRect(0, 0, width, height);
 
+      // palette follows the active theme (light ivory vs dark navy)
+      const darkTheme =
+        document.documentElement.getAttribute("data-theme") === "dark";
+      // dark (warm-black) = cream/orange particles; default (light) = warm
+      // stone specks + orange links + a sparing blue dot on the paper base
+      const starRgb = darkTheme ? "255,240,220" : "120,113,108";
+      const starScale = darkTheme ? 0.5 : 0.24;
+      const linkRgb = darkTheme ? "255,150,90" : "234,88,12";
+      const linkScale = darkTheme ? 0.1 : 0.06;
+      const particleFill = darkTheme
+        ? "rgba(255,220,180,0.22)"
+        : "rgba(37,99,235,0.12)";
+
       // twinkling starfield (behind the particle web)
       for (const s of stars) {
         const tw = 0.5 + 0.5 * Math.sin(now * s.speed + s.phase);
         ctx!.beginPath();
-        ctx!.fillStyle = `rgba(255,240,220,${(0.12 + tw * s.amp) * 0.5})`;
+        ctx!.fillStyle = `rgba(${starRgb},${(0.12 + tw * s.amp) * starScale})`;
         ctx!.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx!.fill();
       }
@@ -102,7 +115,7 @@ export default function HeroAmbientBackground() {
           const dy = a.y - b.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < LINK_DIST) {
-            ctx!.strokeStyle = `rgba(255,150,90,${(1 - dist / LINK_DIST) * 0.1})`;
+            ctx!.strokeStyle = `rgba(${linkRgb},${(1 - dist / LINK_DIST) * linkScale})`;
             ctx!.lineWidth = 1;
             ctx!.beginPath();
             ctx!.moveTo(a.x, a.y);
@@ -114,7 +127,7 @@ export default function HeroAmbientBackground() {
 
       for (const p of particles) {
         ctx!.beginPath();
-        ctx!.fillStyle = "rgba(255,220,180,0.22)";
+        ctx!.fillStyle = particleFill;
         ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx!.fill();
       }
@@ -128,10 +141,17 @@ export default function HeroAmbientBackground() {
     seed();
     loop();
 
+    // reduced-motion renders one static frame — repaint on theme toggle
+    const mo = new MutationObserver(() => {
+      if (reduceMotion) draw();
+    });
+    mo.observe(document.documentElement, { attributeFilter: ["data-theme"] });
+
     const onResize = () => seed();
     window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("resize", onResize);
+      mo.disconnect();
       cancelAnimationFrame(raf);
     };
   }, []);
@@ -142,10 +162,10 @@ export default function HeroAmbientBackground() {
       data-parallax="-5"
     >
       <div
-        className="absolute inset-0 opacity-[0.07]"
+        className="absolute inset-0 opacity-[0.05]"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+            "linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px)",
           backgroundSize: "64px 64px",
           maskImage:
             "radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent 75%)",
@@ -153,8 +173,14 @@ export default function HeroAmbientBackground() {
             "radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent 75%)",
         }}
       />
-      {/* Slowly drifting warm gradient — barely perceptible motion */}
-      <div className="hero-gradient-drift absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_28%_35%,rgba(255,138,61,0.12),transparent_65%)]" />
+      {/* Slowly drifting warm gradient — theme-tinted, barely perceptible */}
+      <div
+        className="hero-gradient-drift absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 55% 45% at 28% 35%, var(--wash-warm), transparent 65%)",
+        }}
+      />
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       {/* Subtle film-grain noise texture */}
       <div

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useWebGLSupported } from "@/lib/webgl";
 
 // ─────────────────────────────────────────────────────────────────────────
 // The company logo, built ENTIRELY from particles.
@@ -37,7 +38,13 @@ const MARK_PATHS = [
 const VIEW_W = 31;
 const VIEW_H = 36;
 const RASTER_SCALE = 10; // rasterize at 310×360 for clean sampling
-const SAMPLE_STEP = 4; // raster px between samples (~2.8k particles)
+// raster px between samples. At 3 the swarm was too sparse to saturate the
+// mark's thin lower strokes (the isolated bottom taper of the cube) into solid
+// gold under additive blending, so the base read as unfinished "sand" while the
+// dense top cap looked solid. 2 (~11k particles) fills every stroke evenly top
+// to bottom while keeping the living-grain texture — still trivial on the GPU
+// since all motion is vertex-shader driven.
+const SAMPLE_STEP = 2;
 const LOGO_HEIGHT = 150; // rendered mark height in CSS px
 const LINK_R = 7; // world px — max target distance for a connection pair
 const MAX_LINKS_PER_NODE = 3;
@@ -48,16 +55,18 @@ const MAX_LINKS_PER_NODE = 3;
 const DRIFT_END = 0.9; // pure particle field, no shape yet
 const FORM_DUR = 2.4; // staggered flight into the mark
 
-// brand ramp sampled by height: #FF9440 → #FB5A38 → #F92B4E, plus a
-// sprinkle of glow-gold #FFC76A
+// Reddish gold, top to bottom. The base is a warm amber-gold with a red lean;
+// sparkle particles are a brighter (but still warm) gold rather than white-hot,
+// so the dense crown reads as rich gold instead of blowing out to white. A
+// small lift toward a lighter gold keeps the whole mark luminous and even, but
+// it stays firmly in the red-gold family — never washing to white.
+const HILITE = new THREE.Color("#FFC066");
 const rampColor = (t: number, gold: boolean, out: THREE.Color) => {
-  if (gold) return out.set("#FFC76A");
-  const a = new THREE.Color("#FF9440");
-  const b = new THREE.Color("#FB5A38");
-  const c = new THREE.Color("#F92B4E");
-  return t < 0.5
-    ? out.copy(a).lerp(b, t * 2)
-    : out.copy(b).lerp(c, (t - 0.5) * 2);
+  if (gold) return out.set("#FFC873");
+  // ONE consistent reddish gold across the whole mark. A small lift toward a
+  // lighter gold that INCREASES slightly toward the base keeps the bottom as
+  // luminous as the crown, so the mark reads solid and even top to bottom.
+  return out.set("#FF8A2E").lerp(HILITE, 0.1 + 0.12 * t);
 };
 
 function mulberry32(seed: number) {
@@ -119,12 +128,13 @@ const MOTION_GLSL = /* glsl */ `
       sin(uTime * 1.6 + seed * 43.0),
       cos(uTime * 1.9 + seed * 61.0)
     ) * 0.8 * lp;
-    // a few particles occasionally detach, wander out, and rejoin
-    float elig = step(fract(seed * 7.31), 0.06);
-    float det = smoothstep(0.982, 1.0, sin(uTime * 0.22 + seed * 40.0)) * elig * lp;
+    // a very few particles occasionally detach, wander out, and rejoin —
+    // kept rare and short so the mark never looks scattered or incomplete
+    float elig = step(fract(seed * 7.31), 0.018);
+    float det = smoothstep(0.986, 1.0, sin(uTime * 0.22 + seed * 40.0)) * elig * lp;
     vec2 dir = normalize(vec2(sin(seed * 90.0), cos(seed * 37.0)) + 0.001);
     vec3 p = mix(s, tgt, lp);
-    p.xy += drift + shim + dir * det * 18.0;
+    p.xy += drift + shim + dir * det * 6.0;
     return p;
   }
 `;
@@ -161,7 +171,7 @@ const pointsFragment = /* glsl */ `
     float core = smoothstep(0.18, 0.0, d);
     // gentle per-particle twinkle keeps the formed mark alive
     float tw = 0.85 + 0.15 * sin(uTime * 2.1 + vColor.g * 40.0);
-    float a = (soft * 0.5 + core * 0.95) * (0.4 + 0.6 * vLp) * tw;
+    float a = (soft * 0.5 + core * 0.95) * (0.55 + 0.45 * vLp) * tw;
     gl_FragColor = vec4(vColor, a);
   }
 `;
@@ -193,7 +203,9 @@ const linesFragment = /* glsl */ `
   precision highp float;
   varying float vAlpha;
   void main() {
-    gl_FragColor = vec4(1.0, 0.604, 0.235, vAlpha * 0.38);
+    // reddish gold to match the particle ramp so the web reads as one colour
+    // with the mark rather than a separate highlight
+    gl_FragColor = vec4(1.0, 0.58, 0.26, vAlpha * 0.34);
   }
 `;
 
@@ -212,7 +224,9 @@ const glowFragment = /* glsl */ `
   void main() {
     float d = length(vUv - 0.5) * 2.0;
     float fall = smoothstep(1.0, 0.0, d);
-    gl_FragColor = vec4(vec3(1.0, 0.42, 0.24), fall * fall * 0.22 * uGlow);
+    // cubed falloff keeps the glow tight to the mark so it doesn't spill a
+    // haze below/around it; warm reddish-gold tint blends with the mark
+    gl_FragColor = vec4(vec3(1.0, 0.5, 0.22), fall * fall * fall * 0.18 * uGlow);
   }
 `;
 
@@ -307,8 +321,11 @@ function Swarm({ active, reduced, center, onFormed }: SwarmProps) {
       target[i * 3 + 2] = 0;
       delay[i] = rand() * 0.55;
       seed[i] = rand() * 100;
-      sizeA[i] = 1.6 + rand() * 1.7;
-      rampColor(samples[i].y / (VIEW_H * RASTER_SCALE), rand() < 0.1, tmp);
+      sizeA[i] = 1.4 + rand() * 1.5;
+      // gold sparkle odds rise toward the bottom, so the lower half twinkles
+      // as richly as the top instead of fading into flat red
+      const tRamp = samples[i].y / (VIEW_H * RASTER_SCALE);
+      rampColor(tRamp, rand() < 0.08 + 0.14 * tRamp, tmp);
       color[i * 3] = tmp.r;
       color[i * 3 + 1] = tmp.g;
       color[i * 3 + 2] = tmp.b;
@@ -360,12 +377,19 @@ function Swarm({ active, reduced, center, onFormed }: SwarmProps) {
     //  - mark links (by target) light up as the shape locks in
     //  - float links (by start) form the loose neural web among the drifting
     //    field, then naturally dissolve as particles fly to their targets
+    // Total-link caps MUST scale with the particle count. buildPairs walks
+    // particles in sample order (top of the mark first), so any fixed cap the
+    // pair count exceeds is spent entirely on the upper mark, starving the lower
+    // mark of its connective web — which reads as a solid-gold top over a sparse,
+    // unfinished bottom. Bounding by (maxPerNode * n) keeps the caps above what
+    // the per-node limits can ever produce, so the per-node caps govern and the
+    // web covers the whole mark evenly at any density.
     const floatR = Math.sqrt((size.width * size.height) / n) * 2.0;
     const pairs: [number, number, number][] = [
-      ...buildPairs(target, LINK_R, MAX_LINKS_PER_NODE, 3400, 0.7).map(
+      ...buildPairs(target, LINK_R, MAX_LINKS_PER_NODE, MAX_LINKS_PER_NODE * n, 0.7).map(
         ([i, j]) => [i, j, LINK_R * 2.3] as [number, number, number],
       ),
-      ...buildPairs(start, floatR, 2, 1800, 1).map(
+      ...buildPairs(start, floatR, 2, 2 * n, 1).map(
         ([i, j]) => [i, j, floatR] as [number, number, number],
       ),
     ];
@@ -444,7 +468,7 @@ function Swarm({ active, reduced, center, onFormed }: SwarmProps) {
   return (
     <>
       <mesh position={geo.glowPos} material={glowMat}>
-        <planeGeometry args={[360, 360]} />
+        <planeGeometry args={[300, 300]} />
       </mesh>
 
       {/* the neural links — visible only between currently-near particles */}
@@ -488,7 +512,13 @@ export default function LogoParticles({
   center: { x: number; y: number } | null;
   onFormed?: () => void;
 }) {
-  if (!center) return null;
+  const webgl = useWebGLSupported();
+  // When WebGL can't start, skip the particle canvas but still reveal the
+  // wordmark (which normally waits on onFormed) so the footer isn't blank.
+  useEffect(() => {
+    if (webgl === false) onFormed?.();
+  }, [webgl, onFormed]);
+  if (!center || webgl === false) return null;
   return (
     <Canvas
       orthographic

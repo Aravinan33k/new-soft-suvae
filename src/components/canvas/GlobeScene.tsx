@@ -1,6 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 
@@ -436,6 +443,9 @@ function Earth({ animate }: { animate: boolean }) {
   }, []);
 
   const pulseCount = data.arcs.length;
+  // Stable per-frame buffers: created once, then mutated in place every frame
+  // by the render loop (the standard r3f pattern — bufferAttribute holds these
+  // exact arrays, so mutating their contents updates the GPU without churn).
   const pulsePosBuf = useMemo(() => new Float32Array(pulseCount * 3), [pulseCount]);
   const pulseBrightBuf = useMemo(() => new Float32Array(pulseCount), [pulseCount]);
   const hubBrightBuf = useMemo(
@@ -444,6 +454,8 @@ function Earth({ animate }: { animate: boolean }) {
   );
   // mutable per-frame color (base orange/gold, occasionally lerped to white)
   const hubColorBuf = useMemo(() => data.hubColor.slice(), [data.hubColor]);
+  // mutable next-flash schedule, copied out of the memoised `data`
+  const hubFlashAtBuf = useMemo(() => data.hubFlashAt.slice(), [data.hubFlashAt]);
 
   const earthUniforms = useMemo(
     () => ({
@@ -500,11 +512,11 @@ function Earth({ animate }: { animate: boolean }) {
 
       // occasional random flash: base color -> white -> base color
       let flash = 0;
-      const flashAt = data.hubFlashAt[h];
+      const flashAt = hubFlashAtBuf[h];
       if (t >= flashAt && t < flashAt + FLASH_DUR) {
         flash = Math.sin(((t - flashAt) / FLASH_DUR) * Math.PI);
       } else if (t >= flashAt + FLASH_DUR) {
-        data.hubFlashAt[h] = t + 5 + Math.random() * 16;
+        hubFlashAtBuf[h] = t + 5 + Math.random() * 16;
       }
       const b = h * 3;
       hubColorBuf[b] = data.hubColor[b] + (1 - data.hubColor[b]) * flash;
@@ -906,16 +918,22 @@ function GlobeControls({
   return <group ref={grp}>{children}</group>;
 }
 
+// Subscribes to the reduced-motion media query via useSyncExternalStore —
+// the idiomatic way to read an external store, with no synchronous setState
+// inside an effect. Server snapshot is `false` (motion on) to match the
+// pre-hydration default.
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+function subscribeReducedMotion(onChange: () => void) {
+  const mq = window.matchMedia(REDUCED_MOTION_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
 function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return reduced;
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    () => false,
+  );
 }
 
 export default function GlobeScene() {
@@ -937,6 +955,10 @@ export default function GlobeScene() {
   const animate = !reduced;
   const frameloop = reduced ? "demand" : inView ? "always" : "never";
 
+  // The Canvas is client-only (HeroGlobe imports this with ssr:false), so it
+  // always mounts here — three.js manages its own WebGL context. No support
+  // gate: probing a throwaway context false-negatived under the browser's
+  // per-process context cap and hid the globe.
   return (
     <div ref={wrap} className="pointer-events-auto h-full w-full">
       <Canvas

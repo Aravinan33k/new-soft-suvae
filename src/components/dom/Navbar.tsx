@@ -1,83 +1,355 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { FiArrowRight } from "react-icons/fi";
+import { useEffect, useRef, useState } from "react";
+import type { IconType } from "react-icons";
+import {
+  FiArrowRight,
+  FiChevronDown,
+  FiMail,
+  FiMenu,
+  FiMessageCircle,
+  FiMoon,
+  FiPhone,
+  FiSun,
+  FiX,
+} from "react-icons/fi";
+import { useTheme } from "@/components/dom/ThemeToggle";
 
-const NAV_LINKS = [
-  { label: "Solutions", href: "#experience" },
-  { label: "Services", href: "#experience" },
+type SubLink = { label: string; href: string };
+type NavItem = { label: string; href?: string; items?: SubLink[] };
+
+// Service pages don't exist yet, so service/team links point at the on-page
+// sections that showcase them (#experience) or the contact CTA (#contact).
+const NAV: NavItem[] = [
+  {
+    label: "AI Solutions",
+    items: [
+      { label: "Custom AI Development", href: "#experience" },
+      { label: "Generative AI", href: "#experience" },
+      { label: "AI Agents", href: "#experience" },
+      { label: "AI Chatbots", href: "#experience" },
+      { label: "RAG Solutions", href: "#experience" },
+      { label: "AI Copilots", href: "#experience" },
+    ],
+  },
+  {
+    label: "AI Integrations",
+    items: [
+      { label: "CRM AI Integration", href: "#experience" },
+      { label: "ERP AI Integration", href: "#experience" },
+      { label: "Enterprise AI Integration", href: "#experience" },
+      { label: "API Integration", href: "#experience" },
+    ],
+  },
+  {
+    label: "AI Automation",
+    items: [
+      { label: "Business Process Automation", href: "#experience" },
+      { label: "Document Automation", href: "#experience" },
+      { label: "Workflow Automation", href: "#experience" },
+      { label: "Voice AI", href: "#experience" },
+      { label: "Email Automation", href: "#experience" },
+    ],
+  },
   { label: "Industries", href: "#industries" },
-  { label: "About Us", href: "#experience" },
+  { label: "Case Studies", href: "#testimonials" },
   { label: "Resources", href: "#stack" },
+  {
+    label: "Company",
+    items: [
+      { label: "Hire AI Engineers", href: "#contact" },
+      { label: "AI Consultants", href: "#contact" },
+      { label: "AI Architects", href: "#contact" },
+      { label: "AI Product Teams", href: "#contact" },
+    ],
+  },
 ];
 
-// Glassmorphic navbar. At the top it spans the full container; once the
-// page scrolls it condenses into a Vercel-style floating pill — 95% width,
-// rounded, elevated shadow — while keeping the same 12px backdrop blur.
-// The outer header keeps a constant height so content below never shifts.
+// the split-button's dropdown options (the chevron half of the CTA)
+const CTA_OPTIONS: { icon: IconType; label: string; href: string }[] = [
+  { icon: FiMail, label: "Email Us", href: "mailto:softsuave.ai@gmail.com" },
+  { icon: FiPhone, label: "Book a Call", href: "tel:+918015159981" },
+  { icon: FiMessageCircle, label: "Chat on WhatsApp", href: "https://wa.me/918015159981" },
+];
+
+// Flat, minimal navbar in the Anthropic template style: a solid warm-cream
+// bar, plain dark text links with dropdown carets, and a black split-button
+// CTA (a "Contact Us" pill + a chevron that opens contact options). A hairline
+// bottom border deepens to a soft shadow once the page scrolls.
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState<string | null>(null); // desktop dropdown
+  const [ctaOpen, setCtaOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const { dark, toggle } = useTheme();
 
   useEffect(() => {
-    // Hysteresis: condense past 72px, expand back under 16px. The gap stops
-    // the nav flip-flopping mid-animation when the user hovers around one
-    // scroll position.
+    // Hysteresis: condense into the floating pill past 48px, expand back under 12px
     const onScroll = () =>
-      setScrolled((prev) => (prev ? window.scrollY > 16 : window.scrollY > 72));
+      setScrolled((prev) => (prev ? window.scrollY > 12 : window.scrollY > 48));
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // close the split-button menu on an outside click
+  useEffect(() => {
+    if (!ctaOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ctaRef.current && !ctaRef.current.contains(e.target as Node)) setCtaOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [ctaOpen]);
+
+  // hover intent: a short close delay lets the cursor cross into the panel
+  const openMenu = (label: string) => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpen(label);
+  };
+  const scheduleClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setOpen(null), 120);
+  };
+
   return (
-    <header className="sticky top-0 z-50 flex h-20 items-center justify-center">
-      {/* Width animates between two interpolable values (100% ↔ min(95%,72rem))
-          — never `max-w-none`, which CSS cannot transition and which made the
-          pill snap on desktop. One eased curve for width/height/radius/shadow. */}
+    <header className="sticky top-0 z-50 flex h-16 items-center justify-center">
       <nav
-        className={`flex items-center px-6 backdrop-blur-[12px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] md:px-10 ${
+        className={`flex items-center transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           scrolled
-            ? "h-12 w-[min(95%,85rem)] rounded-2xl border border-white/10 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7),0_0_24px_-12px_rgba(255,106,61,0.25)]"
-            : "h-20 w-full rounded-none border border-transparent"
+            ? "h-12 w-[min(94%,84rem)] rounded-2xl border shadow-[0_8px_32px_-10px_var(--shadow-strong)]"
+            : "h-16 w-full rounded-none border-x-0 border-t-0 border-b"
         }`}
-        style={{ backgroundColor: "rgba(10,10,20,0.5)" }}
+        style={{ backgroundColor: "var(--nav-surface)", borderColor: "var(--border)" }}
       >
-        <div className="mx-auto flex w-full max-w-[85rem] items-center">
-          <a
-            href="#top"
-            className="group flex items-center gap-3 font-(family-name:--font-manrope) text-xl font-bold tracking-tight text-white md:text-2xl"
-          >
+        <div className="mx-auto flex w-full max-w-[90rem] items-center px-5 md:px-8 lg:px-10">
+          {/* ── Wordmark ─────────────────────────────────────────────── */}
+          <a href="#top" className="group flex shrink-0 items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/softsuave-mark.svg"
               alt=""
-              className="h-9 w-auto transition-all duration-300 group-hover:rotate-[5deg] group-hover:drop-shadow-[0_0_14px_rgba(255,106,61,0.8)] md:h-10"
+              className="h-7 w-auto transition-transform duration-300 group-hover:-translate-y-0.5"
             />
-            Soft Suave
+            <span className="text-lg font-bold tracking-tight text-(--heading)">
+              Soft Suave
+            </span>
           </a>
 
-          {/* Primary menu — hidden on small screens */}
-          <nav className="ml-auto hidden items-center gap-8 lg:flex">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="text-sm font-medium text-zinc-300 transition-colors hover:text-white"
+          {/* ── Right cluster: links + split CTA + toggle ─────────────── */}
+          <div className="ml-auto flex items-center gap-5 lg:gap-7">
+            <ul className="hidden items-center gap-7 xl:flex">
+              {NAV.map((item) =>
+                item.items ? (
+                  <li
+                    key={item.label}
+                    className="relative"
+                    onMouseEnter={() => openMenu(item.label)}
+                    onMouseLeave={scheduleClose}
+                  >
+                    <button
+                      type="button"
+                      aria-expanded={open === item.label}
+                      className={`flex items-center gap-1 text-sm font-medium transition-colors ${
+                        open === item.label
+                          ? "text-(--heading)"
+                          : "text-(--foreground) hover:text-(--heading)"
+                      }`}
+                    >
+                      {item.label}
+                      <FiChevronDown
+                        className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                          open === item.label ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    <div
+                      className={`absolute left-1/2 top-full z-50 w-64 -translate-x-1/2 pt-3 transition-all duration-200 ease-out ${
+                        open === item.label
+                          ? "pointer-events-auto translate-y-0 opacity-100"
+                          : "pointer-events-none -translate-y-1 opacity-0"
+                      }`}
+                    >
+                      <div className="overflow-hidden rounded-xl border border-(--border) bg-(--panel) p-1.5 shadow-[0_20px_56px_-20px_var(--shadow-strong)] backdrop-blur-xl">
+                        {item.items.map((sub) => (
+                          <a
+                            key={sub.label}
+                            href={sub.href}
+                            onClick={() => setOpen(null)}
+                            className="group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm text-(--foreground) transition-colors hover:bg-(--background-alt) hover:text-(--heading)"
+                          >
+                            {sub.label}
+                            <FiArrowRight className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </li>
+                ) : (
+                  <li key={item.label}>
+                    <a
+                      href={item.href}
+                      className="text-sm font-medium text-(--foreground) transition-colors hover:text-(--heading)"
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ),
+              )}
+            </ul>
+
+            {/* ── CTA with a built-in dropdown of contact options ──────── */}
+            <div ref={ctaRef} className="relative hidden sm:block">
+              <button
+                type="button"
+                aria-label="Contact us"
+                aria-expanded={ctaOpen}
+                onClick={() => setCtaOpen((v) => !v)}
+                className="nav-cta flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium"
               >
-                {link.label}
-              </a>
-            ))}
-          </nav>
+                Contact Us
+                <FiChevronDown
+                  className={`h-4 w-4 transition-transform duration-300 ${ctaOpen ? "rotate-180" : ""}`}
+                />
+              </button>
 
-          <a
-            href="mailto:softsuave.ai@gmail.com"
-            className="btn-primary group ml-auto inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-[#1a0a04] lg:ml-8"
-          >
-            Contact Us
-            <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-0.5" />
-          </a>
+              <div
+                className={`absolute right-0 top-full z-50 w-56 pt-2 transition-all duration-200 ease-out ${
+                  ctaOpen
+                    ? "pointer-events-auto translate-y-0 opacity-100"
+                    : "pointer-events-none -translate-y-1 opacity-0"
+                }`}
+              >
+                <div className="overflow-hidden rounded-xl border border-(--border) bg-(--panel) p-1.5 shadow-[0_20px_56px_-20px_var(--shadow-strong)] backdrop-blur-xl">
+                  {CTA_OPTIONS.map((o) => (
+                    <a
+                      key={o.label}
+                      href={o.href}
+                      target={o.href.startsWith("http") ? "_blank" : undefined}
+                      rel={o.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                      onClick={() => setCtaOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-(--foreground) transition-colors hover:bg-(--background-alt) hover:text-(--heading)"
+                    >
+                      <o.icon className="h-4 w-4 shrink-0 text-(--brand-orange)" />
+                      {o.label}
+                    </a>
+                  ))}
+
+                  {/* colour-theme switch lives inside the Contact menu */}
+                  <div className="my-1 h-px bg-(--border)" />
+                  <button
+                    type="button"
+                    onClick={toggle}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-(--foreground) transition-colors hover:bg-(--background-alt) hover:text-(--heading)"
+                  >
+                    {dark ? (
+                      <FiSun className="h-4 w-4 shrink-0 text-(--brand-orange)" />
+                    ) : (
+                      <FiMoon className="h-4 w-4 shrink-0 text-(--brand-orange)" />
+                    )}
+                    {dark ? "Light theme" : "Dark theme"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* hamburger — below xl */}
+            <button
+              type="button"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-(--border) text-(--heading) transition-colors hover:border-(--foreground) xl:hidden"
+            >
+              {mobileOpen ? <FiX className="h-5 w-5" /> : <FiMenu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
       </nav>
+
+      {/* ── Mobile drawer (below xl) ─────────────────────────────────── */}
+      <div
+        className={`fixed inset-x-0 top-16 z-40 origin-top px-4 transition-all duration-300 ease-out xl:hidden ${
+          mobileOpen
+            ? "pointer-events-auto scale-100 opacity-100"
+            : "pointer-events-none scale-95 opacity-0"
+        }`}
+      >
+        <div className="mx-auto max-h-[80vh] w-full max-w-md overflow-y-auto rounded-2xl border border-(--border) bg-(--panel) p-3 shadow-[0_24px_64px_-16px_var(--shadow-strong)] backdrop-blur-xl">
+          {NAV.map((item) =>
+            item.items ? (
+              <div key={item.label} className="border-b border-(--border) last:border-0">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMobileExpanded((v) => (v === item.label ? null : item.label))
+                  }
+                  className="flex w-full items-center justify-between px-3 py-3.5 text-sm font-semibold text-(--heading)"
+                >
+                  {item.label}
+                  <FiChevronDown
+                    className={`h-4 w-4 transition-transform duration-300 ${
+                      mobileExpanded === item.label ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                <div
+                  className={`grid transition-all duration-300 ease-out ${
+                    mobileExpanded === item.label
+                      ? "grid-rows-[1fr] opacity-100"
+                      : "grid-rows-[0fr] opacity-0"
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="flex flex-col gap-0.5 pb-2 pl-3">
+                      {item.items.map((sub) => (
+                        <a
+                          key={sub.label}
+                          href={sub.href}
+                          onClick={() => setMobileOpen(false)}
+                          className="rounded-lg px-3 py-2 text-sm text-(--foreground) transition-colors hover:bg-(--background-alt) hover:text-(--heading)"
+                        >
+                          {sub.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <a
+                key={item.label}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                className="block border-b border-(--border) px-3 py-3.5 text-sm font-semibold text-(--heading) last:border-0 hover:text-(--foreground)"
+              >
+                {item.label}
+              </a>
+            ),
+          )}
+          <a
+            href="mailto:softsuave.ai@gmail.com"
+            onClick={() => setMobileOpen(false)}
+            className="nav-cta mt-3 flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold"
+          >
+            Contact Us
+            <FiArrowRight />
+          </a>
+
+          {/* colour-theme switch */}
+          <button
+            type="button"
+            onClick={toggle}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-(--border) px-5 py-3 text-sm font-medium text-(--foreground) transition-colors hover:text-(--heading)"
+          >
+            {dark ? <FiSun className="h-4 w-4" /> : <FiMoon className="h-4 w-4" />}
+            {dark ? "Light theme" : "Dark theme"}
+          </button>
+        </div>
+      </div>
     </header>
   );
 }

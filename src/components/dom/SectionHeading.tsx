@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 // Shared section heading with a premium typographic reveal: when scrolled
 // into view the title de-blurs (blur 10px → sharp) while its letter
@@ -22,21 +23,17 @@ export default function SectionHeading({
   highlight?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
-  const [instant, setInstant] = useState(false);
+  const reduced = useReducedMotion();
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setInstant(true);
-      setShown(true);
-      return;
-    }
+    if (reduced) return; // shown instantly below — no observer/transition
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setShown(true);
+          setRevealed(true);
           io.disconnect();
         }
       },
@@ -44,7 +41,11 @@ export default function SectionHeading({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [reduced]);
+
+  // reduced-motion → render final state instantly (derived, not set in effect)
+  const shown = revealed || reduced;
+  const instant = reduced;
 
   let titleNode: React.ReactNode = title;
   if (highlight && title.includes(highlight)) {
@@ -52,7 +53,7 @@ export default function SectionHeading({
     titleNode = (
       <>
         {before}
-        <span className="bg-gradient-to-r from-[#FF8A3D] via-[#FFB868] to-white bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-(--brand-orange) via-(--brand-orange-soft) to-(--heading) bg-clip-text text-transparent">
           {highlight}
         </span>
         {after}
@@ -69,15 +70,15 @@ export default function SectionHeading({
           className="mb-4 flex items-center justify-center gap-4 transition-opacity duration-700 ease-out"
           style={{ opacity: shown ? 1 : 0, transitionDuration: dur }}
         >
-          <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#FF8A3D]/60" />
-          <p className="text-xs font-medium uppercase tracking-[0.3em] text-[#FF8A3D]">
+          <span className="h-px w-10 bg-gradient-to-r from-transparent to-(--brand-orange)/60" />
+          <p className="text-xs font-medium uppercase tracking-[0.3em] text-(--brand-orange)">
             {eyebrow}
           </p>
-          <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#FF8A3D]/60" />
+          <span className="h-px w-10 bg-gradient-to-l from-transparent to-(--brand-orange)/60" />
         </div>
       ) : (
         <p
-          className="text-xs font-medium uppercase text-[#FF8A3D] transition-[opacity,letter-spacing] duration-700 ease-out"
+          className="text-xs font-medium uppercase text-(--brand-orange) transition-[opacity,letter-spacing] duration-700 ease-out"
           style={{
             opacity: shown ? 1 : 0,
             letterSpacing: shown ? "0.3em" : "0.55em",
@@ -88,7 +89,7 @@ export default function SectionHeading({
         </p>
       )}
       <h2
-        className={`${decorated ? "" : "mt-4"} text-3xl font-semibold text-white transition-[opacity,filter,letter-spacing,transform] duration-1000 ease-out md:text-4xl`}
+        className={`${decorated ? "" : "mt-4"} text-3xl font-extrabold text-(--heading) transition-[opacity,filter,letter-spacing,transform] duration-1000 ease-out md:text-4xl`}
         style={{
           opacity: shown ? 1 : 0,
           filter: shown ? "blur(0px)" : "blur(10px)",
@@ -101,7 +102,7 @@ export default function SectionHeading({
       </h2>
       {body && (
         <p
-          className="mt-5 text-base leading-relaxed text-zinc-400 transition-[opacity,filter,transform] duration-1000 ease-out md:text-lg"
+          className="mt-5 text-base leading-relaxed text-(--foreground) transition-[opacity,filter,transform] duration-1000 ease-out md:text-lg"
           style={{
             opacity: shown ? 1 : 0,
             filter: shown ? "blur(0px)" : "blur(8px)",

@@ -12,13 +12,14 @@ import {
   TbBox,
   TbStack2,
   TbInfinity,
-  TbCube,
-  TbSparkles,
+  TbUsersGroup,
+  TbRobot,
+  TbListSearch,
+  TbAffiliate,
   TbBrandOpenai,
   TbBrandAzure,
   TbBrandAws,
   TbVectorTriangle,
-  TbBinaryTree,
   TbSearch,
 } from "react-icons/tb";
 import {
@@ -35,6 +36,8 @@ import {
   SiTerraform,
 } from "react-icons/si";
 import EcoNetworkCanvas from "@/components/dom/EcoNetworkCanvas";
+import SectionHeading from "@/components/dom/SectionHeading";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 // TECHNOLOGY ECOSYSTEM — "From intelligence to impact" flow.
 // Left: sticky intro (headline, copy, CTA, quick stats). Right: the stack as
@@ -60,15 +63,17 @@ type Layer = {
   techs: Tech[];
 };
 
-// AI CORE glyph for Foundation Models — a glowing intelligence core with
-// four diamond nodes and dashed energy links. HIT-ONLY like every other
-// tile: completely still until the traveling dot adds .eco-hit, then the
-// halo bursts, links flow current into the core, diamonds relay-blink and
-// two sparks twinkle — once. Styling/keyframes live in globals.css.
+// AI CHIP glyph for Foundation Models — a neural processor: a chip die with
+// signal pins on all four sides and a glowing intelligence core at its
+// centre. Reads unambiguously as "the model / compute", and stays distinct
+// from the Frameworks network glyph. HIT-ONLY like every other tile: still
+// until the traveling dot adds .eco-hit, then the halo bursts, the pins flow
+// current inward, the corner contacts relay-blink and two sparks twinkle —
+// once. Styling/keyframes live in globals.css.
 //
-//        ◇
-//      ◇ ◎ ◇
-//        ◇
+//      ┌─┴─┐
+//     ─┤ ◎ ├─
+//      └─┬─┘
 function AiCoreGlyph() {
   return (
     <svg
@@ -86,50 +91,76 @@ function AiCoreGlyph() {
         </radialGradient>
       </defs>
 
-      {/* dashed energy links — current flows toward the core on hit */}
-      <g stroke="#FF9E55" strokeWidth="1" strokeDasharray="2.5 3" opacity="0.7">
-        <line className="aicore-link" x1="22" y1="11.4" x2="22" y2="15.6" />
-        <line className="aicore-link" x1="32.6" y1="22" x2="28.4" y2="22" />
-        <line className="aicore-link" x1="22" y1="32.6" x2="22" y2="28.4" />
-        <line className="aicore-link" x1="11.4" y1="22" x2="15.6" y2="22" />
-      </g>
-
-      {/* four diamond nodes — relay-blink in sequence on hit */}
-      <g>
+      {/* chip pins — dashed signal leads that flow current inward on hit */}
+      <g
+        stroke="#FF9E55"
+        strokeWidth="1.2"
+        strokeDasharray="2.5 3"
+        strokeLinecap="round"
+        opacity="0.7"
+      >
         {[
-          "M22 3.6 L25.4 7 L22 10.4 L18.6 7 Z",
-          "M37 18.6 L40.4 22 L37 25.4 L33.6 22 Z",
-          "M22 33.6 L25.4 37 L22 40.4 L18.6 37 Z",
-          "M7 18.6 L10.4 22 L7 25.4 L3.6 22 Z",
-        ].map((d, i) => (
-          <path
-            key={d}
-            className="aicore-diamond"
-            style={{ "--gd": `${i * 0.12}s` } as React.CSSProperties}
-            d={d}
-            stroke="#FFC08A"
-            strokeWidth="1.2"
-            fill="rgba(255,138,61,0.14)"
-            strokeLinejoin="round"
+          [18, 7, 18, 13], [26, 7, 26, 13], // top
+          [18, 37, 18, 31], [26, 37, 26, 31], // bottom
+          [7, 18, 13, 18], [7, 26, 13, 26], // left
+          [37, 18, 31, 18], [37, 26, 31, 26], // right
+        ].map(([x1, y1, x2, y2]) => (
+          <line
+            key={`${x1}-${y1}-${x2}-${y2}`}
+            className="aicore-link"
+            x1={x1}
+            y1={y1}
+            x2={x2}
+            y2={y2}
           />
         ))}
       </g>
 
+      {/* chip die */}
+      <rect
+        x="12.5"
+        y="12.5"
+        width="19"
+        height="19"
+        rx="4"
+        fill="rgba(255,138,61,0.10)"
+        stroke="#FFC08A"
+        strokeWidth="1.3"
+      />
+
+      {/* corner contacts — relay-blink in sequence on hit */}
+      <g fill="#FFC08A">
+        {[
+          [16, 16], [28, 16], [16, 28], [28, 28],
+        ].map(([cx, cy], i) => (
+          <rect
+            key={`${cx}-${cy}`}
+            className="aicore-diamond"
+            style={{ "--gd": `${i * 0.12}s` } as React.CSSProperties}
+            x={cx - 1.3}
+            y={cy - 1.3}
+            width="2.6"
+            height="2.6"
+            rx="0.7"
+          />
+        ))}
+      </g>
+
+      {/* the intelligence core: halo (bursts outward on hit) + orb + highlight */}
+      <circle className="aicore-halo" cx="22" cy="22" r="7" fill="#FF8A3D" />
+      <circle cx="22" cy="22" r="5" fill="url(#aiCoreGrad)" />
+      <circle cx="20.4" cy="20.4" r="1.5" fill="#FFF7E6" opacity="0.9" />
+
       {/* sparks — twinkle briefly on hit */}
-      <circle className="aicore-spark" cx="22" cy="5" r="1.2" fill="#FFC08A" />
+      <circle className="aicore-spark" cx="22" cy="9.5" r="1.1" fill="#FFC08A" />
       <circle
         className="aicore-spark"
         style={{ "--gd": "0.25s" } as React.CSSProperties}
-        cx="22"
-        cy="38.6"
+        cx="34.5"
+        cy="22"
         r="1"
         fill="#FF8A3D"
       />
-
-      {/* the core: halo (bursts outward on hit) + orb + highlight */}
-      <circle className="aicore-halo" cx="22" cy="22" r="8" fill="#FF8A3D" />
-      <circle cx="22" cy="22" r="6" fill="url(#aiCoreGrad)" />
-      <circle cx="20.2" cy="20" r="1.7" fill="#FFF7E6" opacity="0.9" />
     </svg>
   );
 }
@@ -227,9 +258,9 @@ const LAYERS: Layer[] = [
     anim: "neural",
     techs: [
       { name: "LangChain", icon: SiLangchain, color: "#5CBB7A" },
-      { name: "CrewAI", icon: TbCube, color: "#FF5A50" },
-      { name: "AutoGen", icon: TbBinaryTree, color: "#3FB6C9" },
-      { name: "LlamaIndex", icon: TbSparkles, color: "#B95AF0" },
+      { name: "CrewAI", icon: TbUsersGroup, color: "#FF5A50" },
+      { name: "AutoGen", icon: TbRobot, color: "#3FB6C9" },
+      { name: "LlamaIndex", icon: TbListSearch, color: "#B95AF0" },
     ],
   },
   {
@@ -240,7 +271,7 @@ const LAYERS: Layer[] = [
     anim: "rings",
     techs: [
       { name: "Pinecone", icon: TbVectorTriangle, color: "#E3E8EF" },
-      { name: "Weaviate", icon: TbBox, color: "#61BD73" },
+      { name: "Weaviate", icon: TbAffiliate, color: "#61BD73" },
       { name: "Qdrant", icon: SiQdrant, color: "#DC4A5C" },
       { name: "FAISS", icon: TbSearch, color: "#7AA7FF" },
     ],
@@ -291,21 +322,19 @@ export default function TechEcosystemFlow() {
   const flowRef = useRef<HTMLDivElement>(null);
   const particleRef = useRef<HTMLSpanElement>(null);
   const tileRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [assembled, setAssembled] = useState(false);
-  const [reduced, setReduced] = useState(false);
+  const reduced = useReducedMotion();
+  const [assembledState, setAssembledState] = useState(false);
+  // reduced-motion: skip the scroll-triggered assembly, show it built
+  const assembled = assembledState || reduced;
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setReduced(true);
-      setAssembled(true);
-      return;
-    }
+    if (reduced) return;
     const el = flowRef.current;
     if (!el) return;
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setAssembled(true);
+          setAssembledState(true);
           io.disconnect();
         }
       },
@@ -313,7 +342,7 @@ export default function TechEcosystemFlow() {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [reduced]);
 
   // HIT DETECTION: while the flow is on screen, watch the traveling dot and
   // flare each icon tile (class "eco-hit") the moment the dot crosses its
@@ -385,36 +414,27 @@ export default function TechEcosystemFlow() {
         <EcoNetworkCanvas />
       </div>
 
-      <div className="grid grid-cols-1 gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,8fr)] lg:gap-12">
-        {/* ── Left: sticky intro ─────────────────────────────────────── */}
-        <div className="lg:sticky lg:top-28 lg:self-start">
-          <p className="text-xs font-medium uppercase tracking-[0.35em] text-[#FF8A3D]">
-            Our Technology Ecosystem
-          </p>
-          <h2 className="mt-4 text-3xl font-semibold leading-[1.15] tracking-tight text-white md:text-[2.6rem]">
-            Modern Technologies.
-            <br />
-            Meaningful{" "}
-            <span className="bg-linear-to-r from-[#FF9440] to-[#F92B4E] bg-clip-text text-transparent">
-              Connections.
-            </span>
-          </h2>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-zinc-400">
-            We combine best-in-class AI models, frameworks, data systems, and
-            cloud infrastructure to build scalable, secure, and intelligent
-            solutions.
-          </p>
+      {/* centered section heading, matching the rest of the page */}
+      <SectionHeading
+        eyebrow="Our Technology Ecosystem"
+        title="Modern Technologies. Meaningful Connections."
+        highlight="Connections."
+        body="We combine best-in-class AI models, frameworks, data systems, and cloud infrastructure to build scalable, secure, and intelligent solutions."
+      />
 
+      <div className="mt-14 grid grid-cols-1 gap-14 lg:mt-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,8fr)] lg:gap-12">
+        {/* ── Left: sticky CTA + quick stats ─────────────────────────── */}
+        <div className="lg:sticky lg:top-28 lg:self-start">
           <a
             href="#experience"
-            className="group mt-8 inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-white/3 px-6 py-3 text-sm font-medium text-zinc-200 transition-all duration-300 hover:border-[#FF8A3D]/50 hover:bg-[#FF8A3D]/10 hover:text-white"
+            className="group inline-flex items-center gap-2.5 rounded-full border border-(--border) bg-(--card) px-6 py-3 text-sm font-medium text-(--foreground) transition-all duration-300 hover:border-(--brand-orange)/50 hover:bg-(--brand-orange)/10 hover:text-(--heading)"
           >
             <FiPlay className="h-3.5 w-3.5 text-[#FF8A3D] transition-transform duration-300 group-hover:scale-110" />
             See How It Works
           </a>
 
           {/* quick stats card */}
-          <div className="mt-10 max-w-sm space-y-6 rounded-2xl border border-white/8 bg-white/2 p-7">
+          <div className="mt-10 max-w-sm space-y-6 rounded-2xl border border-(--border) bg-(--card) p-7 backdrop-blur-md">
             {STATS.map((s) => (
               <div key={s.label} className="flex items-center gap-4">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#FF8A3D]/25 bg-[#FF8A3D]/8 text-[#FF9E55]">
@@ -423,12 +443,12 @@ export default function TechEcosystemFlow() {
                 <div>
                   <p
                     className={`text-xl font-bold ${
-                      s.accent ? "text-[#FF8A3D]" : "text-white"
+                      s.accent ? "text-(--brand-orange)" : "text-(--heading)"
                     }`}
                   >
                     {s.value}
                   </p>
-                  <p className="mt-0.5 text-xs text-zinc-500">{s.label}</p>
+                  <p className="mt-0.5 text-xs text-(--text-secondary)">{s.label}</p>
                 </div>
               </div>
             ))}
@@ -439,7 +459,7 @@ export default function TechEcosystemFlow() {
         <div ref={flowRef} className="lg:pl-24">
           {/* section label — first beat of the assembly */}
           <p
-            className={`mb-8 text-xs font-medium uppercase tracking-[0.3em] text-zinc-500 ${stepClass(assembled)}`}
+            className={`mb-8 text-xs font-medium uppercase tracking-[0.3em] text-(--text-secondary) ${stepClass(assembled)}`}
             style={reduced ? undefined : { transitionDelay: "0ms" }}
           >
             From Intelligence to Impact
@@ -490,7 +510,7 @@ export default function TechEcosystemFlow() {
                       ref={(el) => {
                         tileRefs.current[i] = el;
                       }}
-                      className="eco-tile relative z-10 flex h-17 w-17 shrink-0 items-center justify-center rounded-xl border border-[#FF8A3D]/35 bg-[#160f08] text-[#FF9E55] shadow-[0_0_24px_-6px_rgba(255,138,61,0.45)] group-hover:scale-105"
+                      className="eco-tile relative z-10 flex h-17 w-17 shrink-0 items-center justify-center rounded-xl border border-(--brand-orange)/35 bg-(--brand-orange)/10 text-(--brand-orange) shadow-[0_0_24px_-6px_var(--glow-orange)] group-hover:scale-105"
                     >
                       {/* Foundation: a glow ring pings outward in time with
                           the core's pulse */}
@@ -584,10 +604,10 @@ export default function TechEcosystemFlow() {
                       <p className="font-mono text-xs font-semibold text-[#FF8A3D]">
                         {layer.num}
                       </p>
-                      <h3 className="mt-1 text-lg font-semibold text-white">
+                      <h3 className="mt-1 text-lg font-semibold text-(--heading)">
                         {layer.title}
                       </h3>
-                      <p className="mt-1.5 max-w-lg text-[13px] leading-relaxed text-zinc-500">
+                      <p className="mt-1.5 max-w-lg text-[13px] leading-relaxed text-(--text-secondary)">
                         {layer.desc}
                       </p>
 
@@ -599,7 +619,7 @@ export default function TechEcosystemFlow() {
                         {layer.techs.map((t, ti) => (
                           <span
                             key={t.name}
-                            className={`eco-pill flex items-center gap-2 rounded-xl border border-white/10 bg-[#14161c] px-3.5 py-2 text-[13px] font-medium text-zinc-200 transition-all duration-300 ease-out hover:border-[#FF8A3D]/40 hover:shadow-[0_8px_20px_-8px_rgba(0,0,0,0.7)] ${
+                            className={`eco-pill flex items-center gap-2 rounded-xl border border-(--border) bg-(--card) px-3.5 py-2 text-[13px] font-medium text-(--foreground) transition-all duration-300 ease-out hover:border-(--brand-orange)/40 hover:shadow-[0_8px_20px_-8px_var(--shadow-strong)] ${
                               [
                                 "group-hover:-translate-x-2 group-hover:-translate-y-1",
                                 "group-hover:-translate-y-2",

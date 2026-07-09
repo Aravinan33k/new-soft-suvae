@@ -148,21 +148,21 @@ export default function AiAssistant() {
     <div className="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-4 md:bottom-6 md:right-6">
       {/* ── Chat panel ─────────────────────────────────────────────── */}
       <div
-        className={`flex w-[calc(100vw-2.5rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#111113]/95 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.8),0_0_48px_-12px_rgba(255,138,61,0.25)] backdrop-blur-xl transition-all duration-300 ease-out ${
+        className={`flex w-[calc(100vw-2.5rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-(--border) bg-(--panel) shadow-[0_24px_64px_-12px_var(--shadow-strong),0_0_48px_-12px_var(--glow-orange)] backdrop-blur-xl transition-all duration-300 ease-out ${
           open
             ? "pointer-events-auto translate-y-0 opacity-100"
             : "pointer-events-none translate-y-4 opacity-0"
         }`}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-white/[0.08] bg-[radial-gradient(ellipse_80%_120%_at_50%_0%,rgba(255,106,61,0.14),transparent_70%)] px-4 py-3.5">
+        <div className="flex items-center gap-3 border-b border-(--border) bg-[radial-gradient(ellipse_80%_120%_at_50%_0%,var(--glow-orange),transparent_70%)] px-4 py-3.5">
           <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#FF8A3D]/30 bg-[#FF8A3D]/15 text-[#FF9E55]">
             <TbSparkles className="h-5 w-5" />
             <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#111113] bg-emerald-400" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-white">Suave AI</p>
-            <p className="text-xs text-zinc-500">
+            <p className="text-sm font-semibold text-(--heading)">Suave AI</p>
+            <p className="text-xs text-(--text-secondary)">
               Online — ask me anything
             </p>
           </div>
@@ -170,7 +170,7 @@ export default function AiAssistant() {
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Close chat"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-(--text-secondary) transition-colors hover:bg-(--brand-orange)/10 hover:text-(--heading)"
           >
             <FiX className="h-4 w-4" />
           </button>
@@ -186,8 +186,8 @@ export default function AiAssistant() {
               key={m.id}
               className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                 m.role === "user"
-                  ? "self-end rounded-br-md bg-gradient-to-r from-[#FF9440] to-[#F9723C] text-[#1a0a04]"
-                  : "self-start rounded-bl-md border border-white/[0.08] bg-white/[0.04] text-zinc-300"
+                  ? "self-end rounded-br-md bg-gradient-to-r from-(--btn-a) to-(--btn-b) text-white"
+                  : "self-start rounded-bl-md border border-(--border) bg-(--background-alt) text-(--foreground)"
               }`}
             >
               {m.text}
@@ -195,7 +195,7 @@ export default function AiAssistant() {
           ))}
 
           {typing && (
-            <div className="flex items-center gap-1.5 self-start rounded-2xl rounded-bl-md border border-white/[0.08] bg-white/[0.04] px-4 py-3">
+            <div className="flex items-center gap-1.5 self-start rounded-2xl rounded-bl-md border border-(--border) bg-(--background-alt) px-4 py-3">
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
@@ -228,14 +228,14 @@ export default function AiAssistant() {
             e.preventDefault();
             send(input);
           }}
-          className="flex items-center gap-2 border-t border-white/[0.08] p-3"
+          className="flex items-center gap-2 border-t border-(--border) p-3"
         >
           <input
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question…"
-            className="min-w-0 flex-1 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-500 outline-none transition-colors focus:border-[#FF8A3D]/50"
+            className="min-w-0 flex-1 rounded-full border border-(--border) bg-(--background-alt) px-4 py-2.5 text-sm text-(--foreground) placeholder:text-(--text-secondary) outline-none transition-colors focus:border-(--brand-orange)/50"
           />
           <button
             type="submit"

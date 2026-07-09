@@ -156,7 +156,7 @@ function EnergyClash() {
     if (light.current) light.current.intensity = 8 + pulse * 26;
 
     // Sparks: respawn at the core when a pulse peaks, otherwise fly outward
-    const { positions, velocities, life, size } = data;
+    const { positions, velocities, life } = data;
     const justPeaked = cycle > 0.47 && cycle < 0.53;
     for (let i = 0; i < SPARKS; i++) {
       life[i] += delta * 0.55;
