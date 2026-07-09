@@ -102,146 +102,6 @@ type Scene = {
   draw: (ctx: Ctx, t: number, w: number, h: number, alpha: number) => void;
 };
 
-/* ── Shared cinematic atmosphere ───────────────────────────────────────
-   Every chapter is framed by the same layered depth + lighting so the
-   eight scenes read as one film instead of eight separate widgets. Layers
-   move at deliberately different speeds (slow fog · medium grid · fast
-   sweep) to build the speed-contrast the scenes were missing:
-     back()  — drawn BEHIND the scene, before the camera push-in, so it
-               parallaxes (doesn't zoom with the foreground):
-                 · volumetric fog: two slow-drifting radial blooms
-                 · perspective floor grid receding to a vanishing point
-     front() — drawn OVER the scene, outside the camera, so it frames:
-                 · blue volumetric glow rising from the lower centre
-                 · a raking orange light sweep every ~11s (the fast layer)
-                 · parallax bokeh particles drifting up at varied depths
-                 · a soft vignette + cool top rim light                    */
-type Bokeh = {
-  x: number; y: number; r: number; z: number; sp: number; ph: number; warm: boolean;
-};
-function createAtmosphere() {
-  let W = 0, H = 0;
-  let bok: Bokeh[] = [];
-
-  const build = (w: number, h: number) => {
-    W = w; H = h;
-    bok = [];
-    for (let i = 0; i < 26; i++) {
-      const z = Math.random(); // 0 far … 1 near
-      bok.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        r: lerp(2, 9, z) * (0.6 + Math.random() * 0.8),
-        z,
-        sp: lerp(3, 12, z), // near particles drift faster (parallax)
-        ph: Math.random() * TWO_PI,
-        warm: Math.random() < 0.45,
-      });
-    }
-  };
-
-  const back = (ctx: Ctx, gt: number, w: number, h: number) => {
-    if (w !== W || h !== H) build(w, h);
-
-    // volumetric fog — two slow radial blooms breathing in place
-    ctx.save();
-    const bx = w * (0.32 + 0.08 * Math.sin(gt * 0.13));
-    const by = h * (0.38 + 0.05 * Math.cos(gt * 0.11));
-    let g = ctx.createRadialGradient(bx, by, 0, bx, by, Math.max(w, h) * 0.55);
-    g.addColorStop(0, "rgba(78,168,255,0.06)");
-    g.addColorStop(1, "rgba(78,168,255,0)");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-    const ox = w * (0.72 - 0.07 * Math.sin(gt * 0.09));
-    const oy = h * (0.66 + 0.05 * Math.sin(gt * 0.15));
-    g = ctx.createRadialGradient(ox, oy, 0, ox, oy, Math.max(w, h) * 0.5);
-    g.addColorStop(0, "rgba(255,138,61,0.05)");
-    g.addColorStop(1, "rgba(255,138,61,0)");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-    ctx.restore();
-
-    // perspective floor grid receding to a vanishing point, slow drift
-    ctx.save();
-    ctx.strokeStyle = "rgba(120,170,255,1)";
-    ctx.lineWidth = 1;
-    const hz = h * 0.52; // horizon
-    const vpx = w * 0.5;
-    const drift = (gt * 0.05) % 1;
-    for (let i = 0; i < 9; i++) {
-      const p = (i + drift) / 9; // 0..1 depth
-      const yy = hz + (h - hz) * (p * p); // exponential spacing → perspective
-      ctx.globalAlpha = 0.05 * (1 - p) + 0.008;
-      ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(w, yy); ctx.stroke();
-    }
-    for (let i = 0; i <= 12; i++) {
-      const fx = i / 12 - 0.5; // -0.5..0.5
-      ctx.globalAlpha = 0.04 * (1 - Math.abs(fx) * 1.2);
-      ctx.beginPath();
-      ctx.moveTo(vpx + fx * 40, hz);
-      ctx.lineTo(vpx + fx * w * 2.2, h);
-      ctx.stroke();
-    }
-    ctx.restore();
-  };
-
-  const front = (ctx: Ctx, gt: number, w: number, h: number) => {
-    if (w !== W || h !== H) build(w, h);
-
-    ctx.save();
-    ctx.globalCompositeOperation = "screen";
-
-    // blue volumetric glow rising from the lower centre
-    const gy = h * 0.9;
-    let g = ctx.createRadialGradient(w * 0.5, gy, 0, w * 0.5, gy, h * 0.7);
-    g.addColorStop(0, `rgba(78,168,255,${0.05 + 0.02 * Math.sin(gt * 0.6)})`);
-    g.addColorStop(1, "rgba(78,168,255,0)");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-
-    // raking orange light sweep every ~11s — the fast atmosphere layer
-    const sweep = (gt % 11) / 11;
-    const sx = lerp(-0.3, 1.3, sweep) * w;
-    const sweepA = Math.sin(clamp01(sweep) * Math.PI) * 0.1;
-    if (sweepA > 0.002) {
-      g = ctx.createLinearGradient(sx - w * 0.22, 0, sx + w * 0.22, h);
-      g.addColorStop(0, "rgba(255,180,110,0)");
-      g.addColorStop(0.5, `rgba(255,180,110,${sweepA})`);
-      g.addColorStop(1, "rgba(255,180,110,0)");
-      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-    }
-
-    // parallax bokeh drifting up at varied depths
-    for (const b of bok) {
-      const yy = (((b.y - gt * b.sp) % (h + 40)) + (h + 40)) % (h + 40);
-      const xx = b.x + Math.sin(gt * 0.2 + b.ph) * (6 + b.z * 14);
-      const a = (0.05 + 0.1 * b.z) * (0.55 + 0.45 * Math.sin(gt * 0.5 + b.ph));
-      const col = b.warm ? "255,190,120" : "150,190,255";
-      const gg = ctx.createRadialGradient(xx, yy, 0, xx, yy, b.r * 3);
-      gg.addColorStop(0, `rgba(${col},${clamp01(a)})`);
-      gg.addColorStop(1, `rgba(${col},0)`);
-      ctx.fillStyle = gg;
-      ctx.beginPath(); ctx.arc(xx, yy, b.r * 3, 0, TWO_PI); ctx.fill();
-    }
-    ctx.restore();
-
-    // vignette + cool top rim light — cinematic framing
-    ctx.save();
-    const vg = ctx.createRadialGradient(
-      w * 0.5, h * 0.5, Math.min(w, h) * 0.35,
-      w * 0.5, h * 0.5, Math.max(w, h) * 0.72,
-    );
-    vg.addColorStop(0, "rgba(0,0,0,0)");
-    vg.addColorStop(1, "rgba(2,6,20,0.55)");
-    ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h);
-    ctx.globalCompositeOperation = "screen";
-    const rg = ctx.createLinearGradient(0, 0, 0, h * 0.22);
-    rg.addColorStop(0, "rgba(120,160,255,0.05)");
-    rg.addColorStop(1, "rgba(120,160,255,0)");
-    ctx.fillStyle = rg; ctx.fillRect(0, 0, w, h * 0.22);
-    ctx.restore();
-  };
-
-  return { back, front };
-}
-
 /* ── Scene 0: Custom AI — a 6-second cinematic story ─────────────────
    Told on the local timeline t (seconds since the chapter activated):
      0.0–1.0  Dark digital space: a blue holographic grid fades in and a
@@ -2826,7 +2686,6 @@ export default function ExperienceScenes({
       gccScene(),
     ];
     const clamp = (i: number) => Math.max(0, Math.min(scenes.length - 1, i));
-    const atmo = createAtmosphere();
 
     let w = 0, h = 0;
     let raf = 0;
@@ -2926,10 +2785,6 @@ export default function ExperienceScenes({
       ctx.clearRect(0, 0, w, h);
       drawBg();
 
-      const gt = now / 1000; // continuous clock for the atmosphere layers
-      // depth behind the scene, before the push-in so it parallaxes
-      atmo.back(ctx, gt, w, h);
-
       // cinematic camera: each chapter opens slightly wide and tilted, then
       // slowly pushes in with a tiny settling orbit before coming to rest
       const camT = (now - currentStart) / 1000;
@@ -2945,9 +2800,6 @@ export default function ExperienceScenes({
       scenes[current].draw(ctx, (now - currentStart) / 1000, w, h, f);
       ctx.restore();
 
-      // lighting + foreground framing over the scene
-      atmo.front(ctx, gt, w, h);
-
       // the swarm lives between worlds — above the frame
       drawTransition(now);
 
@@ -2961,9 +2813,7 @@ export default function ExperienceScenes({
         const target = clamp(activeRef.current);
         if (target !== current) current = target;
         drawBg();
-        atmo.back(ctx, 8, w, h);
         scenes[current].draw(ctx, 8, w, h, 1);
-        atmo.front(ctx, 8, w, h);
       };
       still();
       const iv = window.setInterval(still, 400);
@@ -2992,7 +2842,14 @@ export default function ExperienceScenes({
   }, []);
 
   return (
-    <div className={className} aria-hidden>
+    // On lg the canvas is offset into the right half of the card, so its left
+    // edge would meet the plain-navy copy side as a hard seam. A left-edge fade
+    // mask dissolves the animation (and any glow it paints) smoothly into the
+    // card background, so both halves read as one continuous surface.
+    <div
+      className={`${className} lg:[mask-image:linear-gradient(to_right,transparent,#000_20%)] lg:[-webkit-mask-image:linear-gradient(to_right,transparent,#000_20%)]`}
+      aria-hidden
+    >
       <canvas ref={canvasRef} className="block h-full w-full" />
     </div>
   );

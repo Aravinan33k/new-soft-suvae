@@ -14,6 +14,7 @@ import SectionHeading from "@/components/dom/SectionHeading";
 import TechEcosystemFlow from "@/components/dom/TechEcosystemFlow";
 import IndustriesShowcase from "@/components/dom/IndustriesShowcase";
 import ClientShowcase from "@/components/dom/ClientShowcase";
+import ChoosePath from "@/components/dom/ChoosePath";
 
 const HERO_FEATURES = [
   "AI Agents",
@@ -116,10 +117,18 @@ export default function Home() {
               className="hero-float pointer-events-none relative hidden aspect-square w-[90%] max-w-2xl md:block lg:-mr-16 lg:w-[95%] xl:-mr-20"
               data-parallax="4"
             >
-              <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle,var(--glow-orange),transparent_66%)] blur-3xl" />
+              {/* softened + widened so this fades gradually into the same
+                  ambient wash behind the text, instead of reading as a
+                  distinct bright zone confined to the globe's column.
+                  "circle_closest-side" forces the gradient to be inscribed
+                  (radius = half the shorter side) instead of the CSS default
+                  "farthest-corner", which reaches the box's corners — at this
+                  blur size that residual corner glow was showing through as
+                  a faint soft-edged square/rectangle around the globe. */}
+              <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle_closest-side,var(--glow-orange),transparent_70%)] opacity-60 blur-[90px]" />
               {/* small cool counterpoint: blue glow tucked behind the
                   lower-left of the globe so the warm palette has contrast */}
-              <div className="absolute bottom-[6%] left-[4%] h-[45%] w-[45%] rounded-full bg-[radial-gradient(circle,var(--glow-blue),transparent_65%)] blur-3xl" />
+              <div className="absolute bottom-[6%] left-[4%] h-[45%] w-[45%] rounded-full bg-[radial-gradient(circle_closest-side,var(--glow-blue),transparent_70%)] opacity-50 blur-[90px]" />
               <div className="relative h-full w-full">
                 {/* <HeroBrain /> */}
                 <HeroGlobe />
@@ -194,33 +203,29 @@ export default function Home() {
           <TechEcosystemFlow />
         </section>
 
-        {/* ── CTA ───────────────────────────────────────────────────── */}
+        {/* ── CTA — a living card: animated light-border, drifting glow,
+            grid, rising particles, gradient "AI", pulsing button ────────── */}
         <section id="contact" className="pt-24 lg:pt-30">
-          <div
-            className="relative overflow-hidden rounded-3xl border border-(--border) bg-(--card) bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,var(--glow-orange),transparent_70%)] px-6 py-20 text-center shadow-[0_20px_50px_-20px_var(--shadow-soft)] backdrop-blur-xl"
-            data-parallax="3"
-          >
-            <h2 className="mx-auto max-w-2xl text-3xl font-extrabold tracking-tight text-(--heading) md:text-4xl">
-              Ready to Transform Your Business with AI?
-            </h2>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-(--foreground)">
-              Book a free AI strategy session with our experts and discover
-              where AI can create the biggest impact in your organization.
-            </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a
-                href="mailto:softsuave.ai@gmail.com"
-                className="btn-primary group inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm font-semibold text-white"
-              >
-                Book a Free Consultation
-                <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-0.5" />
-              </a>
-              <a
-                href="mailto:softsuave.ai@gmail.com"
-                className="btn-secondary inline-flex items-center gap-2 rounded-full border border-(--border) bg-(--card) px-8 py-3.5 text-sm font-semibold text-(--foreground) hover:border-(--brand-orange)/50 hover:text-(--brand-orange)"
-              >
-                Talk With AI Experts
-              </a>
+          <div className="relative px-6 py-16" data-parallax="3">
+            {/* ── heading on top (centred), choose-your-path cards below ──── */}
+            <div className="relative z-10 mx-auto max-w-4xl text-center">
+              <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-(--brand-orange)">
+                Let&rsquo;s build together
+              </p>
+              <h2 className="mx-auto max-w-2xl text-3xl font-extrabold leading-[1.15] tracking-tight text-(--heading) md:text-4xl">
+                Ready to Transform Your Business with{" "}
+                <span className="bg-gradient-to-r from-(--grad-1) via-(--grad-2) to-(--grad-3) bg-clip-text text-transparent drop-shadow-[0_0_20px_var(--glow-orange)]">
+                  AI
+                </span>
+                ?
+              </h2>
+              <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-(--foreground)">
+                Book a free AI strategy session with our experts and discover
+                where AI can create the biggest impact in your organization.
+              </p>
+
+              {/* choose-your-path cards, centred under the heading */}
+              <ChoosePath className="mx-auto mt-12 w-full max-w-4xl" />
             </div>
           </div>
         </section>

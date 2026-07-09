@@ -84,7 +84,7 @@ export default function Navbar() {
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
-  const { dark, toggle } = useTheme();
+  const { dark, toggle, setDark } = useTheme();
 
   useEffect(() => {
     // Hysteresis: condense into the floating pill past 48px, expand back under 12px
@@ -118,9 +118,9 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-center">
       <nav
-        className={`flex items-center backdrop-blur-xl transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`flex items-center backdrop-blur-xl transition-all duration-300 ease-out ${
           scrolled
-            ? "h-12 w-[min(94%,84rem)] rounded-2xl border shadow-[0_8px_32px_-10px_var(--shadow-strong)]"
+            ? "h-11 w-[min(92%,72rem)] rounded-full border shadow-[0_8px_32px_-10px_var(--shadow-strong)]"
             : "h-16 w-full rounded-none border-x-0 border-t-0 border-b"
         }`}
         style={{ backgroundColor: "var(--nav-surface)", borderColor: "var(--border)" }}
@@ -132,9 +132,15 @@ export default function Navbar() {
             <img
               src="/softsuave-mark.svg"
               alt=""
-              className="h-7 w-auto transition-transform duration-300 group-hover:-translate-y-0.5"
+              className={`w-auto transition-all duration-300 group-hover:-translate-y-0.5 ${
+                scrolled ? "h-6" : "h-7"
+              }`}
             />
-            <span className="text-lg font-bold tracking-tight text-(--heading)">
+            <span
+              className={`font-bold tracking-tight text-(--heading) transition-all duration-300 ${
+                scrolled ? "text-base" : "text-lg"
+              }`}
+            >
               Soft Suave
             </span>
           </a>
@@ -239,20 +245,43 @@ export default function Navbar() {
                     </a>
                   ))}
 
-                  {/* colour-theme switch lives inside the Contact menu */}
+                  {/* colour-theme switch lives inside the Contact menu — an
+                      explicit Light/Dark segmented control so it's unmistakably
+                      a theme picker, not just another menu link */}
                   <div className="my-1 h-px bg-(--border)" />
-                  <button
-                    type="button"
-                    onClick={toggle}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-(--foreground) transition-colors hover:bg-(--background-alt) hover:text-(--heading)"
-                  >
-                    {dark ? (
-                      <FiSun className="h-4 w-4 shrink-0 text-(--brand-orange)" />
-                    ) : (
-                      <FiMoon className="h-4 w-4 shrink-0 text-(--brand-orange)" />
-                    )}
-                    {dark ? "Light theme" : "Dark theme"}
-                  </button>
+                  <div className="px-3 pb-1 pt-1.5">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-(--text-secondary)">
+                      Appearance
+                    </p>
+                    <div className="flex gap-1 rounded-lg bg-(--background-alt) p-1">
+                      <button
+                        type="button"
+                        onClick={() => setDark(false)}
+                        aria-pressed={!dark}
+                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
+                          !dark
+                            ? "bg-(--brand-orange) text-white shadow-sm"
+                            : "text-(--foreground) hover:text-(--heading)"
+                        }`}
+                      >
+                        <FiSun className="h-3.5 w-3.5 shrink-0" />
+                        Light
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDark(true)}
+                        aria-pressed={dark}
+                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
+                          dark
+                            ? "bg-(--brand-orange) text-white shadow-sm"
+                            : "text-(--foreground) hover:text-(--heading)"
+                        }`}
+                      >
+                        <FiMoon className="h-3.5 w-3.5 shrink-0" />
+                        Dark
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

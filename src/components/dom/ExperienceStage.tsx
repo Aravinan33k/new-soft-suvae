@@ -136,6 +136,7 @@ export default function ExperienceStage() {
   const cardRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef(0);
   const playingRef = useRef(true);
+  const wasPlaying = useRef(true); // autoplay state before a hover-pause
   const elapsedRef = useRef(0);
   const neuralRef = useRef(0);
   const barsRef = useRef<(HTMLSpanElement | null)[]>([]);
@@ -263,9 +264,17 @@ export default function ExperienceStage() {
 
   return (
     <section ref={sectionRef} className="relative w-full py-10">
+      {/* Bridges the seam between the previous section and the card: a soft
+          warm glow (same brand tone as the ambient background) pooling right
+          where the card begins, so it reads as emerging from the page's own
+          light instead of a flat rectangle snapping in with a hard shadow. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-16 h-56 bg-[radial-gradient(ellipse_55%_100%_at_50%_100%,var(--glow-orange),transparent_72%)] blur-2xl"
+      />
       <div
         ref={cardRef}
-        className="relative mx-auto flex min-h-[560px] w-full flex-col overflow-hidden bg-(--showcase) shadow-[var(--showcase-shadow)]"
+        className="relative mx-auto flex min-h-[560px] w-full flex-col overflow-hidden bg-(--showcase) shadow-[var(--showcase-shadow)] ring-1 ring-(--brand-orange)/10"
         style={CARD_START}
       >
         {/* Content area: neural scene + left slider + chapter copy */}
@@ -296,7 +305,17 @@ export default function ExperienceStage() {
           {/* Left timeline / chapter navigation: a vertical rail where the
               active item's orange line grows downward, its number scales up
               and its label slides + glows */}
-          <nav className="absolute left-0 top-0 z-20 flex h-full flex-col justify-center pl-5 md:pl-10">
+          <nav
+            className="absolute left-0 top-0 z-20 flex h-full flex-col justify-center pl-5 md:pl-10"
+            onMouseEnter={() => {
+              // pause autoplay while hovering so the hovered chapter stays put
+              wasPlaying.current = playingRef.current;
+              playingRef.current = false;
+            }}
+            onMouseLeave={() => {
+              playingRef.current = wasPlaying.current;
+            }}
+          >
             {SLIDES.map((s, i) => {
               const isActive = i === active;
               return (
@@ -304,6 +323,8 @@ export default function ExperienceStage() {
                   key={s.label}
                   type="button"
                   onClick={() => select(i)}
+                  onMouseEnter={() => select(i)}
+                  onFocus={() => select(i)}
                   aria-current={isActive}
                   className="group relative flex items-center gap-3 py-2.5 pl-4 pr-6 text-left"
                 >

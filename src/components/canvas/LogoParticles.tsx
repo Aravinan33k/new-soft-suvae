@@ -55,18 +55,20 @@ const MAX_LINKS_PER_NODE = 3;
 const DRIFT_END = 0.9; // pure particle field, no shape yet
 const FORM_DUR = 2.4; // staggered flight into the mark
 
-// Reddish gold, top to bottom. The base is a warm amber-gold with a red lean;
-// sparkle particles are a brighter (but still warm) gold rather than white-hot,
-// so the dense crown reads as rich gold instead of blowing out to white. A
-// small lift toward a lighter gold keeps the whole mark luminous and even, but
-// it stays firmly in the red-gold family — never washing to white.
-const HILITE = new THREE.Color("#FFC066");
+// Red-dominant two-tone: a hot red-orange crown fading to a deep crimson base.
+// The green channel is kept LOW on purpose — under additive blending ~11k
+// overlapping particles sum their channels, and a high green (gold) drives the
+// dense crown toward yellow-white. Low green means the sum saturates to a rich
+// RED instead. A rare, restrained ember accent adds a touch of warmth.
+const GOLD = new THREE.Color("#FF4A22"); // crown — hot red-orange (low green)
+const RED = new THREE.Color("#CE1526"); // base — deep crimson
 const rampColor = (t: number, gold: boolean, out: THREE.Color) => {
-  if (gold) return out.set("#FFC873");
-  // ONE consistent reddish gold across the whole mark. A small lift toward a
-  // lighter gold that INCREASES slightly toward the base keeps the bottom as
-  // luminous as the crown, so the mark reads solid and even top to bottom.
-  return out.set("#FF8A2E").lerp(HILITE, 0.1 + 0.12 * t);
+  if (gold) return out.set("#FF6A36"); // ember accent — warm but still red-orange
+  // sharpen the transition around the middle so the top half reads clearly
+  // red-orange and the bottom half clearly crimson — one continuous red mark
+  const u = Math.min(1, Math.max(0, (t - 0.28) / 0.44));
+  const k = u * u * (3 - 2 * u);
+  return out.copy(GOLD).lerp(RED, k);
 };
 
 function mulberry32(seed: number) {
@@ -111,6 +113,8 @@ function sampleMark(): { x: number; y: number }[] {
 const MOTION_GLSL = /* glsl */ `
   uniform float uTime;
   uniform float uProgress;
+  uniform float uBounce;
+  uniform vec2 uCenter;
 
   float lpOf(float delay) {
     float t = smoothstep(delay, delay + 0.45, uProgress);
@@ -135,6 +139,8 @@ const MOTION_GLSL = /* glsl */ `
     vec2 dir = normalize(vec2(sin(seed * 90.0), cos(seed * 37.0)) + 0.001);
     vec3 p = mix(s, tgt, lp);
     p.xy += drift + shim + dir * det * 6.0;
+    // settle-bounce: scale the mark around its own centre as it locks in
+    p.xy = uCenter + (p.xy - uCenter) * uBounce;
     return p;
   }
 `;
@@ -142,6 +148,7 @@ const MOTION_GLSL = /* glsl */ `
 const pointsVertex = /* glsl */ `
   ${MOTION_GLSL}
   uniform float uDpr;
+  uniform vec3 uEmber;
   attribute vec3 aTarget;
   attribute float aDelay;
   attribute float aSeed;
@@ -149,10 +156,15 @@ const pointsVertex = /* glsl */ `
   attribute vec3 aColor;
   varying vec3 vColor;
   varying float vLp;
+  varying float vDiag;
   void main() {
     float lp = lpOf(aDelay);
     vLp = lp;
-    vColor = aColor;
+    // forge: a dim deep-copper ember while drifting, warming to molten gold
+    // as the particle locks into place
+    vColor = mix(uEmber, aColor, smoothstep(0.1, 0.85, lp));
+    // diagonal coord (top-left -> bottom-right) that drives the gold sweep
+    vDiag = ((aTarget.x - uCenter.x) - (aTarget.y - uCenter.y)) / 140.0 + 0.5;
     vec3 p = particlePos(position, aTarget, lp, aSeed);
     gl_PointSize = aSize * uDpr * (0.85 + 0.3 * lp);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
@@ -161,18 +173,33 @@ const pointsVertex = /* glsl */ `
 const pointsFragment = /* glsl */ `
   precision highp float;
   uniform float uTime;
+  uniform float uSweep;
   varying vec3 vColor;
   varying float vLp;
+  varying float vDiag;
   void main() {
     vec2 c = gl_PointCoord - 0.5;
     float d = length(c);
     if (d > 0.5) discard;
     float soft = smoothstep(0.5, 0.0, d);
+    // core alpha capped lower than before (was 0.95) — with ~11k densely
+    // overlapping particles under additive blending, a near-opaque core let
+    // clustered fragments stack past white regardless of the assigned hue.
+    // Capping it keeps the sum saturating toward reddish-gold instead of
+    // clipping every channel to 1.0.
     float core = smoothstep(0.18, 0.0, d);
     // gentle per-particle twinkle keeps the formed mark alive
     float tw = 0.85 + 0.15 * sin(uTime * 2.1 + vColor.g * 40.0);
-    float a = (soft * 0.5 + core * 0.95) * (0.55 + 0.45 * vLp) * tw;
-    gl_FragColor = vec4(vColor, a);
+    float a = (soft * 0.28 + core * 0.46) * (0.55 + 0.45 * vLp) * tw;
+    vec3 col = vColor;
+    // polished-metal sweep: a reflection band travels across the formed mark
+    // (top-left -> bottom-right). Kept a saturated RED-orange (not cream/amber)
+    // and low strength so the "shine" catches light without washing the mark
+    // toward white every ~5s.
+    float band = smoothstep(0.10, 0.0, abs(vDiag - uSweep)) * vLp;
+    col += vec3(1.0, 0.34, 0.12) * band * 0.4;
+    a += band * 0.18 * (soft * 0.28 + core * 0.46);
+    gl_FragColor = vec4(col, a);
   }
 `;
 
@@ -203,9 +230,9 @@ const linesFragment = /* glsl */ `
   precision highp float;
   varying float vAlpha;
   void main() {
-    // reddish gold to match the particle ramp so the web reads as one colour
-    // with the mark rather than a separate highlight
-    gl_FragColor = vec4(1.0, 0.58, 0.26, vAlpha * 0.34);
+    // red to match the particle ramp so the web reads as one colour with the
+    // mark rather than a separate highlight
+    gl_FragColor = vec4(1.0, 0.34, 0.24, vAlpha * 0.34);
   }
 `;
 
@@ -225,8 +252,8 @@ const glowFragment = /* glsl */ `
     float d = length(vUv - 0.5) * 2.0;
     float fall = smoothstep(1.0, 0.0, d);
     // cubed falloff keeps the glow tight to the mark so it doesn't spill a
-    // haze below/around it; warm reddish-gold tint blends with the mark
-    gl_FragColor = vec4(vec3(1.0, 0.5, 0.22), fall * fall * fall * 0.18 * uGlow);
+    // haze below/around it; warm red tint blends with the mark
+    gl_FragColor = vec4(vec3(1.0, 0.32, 0.2), fall * fall * fall * 0.18 * uGlow);
   }
 `;
 
@@ -251,6 +278,11 @@ function Swarm({ active, reduced, center, onFormed }: SwarmProps) {
       uTime: { value: 0 },
       uProgress: { value: reduced ? 1 : 0 },
       uDpr: { value: dpr },
+      // forge: deep-copper ember the particles glow with before they lock in
+      uEmber: { value: new THREE.Color("#6E341E") },
+      uSweep: { value: -1 }, // gold sweep position (-1 = off)
+      uBounce: { value: 1 }, // settle-bounce scale
+      uCenter: { value: new THREE.Vector2(0, 0) }, // mark centre (world)
     };
     const glowUniforms = { uGlow: { value: reduced ? 1 : 0 } };
     const pointsMat = new THREE.ShaderMaterial({
@@ -319,13 +351,17 @@ function Swarm({ active, reduced, center, onFormed }: SwarmProps) {
       target[i * 3] = tx;
       target[i * 3 + 1] = ty;
       target[i * 3 + 2] = 0;
-      delay[i] = rand() * 0.55;
+      // bottom of the mark locks in LAST: delay grows with the sample's
+      // vertical position (y is down here), so the top cap forges first and
+      // the lower cube completes the mark
+      delay[i] = (samples[i].y / (VIEW_H * RASTER_SCALE)) * 0.42 + rand() * 0.12;
       seed[i] = rand() * 100;
       sizeA[i] = 1.4 + rand() * 1.5;
-      // gold sparkle odds rise toward the bottom, so the lower half twinkles
-      // as richly as the top instead of fading into flat red
+      // a few ember accents twinkle, weighted slightly toward the bottom —
+      // kept sparse (was 0.08–0.22) so they add life without lightening the
+      // dense crown toward gold/white
       const tRamp = samples[i].y / (VIEW_H * RASTER_SCALE);
-      rampColor(tRamp, rand() < 0.08 + 0.14 * tRamp, tmp);
+      rampColor(tRamp, rand() < 0.03 + 0.05 * tRamp, tmp);
       color[i * 3] = tmp.r;
       color[i * 3 + 1] = tmp.g;
       color[i * 3 + 2] = tmp.b;
@@ -435,31 +471,52 @@ function Swarm({ active, reduced, center, onFormed }: SwarmProps) {
   // can't do the reset itself — clear the clock here so the whole sequence
   // replays from the drifting field next time the footer scrolls in
   const formedFired = useRef(false);
+  const formedAt = useRef(0);
   useEffect(() => {
     if (!active) {
       T.current = 0;
       formedFired.current = false;
+      formedAt.current = 0;
     }
   }, [active]);
+
+  // the sweep + bounce scale the mark around its own centre
+  useEffect(() => {
+    if (geo) uniforms.uCenter.value.set(geo.glowPos[0], geo.glowPos[1]);
+  }, [geo, uniforms]);
 
   useFrame((_, dt) => {
     if (reduced) {
       uniforms.uProgress.value = 1;
       glowUniforms.uGlow.value = 1;
+      uniforms.uBounce.value = 1;
+      uniforms.uSweep.value = -1;
       return;
     }
     T.current = active ? T.current + Math.min(dt, 0.05) : 0;
     uniforms.uTime.value = T.current;
-    uniforms.uProgress.value = Math.max(
-      0,
-      Math.min(1, (T.current - DRIFT_END) / FORM_DUR),
-    );
-    glowUniforms.uGlow.value = uniforms.uProgress.value;
-    // announce formation from the animation clock itself, so the wordmark
-    // stays in sync even when rendering is throttled
-    if (uniforms.uProgress.value >= 1 && !formedFired.current) {
-      formedFired.current = true;
-      onFormed?.();
+    const prog = Math.max(0, Math.min(1, (T.current - DRIFT_END) / FORM_DUR));
+    uniforms.uProgress.value = prog;
+    glowUniforms.uGlow.value = prog;
+
+    if (prog >= 1) {
+      // announce formation from the animation clock itself, so the wordmark
+      // stays in sync even when rendering is throttled
+      if (!formedFired.current) {
+        formedFired.current = true;
+        formedAt.current = T.current;
+        onFormed?.();
+      }
+      const e = T.current - formedAt.current;
+      // settle-bounce: one quick damped ring (dip → overshoot → rest, ~0.7s)
+      uniforms.uBounce.value =
+        e < 0.7 ? 1 - 0.04 * Math.exp(-5 * e) * Math.sin(e * 20) : 1;
+      // gold sweep: fires 0.5s after forming, then every 5s, crossing in ~0.55s
+      const c = (e - 0.5) % 5;
+      uniforms.uSweep.value = c >= 0 && c < 0.55 ? -0.15 + (c / 0.55) * 1.3 : -1;
+    } else {
+      uniforms.uBounce.value = 1;
+      uniforms.uSweep.value = -1;
     }
   });
 

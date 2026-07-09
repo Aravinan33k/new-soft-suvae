@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" fill="none">
+  <defs>
+    <radialGradient id="f4bg" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#191007"/>
+      <stop offset="100%" stop-color="#0b0906"/>
+    </radialGradient>
+    <style>
+      @keyframes f4Float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+      @keyframes f4Flow { to { stroke-dashoffset: -18; } }
+      @keyframes f4Led { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+      .f4-cloud { transform-origin: 240px 175px; animation: f4Float 5s ease-in-out infinite; }
+      .f4-link { animation: f4Flow 0.9s linear infinite; }
+      .f4-led { animation: f4Led 1.8s ease-in-out infinite; }
+      .f4-led:nth-of-type(2) { animation-delay: 0.4s; }
+      .f4-led:nth-of-type(3) { animation-delay: 0.8s; }
+      @media (prefers-reduced-motion: reduce) {
+        .f4-cloud, .f4-link, .f4-led { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="480" height="480" fill="url(#f4bg)"/>
+  <g stroke="#FF8A3D" stroke-width="1" opacity="0.13">
+    <path d="M0 120H480M0 240H480M0 360H480M120 0V480M240 0V480M360 0V480"/>
+  </g>
+  <!-- cloud, gently floating -->
+  <path class="f4-cloud" d="M150 175 a55 55 0 0 1 108 -14 a42 42 0 0 1 62 30 a38 38 0 0 1 -8 75 H165 a45 45 0 0 1 -15 -91 z"
+        fill="rgba(255,138,61,0.06)" stroke="#FFC08A" stroke-width="2.2" opacity="0.75"/>
+  <!-- links down to server racks, current flowing -->
+  <g class="f4-link" stroke="#FF9E55" stroke-width="1.5" opacity="0.45" stroke-linecap="round" stroke-dasharray="3 6">
+    <path d="M150 300 V360 M240 300 V360 M330 300 V360"/>
+  </g>
+  <!-- three server racks -->
+  <g stroke="#FFC08A" stroke-width="2" opacity="0.65">
+    <g transform="translate(120 360)">
+      <rect width="60" height="80" rx="6" fill="rgba(255,138,61,0.05)"/>
+      <path d="M8 20H52 M8 40H52 M8 60H52"/>
+      <circle class="f4-led" cx="46" cy="12" r="2.5" fill="#FFC08A" stroke="none"/>
+    </g>
+    <g transform="translate(210 360)">
+      <rect width="60" height="80" rx="6" fill="rgba(255,138,61,0.05)"/>
+      <path d="M8 20H52 M8 40H52 M8 60H52"/>
+      <circle class="f4-led" cx="46" cy="12" r="2.5" fill="#FFC08A" stroke="none"/>
+    </g>
+    <g transform="translate(300 360)">
+      <rect width="60" height="80" rx="6" fill="rgba(255,138,61,0.05)"/>
+      <path d="M8 20H52 M8 40H52 M8 60H52"/>
+      <circle class="f4-led" cx="46" cy="12" r="2.5" fill="#FFC08A" stroke="none"/>
+    </g>
+  </g>
+</svg>

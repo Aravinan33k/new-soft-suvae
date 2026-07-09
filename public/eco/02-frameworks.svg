@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" fill="none">
+  <defs>
+    <radialGradient id="f2bg" cx="50%" cy="45%" r="80%">
+      <stop offset="0%" stop-color="#191007"/>
+      <stop offset="100%" stop-color="#0b0906"/>
+    </radialGradient>
+    <style>
+      @keyframes f2Flow { to { stroke-dashoffset: -32; } }
+      @keyframes f2Node { 0%,100% { r: var(--r0); opacity: 0.9; } 50% { r: calc(var(--r0) + 1.5); opacity: 1; } }
+      @keyframes f2Ring { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+      .f2-edge { stroke-dasharray: 5 5; animation: f2Flow 1.2s linear infinite; }
+      .f2-dot { animation: f2Node 2.2s ease-in-out infinite; }
+      .f2-dot:nth-of-type(2) { animation-delay: 0.3s; }
+      .f2-dot:nth-of-type(3) { animation-delay: 0.6s; }
+      .f2-dot:nth-of-type(4) { animation-delay: 0.9s; }
+      .f2-dot:nth-of-type(5) { animation-delay: 1.2s; }
+      .f2-dot:nth-of-type(6) { animation-delay: 1.5s; }
+      .f2-dot:nth-of-type(7) { animation-delay: 1.8s; }
+      .f2-ring { animation: f2Ring 1.6s ease-in-out infinite; }
+      @media (prefers-reduced-motion: reduce) {
+        .f2-edge, .f2-dot, .f2-ring { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="480" height="480" fill="url(#f2bg)"/>
+  <g stroke="#FF8A3D" stroke-width="1" opacity="0.15">
+    <path d="M0 96H480M0 192H480M0 288H480M0 384H480M96 0V480M192 0V480M288 0V480M384 0V480"/>
+  </g>
+  <!-- DAG workflow: three columns of nodes with directed links, signal flowing -->
+  <g class="f2-edge" stroke="#FF9E55" stroke-width="1.6" opacity="0.5" stroke-linecap="round">
+    <path d="M96 120 L240 90 M96 120 L240 240 M96 360 L240 240 M96 360 L240 390 M240 90 L384 160 M240 240 L384 160 M240 240 L384 320 M240 390 L384 320"/>
+  </g>
+  <g>
+    <g class="f2-ring" fill="#1a1108" stroke="#FFB057" stroke-width="2">
+      <circle cx="96" cy="120" r="16"/><circle cx="96" cy="360" r="16"/>
+      <circle cx="240" cy="90" r="18"/><circle cx="240" cy="240" r="20"/><circle cx="240" cy="390" r="18"/>
+      <circle cx="384" cy="160" r="16"/><circle cx="384" cy="320" r="16"/>
+    </g>
+    <g fill="#FFC08A" opacity="0.9">
+      <circle class="f2-dot" style="--r0:5" cx="96" cy="120" r="5"/><circle class="f2-dot" style="--r0:5" cx="96" cy="360" r="5"/>
+      <circle class="f2-dot" style="--r0:5" cx="240" cy="90" r="5"/><circle class="f2-dot" style="--r0:6" cx="240" cy="240" r="6"/><circle class="f2-dot" style="--r0:5" cx="240" cy="390" r="5"/>
+      <circle class="f2-dot" style="--r0:5" cx="384" cy="160" r="5"/><circle class="f2-dot" style="--r0:5" cx="384" cy="320" r="5"/>
+    </g>
+  </g>
+  <!-- flow arrowheads -->
+  <g fill="#FF8A3D" opacity="0.7">
+    <path d="M225 240 l-14 -5 v10 z"/>
+    <path d="M369 160 l-14 -5 v10 z"/>
+  </g>
+</svg>

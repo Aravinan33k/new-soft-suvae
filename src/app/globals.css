@@ -26,9 +26,8 @@
   --brand-blue: #2563eb;
   --brand-purple: #7c3aed;
   --nav-bg: rgba(250, 249, 247, 0.82);
-  /* Anthropic-style flat nav: warm-cream surface (slightly translucent for
-     the glass blur) + black CTA */
-  --nav-surface: rgba(244, 242, 236, 0.78);
+  /* nav has no surface fill — just a colourless glass blur + hairline border */
+  --nav-surface: transparent;
   --nav-cta-bg: #1c1917;
   --nav-cta-fg: #faf9f7;
   --nav-cta-hover: #33302b;
@@ -78,7 +77,7 @@
   --brand-blue: #4fa3ff;
   --nav-bg: rgba(10, 10, 20, 0.5);
   /* dark theme inverts the CTA to white-on-dark so it still reads */
-  --nav-surface: rgba(4, 4, 8, 0.62);
+  --nav-surface: transparent;
   --nav-cta-bg: #ffffff;
   --nav-cta-fg: #0a0a0c;
   --nav-cta-hover: #e6e6e6;
@@ -1712,6 +1711,35 @@ body {
   .ind-particle,
   .ind-core-pulse {
     animation: none;
+  }
+}
+
+/* Eco stats card: a slow diagonal light sweep travelling across the layer
+   artwork so the card reads as a live, energised "engine" rather than a
+   static image behind the numbers. */
+@keyframes ecoCardSweep {
+  0% {
+    transform: translateX(-160%) skewX(-14deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.9;
+  }
+  55% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateX(220%) skewX(-14deg);
+    opacity: 0;
+  }
+}
+.eco-card-sweep {
+  animation: ecoCardSweep 7s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eco-card-sweep {
+    animation: none;
+    opacity: 0;
   }
 }
 

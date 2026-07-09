@@ -3,7 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import type { IconType } from "react-icons";
-import { TbCpu, TbAward, TbHeartHandshake, TbWorld } from "react-icons/tb";
+import {
+  TbCpu,
+  TbHeartHandshake,
+  TbRocket,
+  TbActivityHeartbeat,
+  TbHeadset,
+  TbShieldCheck,
+} from "react-icons/tb";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 // "How It Works" — the intelligent-ecosystem section.
@@ -17,10 +24,12 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 // `charge` = how far the power dial fills (0–1). Decorative energy level, not
 // a percentage — varied per stat so the four dials don't look identical.
 const STATS = [
-  { value: 400, suffix: "+", label: "AI & Engineering Specialists", icon: TbCpu, charge: 0.92 },
-  { value: 13, suffix: "+", label: "Years of Experience", icon: TbAward, charge: 0.72 },
-  { value: 150, suffix: "+", label: "Global Clients", icon: TbHeartHandshake, charge: 0.85 },
-  { value: 21, suffix: "+", label: "Countries", icon: TbWorld, charge: 0.64 },
+  { value: 50, suffix: "+", label: "Projects Delivered", icon: TbRocket, charge: 0.7 },
+  { value: 15, suffix: "+", label: "AI Solutions", icon: TbCpu, charge: 0.6 },
+  { value: 99.9, suffix: "%", label: "Uptime", icon: TbActivityHeartbeat, charge: 0.96 },
+  { value: 24, suffix: "/7", label: "Support", icon: TbHeadset, charge: 1 },
+  { value: 200, suffix: "+", label: "Happy Clients", icon: TbHeartHandshake, charge: 0.9 },
+  { value: 100, suffix: "%", label: "Secure & Compliant", icon: TbShieldCheck, charge: 0.99 },
 ];
 
 // deterministic PRNG so the SSR and client renders match
@@ -93,11 +102,11 @@ function NeuralMesh() {
 }
 
 // Animated AI workflow (lg screens): an explicit pipeline — INPUT sources
-// at the top flow down into the AI BRAIN, which fans out into the four
+// at the top flow down into the AI BRAIN, which fans out into the six
 // stat-card OUTPUTs below. Particles stream through every connector
 // continuously (one passes roughly every second).
 // four inputs, symmetric about the core (x=400) so they converge evenly and
-// then fan back out into exactly four outputs — a balanced funnel
+// then fan back out into six evenly-spaced outputs — a balanced funnel
 const INPUTS: { x: number; label: string }[] = [
   { x: 130, label: "Data" },
   { x: 310, label: "Systems" },
@@ -106,7 +115,7 @@ const INPUTS: { x: number; label: string }[] = [
 ];
 const INPUT_Y = 40;
 const CORE = { x: 400, y: 172 };
-const FAN_XS = [100, 300, 500, 700];
+const FAN_XS = [70, 205, 340, 460, 595, 730];
 
 function EcosystemDiagram() {
   const inPaths = INPUTS.map(
@@ -137,25 +146,6 @@ function EcosystemDiagram() {
           <stop offset="1" stopColor="#F92B4E" />
         </linearGradient>
       </defs>
-
-      {/* stage labels down the left edge */}
-      {[
-        { y: INPUT_Y, label: "INPUT" },
-        { y: CORE.y, label: "AI CORE" },
-        { y: 320, label: "PROVEN" },
-      ].map((s) => (
-        <text
-          key={s.label}
-          x={14}
-          y={s.y + 3}
-          fill="#71717a"
-          fontSize="9"
-          letterSpacing="3"
-          fontFamily="inherit"
-        >
-          {s.label}
-        </text>
-      ))}
 
       {/* INPUT nodes + connectors flowing down into the brain */}
       {INPUTS.map((s, i) => (
@@ -358,10 +348,12 @@ function StatDial({ value, suffix, label, icon: Icon, charge, delay }: StatDialP
   const pipAng = (-90 + level * 360) * (Math.PI / 180);
   const pipX = C + R * Math.cos(pipAng);
   const pipY = C + R * Math.sin(pipAng);
-  const num = Math.round(value * p);
+  // integers count up whole; a fractional target (e.g. 99.9) keeps one decimal
+  const num = Number.isInteger(value) ? Math.round(value * p) : (value * p).toFixed(1);
 
   return (
-    <div ref={ref} className="relative flex aspect-square w-[168px] items-center justify-center">
+    <div ref={ref} className="flex w-31 flex-col items-center">
+      <div className="relative flex aspect-square w-full items-center justify-center">
       <svg viewBox="0 0 170 170" className="absolute inset-0 h-full w-full" fill="none" aria-hidden>
         {/* faint full track */}
         <circle cx={C} cy={C} r={R - 3} stroke="#FF8A3D" strokeOpacity="0.12" strokeWidth="1" />
@@ -398,19 +390,23 @@ function StatDial({ value, suffix, label, icon: Icon, charge, delay }: StatDialP
         )}
       </svg>
 
-      {/* centred content: icon, count-up number, label */}
-      <div className="relative flex flex-col items-center px-4 text-center">
-        <span className="mb-2 flex h-8 w-8 items-center justify-center rounded-full border border-(--brand-orange)/30 bg-(--brand-orange)/10 text-(--brand-orange)">
-          <Icon className="h-4 w-4" />
+      {/* centred content: icon + count-up number only — the label lives
+          below, outside the ring, where it has room to stay legible */}
+      <div className="relative flex flex-col items-center px-2 text-center">
+        <span className="mb-1.5 flex h-7 w-7 items-center justify-center rounded-full border border-(--brand-orange)/30 bg-(--brand-orange)/10 text-(--brand-orange)">
+          <Icon className="h-3.5 w-3.5" />
         </span>
-        <span className="bg-gradient-to-b from-(--brand-orange-soft) via-(--brand-orange) to-(--brand-orange-hover) bg-clip-text text-[32px] font-bold leading-none tracking-tight text-transparent">
+        <span className="bg-gradient-to-b from-(--brand-orange-soft) via-(--brand-orange) to-(--brand-orange-hover) bg-clip-text text-[22px] font-bold leading-none tracking-tight text-transparent">
           {num}
           {suffix}
         </span>
-        <span className="mt-2 max-w-[120px] text-[11px] leading-snug text-(--text-secondary)">
-          {label}
-        </span>
       </div>
+      </div>
+
+      {/* label — outside the ring, below it */}
+      <span className="mt-2.5 max-w-32 text-center text-sm leading-snug text-(--foreground)">
+        {label}
+      </span>
     </div>
   );
 }
@@ -454,15 +450,9 @@ export default function EcosystemSection() {
         viewport={{ once: true, margin: "-100px" }}
         transition={{ staggerChildren: 0.12 }}
       >
-        <motion.p
-          variants={fadeUp}
-          className="text-xs font-medium uppercase tracking-[0.3em] text-(--brand-orange)"
-        >
-          How It Works
-        </motion.p>
         <motion.h2
           variants={headingReveal}
-          className="mt-4 text-3xl font-extrabold text-(--heading) md:text-4xl"
+          className="text-3xl font-extrabold text-(--heading) md:text-4xl"
         >
           We connect it all into one{" "}
           <span className="bg-gradient-to-r from-(--brand-orange) via-(--brand-orange-soft) to-(--heading) bg-clip-text text-transparent">
@@ -489,15 +479,34 @@ export default function EcosystemSection() {
       >
         <EcosystemDiagram />
         <MobileDiagram />
+
+        {/* stage labels — anchored to this FULL-WIDTH wrapper (not the
+            narrower, centred diagram inside it), so they sit well out to
+            the left rather than hugging the diagram's own edge */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
+          {[
+            { top: (INPUT_Y / 340) * 100, label: "INPUT" },
+            { top: (CORE.y / 340) * 100, label: "AI CORE" },
+            { top: (332 / 340) * 100, label: "PROVEN" },
+          ].map((s) => (
+            <span
+              key={s.label}
+              className="absolute left-0 -translate-y-1/2 text-[10px] font-bold uppercase tracking-[0.3em] text-(--brand-orange)"
+              style={{ top: `${s.top}%` }}
+            >
+              {s.label}
+            </span>
+          ))}
+        </div>
       </motion.div>
 
-      <div className="relative mx-auto mt-10 max-w-4xl lg:-mt-2">
+      <div className="relative mx-auto mt-10 max-w-5xl lg:-mt-2">
         {/* bottom glow behind the cards */}
         <div
           aria-hidden
           className="pointer-events-none absolute -inset-x-12 -bottom-20 h-64 bg-[radial-gradient(ellipse_55%_90%_at_50%_100%,rgba(255,106,61,0.1),transparent_70%)]"
         />
-        <div className="relative grid grid-cols-2 justify-items-center gap-x-6 gap-y-10 lg:grid-cols-4">
+        <div className="relative grid grid-cols-3 justify-items-center gap-x-3 gap-y-10 sm:gap-x-4 lg:grid-cols-6">
           {STATS.map((stat, i) => (
             <motion.div
               key={stat.label}

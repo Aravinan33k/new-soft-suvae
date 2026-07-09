@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { IconType } from "react-icons";
-import { FiMail, FiPhone, FiMapPin } from "react-icons/fi";
 import {
   FaFacebookF,
   FaXTwitter,
@@ -37,12 +36,6 @@ const SOCIALS: { icon: IconType; label: string; href: string }[] = [
   { icon: FaLinkedinIn, label: "LinkedIn", href: "https://www.linkedin.com/company/softsuave" },
   { icon: FaInstagram, label: "Instagram", href: "https://www.instagram.com/softsuave" },
   { icon: FaYoutube, label: "YouTube", href: "https://www.youtube.com/@softsuave" },
-];
-
-const PHONES = [
-  { label: "USA", value: "+1 (410) 220-6301", href: "tel:+14102206301" },
-  { label: "UK", value: "+44 7403 646450", href: "tel:+447403646450" },
-  { label: "India (HR)", value: "+91 8015159981", href: "tel:+918015159981" },
 ];
 
 export default function SiteFooter() {
@@ -100,7 +93,7 @@ export default function SiteFooter() {
     <footer
       ref={wrapRef}
       data-theme="dark"
-      className="relative z-10 mt-24 overflow-hidden border-t border-(--border) bg-(--background-alt)"
+      className="relative z-10 mt-24 overflow-hidden border-t border-(--border) bg-[#0a0a0c]"
     >
       {/* the particle system covers the footer; the mark forms in the slot */}
       <div className="pointer-events-none absolute inset-0">
@@ -112,7 +105,7 @@ export default function SiteFooter() {
         />
       </div>
 
-      <div className="relative mx-auto max-w-[85rem] px-6 py-20 md:px-10 lg:px-20">
+      <div className="relative mx-auto max-w-[85rem] px-6 py-14 md:px-10 lg:px-20">
         {/* ── Brand mark finale + about blurb + socials (centred) ──────── */}
         <div className="flex flex-col items-center text-center">
           {/* empty slot the particles assemble into — never an image */}
@@ -146,76 +139,6 @@ export default function SiteFooter() {
                 <Icon className="h-4 w-4" />
               </a>
             ))}
-          </div>
-        </div>
-
-        {/* ── Get in Touch: offices + email + phones ───────────────────── */}
-        <div className="mx-auto mt-16 grid max-w-4xl gap-x-10 gap-y-8 text-left sm:grid-cols-2 lg:grid-cols-3">
-          {/* USA office */}
-          <div className="flex gap-2.5">
-            <FiMapPin className="mt-0.5 shrink-0 text-(--brand-orange)" />
-            <p className="text-sm leading-relaxed text-(--foreground)">
-              <span className="font-medium text-(--heading)">Soft Suave LLC</span>
-              <br />
-              3030 K Street NW, Suite 102, Washington, DC 20007, USA
-            </p>
-          </div>
-
-          {/* India office */}
-          <div className="flex gap-2.5">
-            <FiMapPin className="mt-0.5 shrink-0 text-(--brand-orange)" />
-            <p className="text-sm leading-relaxed text-(--foreground)">
-              <span className="font-medium text-(--heading)">
-                Soft Suave Technologies
-              </span>
-              <br />
-              SSPDL Building, Alpha City, Gamma Block, 5th Floor, Navalur,
-              Chennai&nbsp;-&nbsp;603103
-            </p>
-          </div>
-
-          {/* email + phones */}
-          <div>
-            <a
-              href="mailto:contact@softsuave.com"
-              className="flex items-center gap-2.5 text-sm text-(--foreground) transition-colors hover:text-(--brand-orange)"
-            >
-              <FiMail className="shrink-0 text-(--brand-orange)" />
-              contact@softsuave.com
-            </a>
-            <div className="mt-3 space-y-2">
-              {PHONES.map((p) => (
-                <a
-                  key={p.label}
-                  href={p.href}
-                  className="flex items-center gap-2.5 text-sm text-(--foreground) transition-colors hover:text-(--brand-orange)"
-                >
-                  <FiPhone className="shrink-0 text-(--brand-orange)" />
-                  <span>
-                    {p.value}{" "}
-                    <span className="text-(--text-secondary)">· {p.label}</span>
-                  </span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Bottom bar ──────────────────────────────────────────────────── */}
-      <div className="relative border-t border-(--border)">
-        <div className="mx-auto flex max-w-[85rem] flex-col items-center justify-between gap-3 px-6 py-6 text-xs text-(--text-secondary) md:flex-row md:px-10 lg:px-20">
-          <p>© 2026 Soft Suave. All rights reserved.</p>
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
-            <a href="#" className="transition-colors hover:text-(--brand-orange)">
-              Privacy Policy
-            </a>
-            <a href="#" className="transition-colors hover:text-(--brand-orange)">
-              Case Studies
-            </a>
-            <a href="#" className="transition-colors hover:text-(--brand-orange)">
-              Blog
-            </a>
           </div>
         </div>
       </div>
