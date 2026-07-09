@@ -30,13 +30,16 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f8fafc",
+  themeColor: "#0a0a0c",
 };
 
 // Runs before paint: restores the saved theme (light = Warm Ivory default,
 // dark = the original Enterprise AI look) so there's no flash of the wrong
 // theme on load. The navbar toggle writes the same localStorage key.
-const themeInit = `try{var t=localStorage.getItem("theme");if(t==="dark")document.documentElement.setAttribute("data-theme","dark")}catch(e){}`;
+// Dark ("Enterprise AI") is the default; <html> ships with data-theme="dark".
+// Only drop to the light "Warm Ivory" palette if the visitor explicitly chose
+// it — restored before paint so there's no flash of the wrong theme.
+const themeInit = `try{if(localStorage.getItem("theme")==="light")document.documentElement.removeAttribute("data-theme")}catch(e){}`;
 
 export default function RootLayout({
   children,
@@ -46,6 +49,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-theme="dark"
       suppressHydrationWarning
       className={`${satoshi.variable} ${geistMono.variable} h-full antialiased`}
     >

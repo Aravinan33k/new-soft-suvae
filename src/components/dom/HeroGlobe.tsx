@@ -28,12 +28,12 @@ type Stat = {
 };
 
 const STATS: Stat[] = [
-  { value: "50+", label: "Projects Delivered", pos: "left-[2%] top-[13%]", align: "text-right", delay: 0 },
-  { value: "15+", label: "AI Solutions", pos: "left-0 top-[45%]", align: "text-right", delay: 2.1 },
-  { value: "99.9%", label: "Uptime", pos: "left-[2%] bottom-[15%]", align: "text-right", delay: 4.2 },
-  { value: "24/7", label: "Support", pos: "right-[2%] top-[13%]", align: "text-left", delay: 1.1 },
-  { value: "200+", label: "Happy Clients", pos: "right-0 top-[45%]", align: "text-left", delay: 3.2 },
-  { value: "100%", label: "Secure & Compliant", pos: "right-[2%] bottom-[15%]", align: "text-left", delay: 5.3 },
+  { value: "50+", label: "Projects Delivered", pos: "left-[1%] top-[11%]", align: "text-left", delay: 0 },
+  { value: "15+", label: "AI Solutions", pos: "left-[1%] top-[44%]", align: "text-left", delay: 2.1 },
+  { value: "99.9%", label: "Uptime", pos: "left-[1%] bottom-[12%]", align: "text-left", delay: 4.2 },
+  { value: "24/7", label: "Support", pos: "right-[1%] top-[11%]", align: "text-right", delay: 1.1 },
+  { value: "200+", label: "Happy Clients", pos: "right-[1%] top-[44%]", align: "text-right", delay: 3.2 },
+  { value: "100%", label: "Secure & Compliant", pos: "right-[1%] bottom-[12%]", align: "text-right", delay: 5.3 },
 ];
 
 // Radius of the faint dashed orbit tracks — just outside the globe rim (38).
@@ -111,7 +111,7 @@ export default function HeroGlobe() {
       {STATS.map((s) => (
         <div
           key={s.label}
-          className={`chip-float absolute z-[2] w-[38%] max-w-[160px] ${s.pos} ${s.align}`}
+          className={`chip-float absolute z-[2] w-max max-w-[40%] ${s.pos} ${s.align}`}
           style={{ animationDelay: `-${s.delay}s` }}
         >
           <div className="text-2xl font-extrabold leading-none tracking-tight text-(--heading) [text-shadow:0_2px_18px_rgba(0,0,0,0.45)] md:text-[1.7rem]">
