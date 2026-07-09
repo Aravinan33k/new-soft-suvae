@@ -274,6 +274,8 @@ export default function IndustriesShowcase() {
               key={ind.name}
               type="button"
               onClick={() => setActive(i)}
+              onMouseEnter={() => setActive(i)}
+              onFocus={() => setActive(i)}
               aria-expanded={isActive}
               className="group block w-full rounded-2xl p-3.5 text-left transition-all duration-300"
             >

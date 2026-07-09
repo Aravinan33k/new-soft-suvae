@@ -3,9 +3,9 @@
 import dynamic from "next/dynamic";
 import CountUp from "@/components/dom/CountUp";
 
-// Client wrapper so the three.js globe never blocks first paint, plus the six
-// key metrics floating as minimal text labels spread radially around the Earth
-// (HTML for crisp text), echoing the globe's faint orbital rings.
+// Client wrapper so the three.js globe never blocks first paint, plus the four
+// headline company stats floating as minimal text labels spread radially around
+// the Earth (HTML for crisp text), echoing the globe's faint orbital rings.
 const GlobeScene = dynamic(() => import("@/components/canvas/GlobeScene"), {
   ssr: false,
   loading: () => null,
@@ -28,12 +28,10 @@ type Stat = {
 };
 
 const STATS: Stat[] = [
-  { value: "50+", label: "Projects Delivered", pos: "left-[1%] top-[11%]", align: "text-left", delay: 0 },
-  { value: "15+", label: "AI Solutions", pos: "left-[1%] top-[44%]", align: "text-left", delay: 2.1 },
-  { value: "99.9%", label: "Uptime", pos: "left-[1%] bottom-[12%]", align: "text-left", delay: 4.2 },
-  { value: "24/7", label: "Support", pos: "right-[1%] top-[11%]", align: "text-right", delay: 1.1 },
-  { value: "200+", label: "Happy Clients", pos: "right-[1%] top-[44%]", align: "text-right", delay: 3.2 },
-  { value: "100%", label: "Secure & Compliant", pos: "right-[1%] bottom-[12%]", align: "text-right", delay: 5.3 },
+  { value: "400+", label: "AI & Engineering Specialists", pos: "left-[1%] top-[13%]", align: "text-left", delay: 0 },
+  { value: "150+", label: "Global Clients", pos: "left-[1%] bottom-[14%]", align: "text-left", delay: 2.1 },
+  { value: "13+", label: "Years of Experience", pos: "right-[1%] top-[13%]", align: "text-right", delay: 1.1 },
+  { value: "21+", label: "Countries", pos: "right-[1%] bottom-[14%]", align: "text-right", delay: 3.2 },
 ];
 
 // Radius of the faint dashed orbit tracks — just outside the globe rim (38).
@@ -107,7 +105,7 @@ export default function HeroGlobe() {
         </g>
       </svg>
 
-      {/* six key metrics as minimal floating text, spread around the globe */}
+      {/* four headline stats as minimal floating text, spread around the globe */}
       {STATS.map((s) => (
         <div
           key={s.label}

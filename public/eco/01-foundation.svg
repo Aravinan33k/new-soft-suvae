@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" fill="none">
+  <defs>
+    <radialGradient id="f1bg" cx="50%" cy="42%" r="75%">
+      <stop offset="0%" stop-color="#1a1108"/>
+      <stop offset="100%" stop-color="#0b0906"/>
+    </radialGradient>
+    <radialGradient id="f1core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFE3BC"/>
+      <stop offset="45%" stop-color="#FFB057"/>
+      <stop offset="100%" stop-color="#F9723C"/>
+    </radialGradient>
+    <style>
+      @keyframes f1Pulse { 0%,100% { r: 22; opacity: 1; } 50% { r: 25; opacity: 0.85; } }
+      @keyframes f1Halo { 0% { r: 34; opacity: 0.28; } 70% { r: 52; opacity: 0; } 100% { r: 52; opacity: 0; } }
+      @keyframes f1Flow { to { stroke-dashoffset: -40; } }
+      @keyframes f1Node { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+      .f1-core { transform-origin: 240px 240px; animation: f1Pulse 3.2s ease-in-out infinite; }
+      .f1-halo { transform-origin: 240px 240px; animation: f1Halo 3.2s ease-out infinite; }
+      .f1-lead { stroke-dasharray: 6 6; animation: f1Flow 1.6s linear infinite; }
+      .f1-node { animation: f1Node 2.4s ease-in-out infinite; }
+      .f1-node:nth-child(2) { animation-delay: 0.3s; }
+      .f1-node:nth-child(3) { animation-delay: 0.6s; }
+      .f1-node:nth-child(4) { animation-delay: 0.9s; }
+      .f1-node:nth-child(5) { animation-delay: 1.2s; }
+      .f1-node:nth-child(6) { animation-delay: 1.5s; }
+      .f1-node:nth-child(7) { animation-delay: 1.8s; }
+      .f1-node:nth-child(8) { animation-delay: 2.1s; }
+      @media (prefers-reduced-motion: reduce) {
+        .f1-core, .f1-halo, .f1-lead, .f1-node { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="480" height="480" fill="url(#f1bg)"/>
+  <g stroke="#FF8A3D" stroke-width="1" opacity="0.18">
+    <path d="M0 120H480M0 240H480M0 360H480M120 0V480M240 0V480M360 0V480"/>
+  </g>
+  <!-- radiating neural leads, energy flowing outward -->
+  <g stroke="#FF9E55" stroke-width="1.4" opacity="0.5" stroke-linecap="round">
+    <path class="f1-lead" d="M240 240 L90 90 M240 240 L390 90 M240 240 L90 390 M240 240 L390 390 M240 240 L240 60 M240 240 L240 420 M240 240 L60 240 M240 240 L420 240"/>
+  </g>
+  <g fill="#FFC08A" opacity="0.85">
+    <circle class="f1-node" cx="90" cy="90" r="5"/><circle class="f1-node" cx="390" cy="90" r="5"/>
+    <circle class="f1-node" cx="90" cy="390" r="5"/><circle class="f1-node" cx="390" cy="390" r="5"/>
+    <circle class="f1-node" cx="240" cy="60" r="4"/><circle class="f1-node" cx="240" cy="420" r="4"/>
+    <circle class="f1-node" cx="60" cy="240" r="4"/><circle class="f1-node" cx="420" cy="240" r="4"/>
+  </g>
+  <!-- chip die -->
+  <g stroke="#FFC08A" stroke-width="2" opacity="0.7">
+    <rect x="185" y="185" width="110" height="110" rx="18" fill="rgba(255,138,61,0.06)"/>
+  </g>
+  <g stroke="#FF9E55" stroke-width="2" stroke-linecap="round" opacity="0.55">
+    <path d="M215 185V150 M240 185V150 M265 185V150 M215 295V330 M240 295V330 M265 295V330 M185 215H150 M185 240H150 M185 265H150 M295 215H330 M295 240H330 M295 265H330"/>
+  </g>
+  <circle class="f1-halo" cx="240" cy="240" r="34" fill="#FF8A3D" opacity="0.28"/>
+  <circle class="f1-core" cx="240" cy="240" r="22" fill="url(#f1core)"/>
+  <circle cx="232" cy="232" r="6" fill="#FFF7E6" opacity="0.9"/>
+</svg>

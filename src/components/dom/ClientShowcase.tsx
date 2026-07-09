@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { IconType } from "react-icons";
 import {
-  FiSearch,
-  FiBell,
   FiChevronLeft,
   FiChevronRight,
   FiPause,
@@ -20,7 +18,6 @@ import {
   TbShoppingCart,
   TbSchool,
   TbUsers,
-  TbUserCircle,
   TbPlayerPlayFilled,
   TbClock,
 } from "react-icons/tb";
@@ -146,8 +143,6 @@ const CLIENTS: Client[] = [
     rating: 5,
   },
 ];
-
-const TABS = ["Testimonials", "Case Studies", "Success Metrics", "Reviews", "More"];
 
 // Headline metric per client — animates (counts up) on each hero change.
 const METRIC: Record<string, { value: string; label: string }> = {
@@ -526,7 +521,6 @@ function GlassCircle({
 
 export default function ClientShowcase() {
   const [active, setActive] = useState(0);
-  const [tab, setTab] = useState(0);
   const [paused, setPaused] = useState(false); // manual pause button
   const [hovered, setHovered] = useState(false); // hover-to-pause
   const [activeVideo, setActiveVideo] = useState<Video | null>(null); // video whose story is on the big screen
@@ -615,78 +609,6 @@ export default function ClientShowcase() {
               animationDuration: p.dur,
             }}
           />
-        ))}
-      </div>
-
-      {/* ── Floating nav pill ──────────────────────────────────────────── */}
-      <div className="relative flex items-center gap-3 rounded-full border border-(--border) bg-(--background)/50 px-3 py-2 backdrop-blur-xl">
-        <div className="flex items-center gap-2 pl-1">
-          <GlassCircle label="Back" size="sm" onClick={() => go(-1)}>
-            <FiChevronLeft className="h-4 w-4" />
-          </GlassCircle>
-          <GlassCircle label="Forward" size="sm" onClick={() => go(1)}>
-            <FiChevronRight className="h-4 w-4" />
-          </GlassCircle>
-        </div>
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-(--border) bg-(--card)/60 px-3.5 py-1.5">
-          <FiSearch className="h-4 w-4 shrink-0 text-(--text-secondary)" />
-          <input
-            type="text"
-            aria-label="Search testimonials"
-            placeholder="Ask me anything about our clients..."
-            className="min-w-0 flex-1 bg-transparent text-sm text-(--foreground) placeholder:text-(--text-secondary) focus:outline-none"
-          />
-        </div>
-        {/* tabs — hidden on small screens, shown inline on lg */}
-        <div className="hidden items-center gap-1 lg:flex">
-          {TABS.map((t, i) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(i)}
-              className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-all ${
-                i === tab
-                  ? "bg-(--brand-orange)/15 text-(--brand-orange)"
-                  : "text-(--text-secondary) hover:text-(--heading)"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-(--border) bg-(--card)/60 text-(--foreground) transition-colors hover:text-(--brand-orange)"
-          >
-            <FiBell className="h-4 w-4" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-400" />
-          </button>
-          <span className="flex items-center gap-2 rounded-full border border-(--border) bg-(--card)/60 py-1 pl-1 pr-3">
-            <TbUserCircle className="h-7 w-7 text-(--brand-orange)" />
-            <span className="hidden text-xs font-semibold text-(--heading) sm:block">
-              Account
-            </span>
-          </span>
-        </div>
-      </div>
-
-      {/* mobile tabs (nav pill hides them) */}
-      <div className="mt-3 flex gap-2 overflow-x-auto lg:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {TABS.map((t, i) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(i)}
-            className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-all ${
-              i === tab
-                ? "bg-(--brand-orange)/15 text-(--brand-orange)"
-                : "text-(--text-secondary) hover:text-(--heading)"
-            }`}
-          >
-            {t}
-          </button>
         ))}
       </div>
 

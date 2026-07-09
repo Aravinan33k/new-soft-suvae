@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import type { IconType } from "react-icons";
 import { FiPlay } from "react-icons/fi";
 import {
@@ -9,9 +10,6 @@ import {
   TbDatabase,
   TbCloud,
   TbRocket,
-  TbBox,
-  TbStack2,
-  TbInfinity,
   TbUsersGroup,
   TbRobot,
   TbListSearch,
@@ -306,9 +304,22 @@ const LAYERS: Layer[] = [
 ];
 
 const STATS = [
-  { icon: TbBox, value: "25+", label: "Technologies" },
-  { icon: TbStack2, value: "6", label: "Technology Layers" },
-  { icon: TbInfinity, value: "Unlimited", label: "Possibilities", accent: true },
+  { value: "25+", label: "Technologies" },
+  { value: "6", label: "Technology Layers" },
+  { value: "Unlimited", label: "Possibilities", accent: true },
+];
+
+// Left-card backdrop artwork — one photo per layer (index-aligned with
+// LAYERS). As the traveling dot rides the rail and crosses each layer on the
+// right, the stats card reveals that layer's image (sliding in from the right,
+// echoing the dot's direction), so the intro card "reacts" to where the flow
+// currently is.
+const LAYER_BG = [
+  "/eco/01-foundation.jpg", // 01 Foundation Models — glowing brain on a chip
+  "/eco/02-frameworks.jpg", // 02 AI Frameworks — workflow gears + pipeline
+  "/eco/03-vector.jpg", // 03 Vector Databases — database + vector field
+  "/eco/04-cloud.jpg", // 04 Cloud Infrastructure — cloud + server racks
+  "/eco/05-deploy.jpg", // 05 Deployment & DevOps — DevOps infinity loop
 ];
 
 // Assembly timing (ms): label at 0, layer i at BASE + i * STEP, rail keeps
@@ -324,6 +335,9 @@ export default function TechEcosystemFlow() {
   const tileRefs = useRef<(HTMLDivElement | null)[]>([]);
   const reduced = useReducedMotion();
   const [assembledState, setAssembledState] = useState(false);
+  // which layer the traveling dot is currently nearest — drives the left
+  // card's crossfading backdrop. Defaults to 0 so a frame shows at rest.
+  const [activeLayer, setActiveLayer] = useState(0);
   // reduced-motion: skip the scroll-triggered assembly, show it built
   const assembled = assembledState || reduced;
 
@@ -351,6 +365,7 @@ export default function TechEcosystemFlow() {
     if (!assembled || reduced) return;
     let raf = 0;
     let running = false;
+    let curActive = -1;
     const lastFire: number[] = LAYERS.map(() => 0);
 
     const loop = () => {
@@ -359,6 +374,8 @@ export default function TechEcosystemFlow() {
         const dr = dot.getBoundingClientRect();
         const py = dr.top + dr.height / 2;
         const now = performance.now();
+        let nearest = curActive < 0 ? 0 : curActive;
+        let nearestDist = Infinity;
         tileRefs.current.forEach((tile, i) => {
           if (!tile) return;
           const tr = tile.getBoundingClientRect();
@@ -372,7 +389,18 @@ export default function TechEcosystemFlow() {
             row.classList.add("eco-hit");
             setTimeout(() => row.classList.remove("eco-hit"), 1200);
           }
+          // track the layer whose tile the dot is closest to — this drives
+          // the left card's crossfading backdrop.
+          const dist = Math.abs(py - ty);
+          if (dist < nearestDist) {
+            nearestDist = dist;
+            nearest = i;
+          }
         });
+        if (nearest !== curActive) {
+          curActive = nearest;
+          setActiveLayer(nearest);
+        }
       }
       if (running) raf = requestAnimationFrame(loop);
     };
@@ -433,25 +461,60 @@ export default function TechEcosystemFlow() {
             See How It Works
           </a>
 
-          {/* quick stats card */}
-          <div className="mt-10 max-w-sm space-y-6 rounded-2xl border border-(--border) bg-(--card) p-7 backdrop-blur-md">
-            {STATS.map((s) => (
-              <div key={s.label} className="flex items-center gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#FF8A3D]/25 bg-[#FF8A3D]/8 text-[#FF9E55]">
-                  <s.icon className="h-5 w-5" />
-                </span>
-                <div>
+          {/* quick stats card — its backdrop reveals the layer the traveling
+              dot is currently riding, sliding IN FROM THE RIGHT to echo the
+              dot's direction, so the card feels alive as the flow assembles */}
+          <div className="relative mt-10 flex min-h-115 w-full max-w-md flex-col justify-end overflow-hidden rounded-2xl border border-(--border) bg-(--card) p-8 backdrop-blur-md">
+            {/* layer photos: all frames mounted; the active one slides in from
+                the right + fades in while the outgoing one drifts left out, so
+                each transition reads as a directional reveal (not a plain fade) */}
+            <div aria-hidden className="pointer-events-none absolute inset-0">
+              {LAYER_BG.map((src, i) => {
+                const active = i === activeLayer;
+                return (
+                  <Image
+                    key={src}
+                    src={src}
+                    alt=""
+                    fill
+                    sizes="448px"
+                    quality={72}
+                    priority={i === 0}
+                    className="object-cover object-center transition-[opacity,transform] duration-[900ms] ease-out will-change-transform"
+                    style={{
+                      opacity: active ? 0.92 : 0,
+                      // active: settled + slow zoom; incoming from the right,
+                      // outgoing drifts to the left
+                      transform: active
+                        ? "translateX(0) scale(1.05)"
+                        : i < activeLayer
+                          ? "translateX(-8%) scale(1.12)"
+                          : "translateX(8%) scale(1.12)",
+                    }}
+                  />
+                );
+              })}
+              {/* scrim: darker at the bottom so the stats stay legible over the
+                  photo, clear through the middle so the image reads */}
+              <div className="absolute inset-0 bg-linear-to-t from-(--card) via-(--card)/25 to-(--card)/45" />
+            </div>
+
+            <div className="relative z-10 grid grid-cols-3 gap-4 border-t border-(--border) pt-6">
+              {STATS.map((s) => (
+                <div key={s.label}>
                   <p
-                    className={`text-xl font-bold ${
+                    className={`text-2xl font-bold leading-none ${
                       s.accent ? "text-(--brand-orange)" : "text-(--heading)"
                     }`}
                   >
                     {s.value}
                   </p>
-                  <p className="mt-0.5 text-xs text-(--text-secondary)">{s.label}</p>
+                  <p className="mt-2 text-xs leading-snug text-(--text-secondary)">
+                    {s.label}
+                  </p>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 

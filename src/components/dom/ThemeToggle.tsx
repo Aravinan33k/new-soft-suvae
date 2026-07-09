@@ -24,17 +24,18 @@ function isDark() {
 // Reused by the standalone button below and by the navbar's Contact dropdown.
 export function useTheme() {
   const dark = useSyncExternalStore(subscribeTheme, isDark, () => false);
-  const toggle = () => {
-    const next = !dark;
-    if (next) document.documentElement.setAttribute("data-theme", "dark");
+  // apply a specific theme (true = dark) to <html> and persist the choice
+  const setDark = (nextDark: boolean) => {
+    if (nextDark) document.documentElement.setAttribute("data-theme", "dark");
     else document.documentElement.removeAttribute("data-theme");
     try {
-      localStorage.setItem("theme", next ? "dark" : "light");
+      localStorage.setItem("theme", nextDark ? "dark" : "light");
     } catch {
       /* private mode */
     }
   };
-  return { dark, toggle };
+  const toggle = () => setDark(!dark);
+  return { dark, toggle, setDark };
 }
 
 // Light/dark switch. Light = the Warm Ivory palette, dark = the original

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" fill="none">
+  <defs>
+    <radialGradient id="f3bg" cx="55%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#191007"/>
+      <stop offset="100%" stop-color="#0b0906"/>
+    </radialGradient>
+    <style>
+      @keyframes f3Twinkle { 0%,100% { opacity: var(--o0); } 50% { opacity: 1; } }
+      @keyframes f3Spin { to { transform: rotate(360deg); } }
+      @keyframes f3Query { 0%,100% { r: 9; } 50% { r: 11; } }
+      .f3-pt { animation: f3Twinkle 2.6s ease-in-out infinite; }
+      .f3-ring { transform-origin: 240px 240px; animation: f3Spin 18s linear infinite; }
+      .f3-query { animation: f3Query 2s ease-in-out infinite; }
+      @media (prefers-reduced-motion: reduce) {
+        .f3-pt, .f3-ring, .f3-query { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="480" height="480" fill="url(#f3bg)"/>
+  <!-- vector space: scattered embedding points, twinkling -->
+  <g fill="#FF9E55">
+    <circle class="f3-pt" style="--o0:0.4;animation-delay:0s" cx="70" cy="80" r="3"/><circle class="f3-pt" style="--o0:0.35;animation-delay:0.2s" cx="150" cy="60" r="2.5"/>
+    <circle class="f3-pt" style="--o0:0.45;animation-delay:0.4s" cx="300" cy="70" r="3"/><circle class="f3-pt" style="--o0:0.35;animation-delay:0.6s" cx="410" cy="110" r="2.5"/>
+    <circle class="f3-pt" style="--o0:0.35;animation-delay:0.8s" cx="60" cy="200" r="2.5"/><circle class="f3-pt" style="--o0:0.4;animation-delay:1s" cx="120" cy="300" r="3"/>
+    <circle class="f3-pt" style="--o0:0.35;animation-delay:1.2s" cx="360" cy="260" r="2.5"/><circle class="f3-pt" style="--o0:0.4;animation-delay:1.4s" cx="430" cy="330" r="3"/>
+    <circle class="f3-pt" style="--o0:0.35;animation-delay:1.6s" cx="90" cy="420" r="2.5"/><circle class="f3-pt" style="--o0:0.4;animation-delay:1.8s" cx="330" cy="420" r="3"/>
+    <circle class="f3-pt" style="--o0:0.3;animation-delay:2s" cx="200" cy="150" r="2.5"/><circle class="f3-pt" style="--o0:0.3;animation-delay:2.2s" cx="400" cy="440" r="2.5"/>
+  </g>
+  <!-- nearest-neighbour cluster around a query point -->
+  <g stroke="#FF8A3D" stroke-width="1.3" opacity="0.5" stroke-linecap="round">
+    <path d="M240 240 L200 200 M240 240 L290 205 M240 240 L295 285 M240 240 L195 290 M240 240 L245 175"/>
+  </g>
+  <circle class="f3-ring" cx="240" cy="240" r="60" fill="none" stroke="#FF8A3D" stroke-width="1" stroke-dasharray="4 6" opacity="0.4"/>
+  <g fill="#FFC08A">
+    <circle cx="200" cy="200" r="4"/><circle cx="290" cy="205" r="4"/>
+    <circle cx="295" cy="285" r="4"/><circle cx="195" cy="290" r="4"/><circle cx="245" cy="175" r="4"/>
+  </g>
+  <circle class="f3-query" cx="240" cy="240" r="9" fill="#FFB057"/>
+  <circle cx="240" cy="240" r="3.5" fill="#FFF7E6" opacity="0.9"/>
+  <!-- DB cylinder stack, lower-right -->
+  <g transform="translate(350 350)" stroke="#FFC08A" stroke-width="2" fill="rgba(255,138,61,0.05)" opacity="0.6">
+    <ellipse cx="0" cy="0" rx="34" ry="11"/>
+    <path d="M-34 0 V34 A34 11 0 0 0 34 34 V0"/>
+    <path d="M-34 17 A34 11 0 0 0 34 17"/>
+  </g>
+</svg>

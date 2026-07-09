@@ -91,34 +91,43 @@ function buildGraticule(radius: number): Float32Array {
   return new Float32Array(pos);
 }
 
-// Real network cities — index 0 is Soft Suave HQ (Chennai), kept brightest
+// Real network cities — index 0 is Soft Suave HQ (Chennai), the single hub
+// every arc converges on. The rest are the world's leading tech hubs; each
+// one throws a great-circle "vein" straight into Chennai.
 const CITIES: [number, number][] = [
-  [13.08, 80.27], // Chennai (HQ)
-  [19.07, 72.88], // Mumbai
-  [25.2, 55.27], // Dubai
+  [13.08, 80.27], // Chennai (HQ) — every arc converges here
+  [37.77, -122.42], // San Francisco Bay Area, USA
+  [40.71, -74.01], // New York City, USA
+  [39.9, 116.4], // Beijing, China
+  [47.61, -122.33], // Seattle, USA
+  [30.27, -97.74], // Austin, USA
+  [51.51, -0.13], // London, UK
+  [34.05, -118.24], // Los Angeles, USA
+  [42.36, -71.06], // Boston, USA
+  [31.23, 121.47], // Shanghai, China
+  [22.54, 114.06], // Shenzhen, China
+  [12.97, 77.59], // Bengaluru, India
   [1.35, 103.82], // Singapore
-  [35.68, 139.69], // Tokyo
-  [-33.87, 151.21], // Sydney
-  [51.51, -0.13], // London
-  [50.11, 8.68], // Frankfurt
-  [40.71, -74.01], // New York
-  [37.77, -122.42], // San Francisco
-  [43.65, -79.38], // Toronto
-  [-23.55, -46.63], // São Paulo
-  [-26.2, 28.05], // Johannesburg
-  [37.57, 126.98], // Seoul
-  [19.43, -99.13], // Mexico City
+  [30.27, 120.15], // Hangzhou, China
+  [48.86, 2.35], // Paris, France
+  [43.65, -79.38], // Toronto, Canada
+  [37.57, 126.98], // Seoul, South Korea
+  [32.08, 34.78], // Tel Aviv, Israel
+  [35.68, 139.69], // Tokyo, Japan
+  [52.52, 13.4], // Berlin, Germany
+  [38.91, -77.04], // Washington, D.C., USA
+  [-23.55, -46.63], // São Paulo, Brazil
+  [19.07, 72.88], // Mumbai, India
+  [41.88, -87.63], // Chicago, USA
+  [28.61, 77.21], // New Delhi, India
+  [32.78, -96.8], // Dallas, USA
+  [32.72, -117.16], // San Diego, USA
+  [52.37, 4.9], // Amsterdam, Netherlands
 ];
-const LINKS: [number, number][] = [
-  [0, 1], [0, 2], [0, 3], [0, 6], [0, 4],
-  [1, 2], [2, 6], [2, 12], [3, 4], [3, 5],
-  [4, 13], [4, 9], [6, 7], [6, 8], [8, 9],
-  [8, 10], [8, 11], [9, 14], [11, 12],
-  // extra links to densify the cage
-  [0, 5], [1, 3], [2, 7], [3, 13], [5, 11],
-  [6, 11], [7, 8], [7, 12], [9, 11], [10, 14],
-  [8, 14], [4, 5], [1, 12], [6, 10], [0, 7],
-];
+// Hub-and-spoke: every tech hub links straight to Chennai (index 0).
+const LINKS: [number, number][] = CITIES.slice(1).map(
+  (_, i) => [0, i + 1] as [number, number],
+);
 
 // ---------------------------------------------------------------------
 // Shaders
@@ -370,8 +379,9 @@ function Earth({ animate }: { animate: boolean }) {
       const b = hubs[j];
       const angle = a.angleTo(b);
       // Bow the arcs just off the surface so they wrap the globe like the
-      // reference — thin orange great-circles hugging the planet.
-      const lift = 0.035 + angle * 0.075;
+      // reference — thin orange great-circles hugging the planet. Kept low so
+      // the veins ride close to the Earth rather than floating well above it.
+      const lift = 0.02 + angle * 0.035;
       const pts = new Float32Array((ARC_SEG + 1) * 3);
       const tmp = new THREE.Vector3();
       for (let s = 0; s <= ARC_SEG; s++) {
@@ -634,10 +644,12 @@ function Earth({ animate }: { animate: boolean }) {
   );
 }
 
-// Two faint orbital rings with a few small lights
+// Two faint orbital rings with a few small lights — radii tucked inside the
+// camera frustum (was 1.2 / 1.32×R, whose edges crossed the square canvas
+// boundary and clipped into straight lines, framing the Earth in a "box")
 const RING_DEFS = [
-  { r: R * 1.2, tiltX: 1.18, tiltZ: 0.22, speed: 0.12, particles: 7, opacity: 0.26 },
-  { r: R * 1.32, tiltX: 1.42, tiltZ: -0.12, speed: -0.07, particles: 9, opacity: 0.18 },
+  { r: R * 1.1, tiltX: 1.18, tiltZ: 0.22, speed: 0.12, particles: 7, opacity: 0.26 },
+  { r: R * 1.18, tiltX: 1.42, tiltZ: -0.12, speed: -0.07, particles: 9, opacity: 0.18 },
 ];
 
 function OrbitalRing({
@@ -729,7 +741,8 @@ function FloatingSparks({ animate }: { animate: boolean }) {
     const tmp = new THREE.Color();
     for (let i = 0; i < N; i++) {
       const th = rand() * Math.PI * 2;
-      const rad = R * (1.18 + rand() * 0.14);
+      // kept inside the ring radii so no spark drifts past the canvas edge
+      const rad = R * (1.06 + rand() * 0.1);
       const y = (rand() - 0.5) * R * 1.7;
       pos.set([Math.cos(th) * rad, y, Math.sin(th) * rad], i * 3);
       tmp.set(rand() < 0.25 ? "#FF9A3C" : "#FFC76A"); // arc orange / glow gold
