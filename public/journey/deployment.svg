@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0c1526"/><stop offset="0.55" stop-color="#0a1020"/><stop offset="1" stop-color="#080a12"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff9440"/><stop offset="1" stop-color="#f9436b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.25" cy="0.8" r="0.7">
+      <stop offset="0" stop-color="#ff8a3d" stop-opacity="0.22"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect width="1280" height="720" fill="url(#glow)"/>
+  <text x="56" y="78" font-family="Segoe UI, system-ui, sans-serif" font-size="30" font-weight="700" fill="#e8eefb">Production Release</text>
+  <text x="56" y="106" font-family="Segoe UI, system-ui, sans-serif" font-size="15" fill="#8ea0bd">Enterprise-grade security, scale &amp; reliability</text>
+  <rect x="1054" y="52" width="170" height="40" rx="20" fill="#2ed3b7" fill-opacity="0.12" stroke="#2ed3b7" stroke-opacity="0.45"/>
+  <circle cx="1078" cy="72" r="5" fill="#2ed3b7"/>
+  <text x="1092" y="77" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="600" fill="#7fe8d4">v1.0.0 · live</text>
+  <!-- release pipeline -->
+  <rect x="56" y="140" width="1168" height="150" rx="22" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+  <g stroke-width="2">
+    <line x1="220" y1="204" x2="356" y2="204" stroke="#2ed3b7" stroke-opacity="0.7"/>
+    <line x1="500" y1="204" x2="636" y2="204" stroke="#2ed3b7" stroke-opacity="0.7"/>
+    <line x1="780" y1="204" x2="916" y2="204" stroke="#2ed3b7" stroke-opacity="0.7"/>
+  </g>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="14" text-anchor="middle">
+    <circle cx="160" cy="204" r="26" fill="#2ed3b7" fill-opacity="0.15" stroke="#2ed3b7"/>
+    <path d="M150 204l7 7 13-13" stroke="#2ed3b7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="160" y="262" fill="#cbd5e1" font-weight="600">Build</text>
+    <circle cx="440" cy="204" r="26" fill="#2ed3b7" fill-opacity="0.15" stroke="#2ed3b7"/>
+    <path d="M430 204l7 7 13-13" stroke="#2ed3b7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="440" y="262" fill="#cbd5e1" font-weight="600">Tests · 412 passed</text>
+    <circle cx="720" cy="204" r="26" fill="#2ed3b7" fill-opacity="0.15" stroke="#2ed3b7"/>
+    <path d="M710 204l7 7 13-13" stroke="#2ed3b7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="720" y="262" fill="#cbd5e1" font-weight="600">Security scan</text>
+    <circle cx="1000" cy="204" r="30" fill="url(#acc)"/>
+    <path d="M993 214l0 -14 7 -6 7 6 0 14z" fill="#ffffff"/>
+    <circle cx="1000" cy="217" r="2.4" fill="#ff9440"/>
+    <text x="1000" y="262" fill="#ffc08a" font-weight="700">Production</text>
+  </g>
+  <!-- uptime + latency + shield row -->
+  <g font-family="Segoe UI, system-ui, sans-serif">
+    <rect x="56" y="322" width="368" height="150" rx="20" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+    <text x="84" y="366" font-size="13" fill="#8ea0bd">Uptime — 90 days</text>
+    <text x="84" y="418" font-size="40" font-weight="700" fill="#e8eefb">99.98%</text>
+    <g fill="#2ed3b7">
+      <rect x="84" y="438" width="10" height="16" rx="2"/><rect x="100" y="438" width="10" height="16" rx="2"/><rect x="116" y="438" width="10" height="16" rx="2"/><rect x="132" y="438" width="10" height="16" rx="2"/><rect x="148" y="438" width="10" height="16" rx="2"/><rect x="164" y="438" width="10" height="16" rx="2"/><rect x="180" y="438" width="10" height="16" rx="2"/><rect x="196" y="438" width="10" height="16" rx="2"/><rect x="212" y="438" width="10" height="16" rx="2"/><rect x="228" y="438" width="10" height="16" rx="2" opacity="0.4"/><rect x="244" y="438" width="10" height="16" rx="2"/><rect x="260" y="438" width="10" height="16" rx="2"/><rect x="276" y="438" width="10" height="16" rx="2"/><rect x="292" y="438" width="10" height="16" rx="2"/><rect x="308" y="438" width="10" height="16" rx="2"/><rect x="324" y="438" width="10" height="16" rx="2"/><rect x="340" y="438" width="10" height="16" rx="2"/><rect x="356" y="438" width="10" height="16" rx="2"/><rect x="372" y="438" width="10" height="16" rx="2"/><rect x="388" y="438" width="10" height="16" rx="2"/>
+    </g>
+    <rect x="456" y="322" width="368" height="150" rx="20" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+    <text x="484" y="366" font-size="13" fill="#8ea0bd">p95 Latency</text>
+    <text x="484" y="418" font-size="40" font-weight="700" fill="#e8eefb">140ms</text>
+    <polyline points="484,452 524,446 564,450 604,442 644,447 684,440 724,444 764,438" stroke="#ffb057" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="856" y="322" width="368" height="150" rx="20" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+    <text x="884" y="366" font-size="13" fill="#8ea0bd">Security</text>
+    <path d="M916 392l30 12v22c0 20-13 32-30 40-17-8-30-20-30-40v-22z" fill="#ff8a3d" fill-opacity="0.14" stroke="url(#acc)" stroke-width="2"/>
+    <path d="M904 424l9 9 19-19" stroke="#ffb057" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="972" y="412" font-size="15" font-weight="600" fill="#e8eefb">SOC 2 · SSO · encrypted</text>
+    <text x="972" y="438" font-size="13" fill="#8ea0bd">Role-based access · audit logs</text>
+  </g>
+  <!-- rollout regions -->
+  <rect x="56" y="504" width="1168" height="160" rx="22" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+  <text x="84" y="548" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="600" fill="#cbd5e1">Rollout</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="14">
+    <rect x="84" y="572" width="256" height="60" rx="14" fill="#ffffff" fill-opacity="0.05"/>
+    <circle cx="112" cy="602" r="6" fill="#2ed3b7"/><text x="132" y="598" fill="#e8eefb" font-weight="600">US · East</text><text x="132" y="618" font-size="12" fill="#8ea0bd">100% traffic</text>
+    <rect x="364" y="572" width="256" height="60" rx="14" fill="#ffffff" fill-opacity="0.05"/>
+    <circle cx="392" cy="602" r="6" fill="#2ed3b7"/><text x="412" y="598" fill="#e8eefb" font-weight="600">EU · West</text><text x="412" y="618" font-size="12" fill="#8ea0bd">100% traffic</text>
+    <rect x="644" y="572" width="256" height="60" rx="14" fill="#ffffff" fill-opacity="0.05"/>
+    <circle cx="672" cy="602" r="6" fill="#ffb057"/><text x="692" y="598" fill="#e8eefb" font-weight="600">APAC · Chennai</text><text x="692" y="618" font-size="12" fill="#8ea0bd">canary 25%</text>
+    <rect x="924" y="572" width="256" height="60" rx="14" fill="#ffffff" fill-opacity="0.05"/>
+    <circle cx="952" cy="602" r="6" fill="#8ea0bd"/><text x="972" y="598" fill="#e8eefb" font-weight="600">Failover</text><text x="972" y="618" font-size="12" fill="#8ea0bd">standby · warm</text>
+  </g>
+</svg>

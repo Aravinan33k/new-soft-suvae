@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Preloader from "@/components/dom/Preloader";
 import AiAssistant from "@/components/dom/AiAssistant";
+import SmoothScroll from "@/components/dom/SmoothScroll";
 
 // Satoshi — the site's primary typeface (self-hosted variable font, all
 // weights 300–900). Exposed as --font-satoshi and mapped to --font-sans in
@@ -54,6 +55,7 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        <SmoothScroll />
         <Preloader />
         {children}
         <AiAssistant />

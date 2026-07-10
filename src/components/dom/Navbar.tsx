@@ -82,17 +82,51 @@ export default function Navbar() {
   const [ctaOpen, setCtaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  // the sliding glass highlight that tracks the hovered nav item
+  const [hi, setHi] = useState({ left: 0, width: 0, opacity: 0 });
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
+  const navListRef = useRef<HTMLUListElement>(null);
   const { dark, toggle, setDark } = useTheme();
 
+  // slide the glass highlight to sit behind the hovered nav item (measured
+  // relative to the list, with a little breathing room on each side)
+  const moveHi = (el: HTMLElement) => {
+    const ul = navListRef.current;
+    if (!ul) return;
+    const ur = ul.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const pad = 14;
+    setHi({ left: r.left - ur.left - pad, width: r.width + pad * 2, opacity: 1 });
+  };
+  const hideHi = () => setHi((h) => ({ ...h, opacity: 0 }));
+
+  // magnetic pull: nudge an element toward the cursor, spring back on leave
+  const magnet = {
+    onMouseMove: (e: React.MouseEvent<HTMLElement>) => {
+      const el = e.currentTarget;
+      const r = el.getBoundingClientRect();
+      const dx = (e.clientX - (r.left + r.width / 2)) * 0.25;
+      const dy = (e.clientY - (r.top + r.height / 2)) * 0.35;
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+    },
+    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+      e.currentTarget.style.transform = "";
+    },
+  };
+
   useEffect(() => {
-    // Hysteresis: condense into the floating pill past 48px, expand back under 12px
-    const onScroll = () =>
+    // Hysteresis: condense into the floating pill past 48px, expand back under 12px.
+    const onScroll = () => {
       setScrolled((prev) => (prev ? window.scrollY > 12 : window.scrollY > 48));
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   // close the split-button menu on an outside click
@@ -147,19 +181,36 @@ export default function Navbar() {
 
           {/* ── Right cluster: links + split CTA + toggle ─────────────── */}
           <div className="ml-auto flex items-center gap-5 lg:gap-7">
-            <ul className="hidden items-center gap-7 xl:flex">
+            <ul
+              ref={navListRef}
+              onMouseLeave={hideHi}
+              className="relative hidden items-center gap-7 xl:flex"
+            >
+              {/* sliding glass highlight that follows the hovered menu item */}
+              <span
+                aria-hidden
+                className="nav-hi"
+                style={{
+                  transform: `translate(${hi.left}px, -50%)`,
+                  width: `${hi.width}px`,
+                  opacity: hi.opacity,
+                }}
+              />
               {NAV.map((item) =>
                 item.items ? (
                   <li
                     key={item.label}
                     className="relative"
-                    onMouseEnter={() => openMenu(item.label)}
+                    onMouseEnter={(e) => {
+                      openMenu(item.label);
+                      moveHi(e.currentTarget);
+                    }}
                     onMouseLeave={scheduleClose}
                   >
                     <button
                       type="button"
                       aria-expanded={open === item.label}
-                      className={`flex items-center gap-1 text-sm font-medium transition-colors ${
+                      className={`relative z-10 flex items-center gap-1 text-sm font-medium transition-colors ${
                         open === item.label
                           ? "text-(--heading)"
                           : "text-(--foreground) hover:text-(--heading)"
@@ -196,10 +247,14 @@ export default function Navbar() {
                     </div>
                   </li>
                 ) : (
-                  <li key={item.label}>
+                  <li
+                    key={item.label}
+                    className="relative"
+                    onMouseEnter={(e) => moveHi(e.currentTarget)}
+                  >
                     <a
                       href={item.href}
-                      className="text-sm font-medium text-(--foreground) transition-colors hover:text-(--heading)"
+                      className="relative z-10 text-sm font-medium text-(--foreground) transition-colors hover:text-(--heading)"
                     >
                       {item.label}
                     </a>
@@ -215,6 +270,8 @@ export default function Navbar() {
                 aria-label="Contact us"
                 aria-expanded={ctaOpen}
                 onClick={() => setCtaOpen((v) => !v)}
+                onMouseMove={magnet.onMouseMove}
+                onMouseLeave={magnet.onMouseLeave}
                 className="nav-cta flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium"
               >
                 Contact Us
@@ -307,7 +364,10 @@ export default function Navbar() {
             : "pointer-events-none scale-95 opacity-0"
         }`}
       >
-        <div className="mx-auto max-h-[80vh] w-full max-w-md overflow-y-auto rounded-2xl border border-(--border) bg-(--panel) p-3 shadow-[0_24px_64px_-16px_var(--shadow-strong)] backdrop-blur-xl">
+        <div
+          data-lenis-prevent
+          className="mx-auto max-h-[80vh] w-full max-w-md overflow-y-auto rounded-2xl border border-(--border) bg-(--panel) p-3 shadow-[0_24px_64px_-16px_var(--shadow-strong)] backdrop-blur-xl"
+        >
           {NAV.map((item) =>
             item.items ? (
               <div key={item.label} className="border-b border-(--border) last:border-0">

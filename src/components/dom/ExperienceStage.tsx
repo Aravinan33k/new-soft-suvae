@@ -365,15 +365,6 @@ export default function ExperienceStage() {
                   />
 
                   <span
-                    className={`relative inline-block origin-left pl-2 font-mono text-sm tabular-nums transition-all duration-300 ease-out ${
-                      isActive
-                        ? "scale-[1.2] text-[#FF8A3D]"
-                        : "scale-100 text-zinc-600 group-hover:text-zinc-400"
-                    }`}
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span
                     className={`relative inline-block text-base font-medium transition-all duration-300 ease-out md:text-lg ${
                       isActive
                         ? "translate-x-[5px] text-white [text-shadow:0_0_14px_rgba(255,138,61,0.55)]"

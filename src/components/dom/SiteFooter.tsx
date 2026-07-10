@@ -90,10 +90,20 @@ export default function SiteFooter() {
   }, [active, reduced]);
 
   return (
+    <div className="relative z-10 mt-24">
+      {/* smooth hand-off from the page: instead of a hard border-t cut, the
+          page background pours into the footer's dark and fades out. Lives
+          OUTSIDE the footer's data-theme="dark" scope so --background is the
+          PAGE's value — in dark theme the colours match (invisible), in light
+          theme it reads as a soft dusk gradient rather than a slab edge. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 z-10 h-28 bg-linear-to-b from-(--background) to-transparent"
+      />
     <footer
       ref={wrapRef}
       data-theme="dark"
-      className="relative z-10 mt-24 overflow-hidden border-t border-(--border) bg-[#0a0a0c]"
+      className="relative overflow-hidden bg-[#0a0a0c]"
     >
       {/* the particle system covers the footer; the mark forms in the slot */}
       <div className="pointer-events-none absolute inset-0">
@@ -143,5 +153,6 @@ export default function SiteFooter() {
         </div>
       </div>
     </footer>
+    </div>
   );
 }

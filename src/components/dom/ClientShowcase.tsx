@@ -189,6 +189,7 @@ const TOP_VIDEOS: Video[] = [
         "Soft Suave's commitment to meeting deadlines, flexibility in working hours, and ability to seamlessly integrate with our U.S. team make them a reliable and invaluable technology partner.",
       author: "Tim Maliyil",
       role: "Founder & CEO, AlertBoot",
+      company: "AlertBoot",
       rating: 5,
       metric: { value: "10+", label: "Years Partnered" },
     },
@@ -207,6 +208,7 @@ const TOP_VIDEOS: Video[] = [
         "I've worked with Soft Suave for 3 years and the experience was unique. Partnering with them reduced our costs by 40% and increased our delivery speed by 20%.",
       author: "Dimitris Rokos",
       role: "Founder & CEO, AMD Telecom",
+      company: "AMD Telecom",
       rating: 5,
       metric: { value: "40%", label: "Cost Reduction" },
     },
@@ -225,6 +227,7 @@ const TOP_VIDEOS: Video[] = [
         "Their 40-hour free trial isn't just a marketing promise — it's a genuine opportunity to experience top-notch developer skills. I was beyond impressed with what they delivered during the trial period!",
       author: "Dara Huang",
       role: "Co-Founder, Perkypet",
+      company: "Perkypet",
       rating: 5,
       metric: { value: "40hr", label: "Free Trial" },
     },
@@ -243,6 +246,7 @@ const TOP_VIDEOS: Video[] = [
         "Soft Suave helped us bring Beautiful Mind to life — a social media and peer-support platform — guiding us from concept through to a polished, launched product.",
       author: "Aaron Gander",
       role: "Founder, Beautiful Mind",
+      company: "Beautiful Mind",
       rating: 5,
       metric: { value: "1", label: "Platform Launched" },
     },
@@ -265,6 +269,7 @@ const VIDEO_STORIES: Video[] = [
         "Hear directly from the clients who trusted Soft Suave to design, build, and scale their products — across logistics, healthcare, finance, and beyond.",
       author: "Soft Suave Clients",
       role: "Global client community",
+      company: "Soft Suave",
       rating: 5,
       metric: { value: "100+", label: "Happy Clients" },
     },
@@ -283,6 +288,7 @@ const VIDEO_STORIES: Video[] = [
         "Their 40-hour free trial isn't just a marketing promise — it's a genuine opportunity to experience top-notch developer skills. I was beyond impressed with what they delivered during the trial period!",
       author: "Dara Huang",
       role: "Co-Founder, Perkypet",
+      company: "Perkypet",
       rating: 5,
       metric: { value: "40hr", label: "Free Trial" },
     },
@@ -301,6 +307,7 @@ const VIDEO_STORIES: Video[] = [
         "Soft Suave helped us bring Beautiful Mind to life — a social media and peer-support platform — guiding us from concept through to a polished, launched product.",
       author: "Aaron Gander",
       role: "Founder, Beautiful Mind",
+      company: "Beautiful Mind",
       rating: 5,
       metric: { value: "1", label: "Platform Launched" },
     },
@@ -322,6 +329,7 @@ type HeroContent = {
   quote: string;
   author: string;
   role: string;
+  company: string; // reviewer's company — rendered as a monogram trust mark
   rating: number;
   metric?: { value: string; label: string };
 };
@@ -337,6 +345,69 @@ const CLIENT_IMAGE: Record<string, string> = {
 };
 type Video = { src: string; title: string; subtitle: string; related: HeroContent };
 
+// A small monochrome company "logo" — a monogram tile in the client's brand
+// accent, shown beside the reviewer. These are our own clients (not Google/
+// AWS), so we render an honest lettermark rather than borrowed brand logos —
+// same trust cue, no false endorsement.
+function CompanyMark({ name, accent }: { name: string; accent: string }) {
+  const initials = name
+    .replace(/[^a-zA-Z0-9 ]/g, "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+  return (
+    <span
+      aria-hidden
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-[12px] font-black leading-none tracking-tight text-white backdrop-blur-md"
+      style={{
+        borderColor: `${accent}66`,
+        background: `linear-gradient(135deg, ${accent}55, ${accent}1f)`,
+        boxShadow: `0 6px 16px -8px ${accent}, inset 0 1px 0 rgba(255,255,255,0.18)`,
+      }}
+    >
+      {initials}
+    </span>
+  );
+}
+
+// Featured-review backdrop with a "generating" load feel: a skeleton shimmer
+// holds the frame, then the image fades up from a heavy blur to sharp once it
+// decodes. Mounted with key={story} so the cycle replays on every change.
+function HeroBackdrop({ src }: { src: string }) {
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  // Cached images can be `complete` before React attaches onLoad — sync once.
+  useEffect(() => {
+    if (imgRef.current?.complete) setLoaded(true);
+  }, []);
+
+  return (
+    <>
+      {/* skeleton shimmer — fades out as the image resolves */}
+      <div
+        aria-hidden
+        className={`cs-shimmer absolute inset-0 transition-opacity duration-700 ${
+          loaded ? "opacity-0" : "opacity-100"
+        }`}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={imgRef}
+        src={src}
+        alt=""
+        onLoad={() => setLoaded(true)}
+        className={`holo-img absolute inset-0 h-full w-full scale-105 object-cover transition-[opacity,filter] duration-[900ms] ease-out ${
+          loaded ? "opacity-100 blur-0" : "opacity-0 blur-2xl"
+        }`}
+      />
+    </>
+  );
+}
+
 // mm:ss for the video duration badge
 function fmtDuration(s: number) {
   const m = Math.floor(s / 60);
@@ -348,18 +419,51 @@ function VideoCard({
   video,
   onPlay,
   onEnded,
+  onPreviewStart,
+  onPreviewEnd,
   active = false,
+  dimmed = false,
 }: {
   video: Video;
   onPlay: (v: Video) => void;
   onEnded: (v: Video) => void;
+  // hover preview started/stopped — lets the big screen swap just its backdrop
+  onPreviewStart?: (v: Video) => void;
+  onPreviewEnd?: (v: Video) => void;
   active?: boolean;
+  dimmed?: boolean; // another card is active — recede into the background
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
   const [playing, setPlaying] = useState(false);
+  const [previewing, setPreviewing] = useState(false); // muted hover preview
   const [poster, setPoster] = useState<string>();
   const [duration, setDuration] = useState<number>();
+
+  // Netflix/Apple-TV style hover preview: the video plays muted while the
+  // cursor is over the card. `previewRef` marks the playback as a silent
+  // preview so onPlay doesn't hijack the big hero screen. Disabled under
+  // reduced-motion. A real click (below) clears the flag and unmutes.
+  const previewRef = useRef(false);
+  const startPreview = () => {
+    const v = ref.current;
+    if (!v || playing || reduced) return;
+    previewRef.current = true;
+    v.muted = true;
+    setPreviewing(true);
+    v.play().catch(() => {});
+    // the big screen backdrop follows the previewing video's project
+    onPreviewStart?.(video);
+  };
+  const stopPreview = () => {
+    const v = ref.current;
+    if (!v || !previewRef.current) return;
+    previewRef.current = false;
+    setPreviewing(false);
+    v.pause();
+    onPreviewEnd?.(video);
+  };
 
   // Single-video playback: only one video plays at a time. When another card
   // becomes the active one, this card's `active` turns false — so pause its
@@ -367,6 +471,22 @@ function VideoCard({
   useEffect(() => {
     if (!active) ref.current?.pause();
   }, [active]);
+
+  // Videos only play while the user is actually on this area: scrolling the
+  // card (mostly) out of the viewport auto-pauses it. The overlay reappears
+  // via onPause, and the user can resume when they scroll back.
+  useEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) ref.current?.pause();
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(box);
+    return () => io.disconnect();
+  }, []);
 
   // Capture a representative frame as the poster once the card is in view.
   useEffect(() => {
@@ -432,8 +552,14 @@ function VideoCard({
   return (
     <div
       ref={boxRef}
-      className={`group relative aspect-video w-full overflow-hidden rounded-2xl border bg-black shadow-[0_20px_50px_-30px_var(--shadow-strong)] transition-all ${
-        active ? ACTIVE_CARD : "border-(--border) hover:border-(--brand-orange)/50"
+      onMouseEnter={startPreview}
+      onMouseLeave={stopPreview}
+      className={`group relative aspect-video w-full overflow-hidden rounded-2xl border bg-black shadow-[0_20px_50px_-30px_var(--shadow-strong)] transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_30px_65px_-22px_var(--glow-orange)] hover:ring-1 hover:ring-(--brand-orange)/45 ${
+        active
+          ? ACTIVE_CARD
+          : dimmed
+            ? "border-(--border) opacity-60 blur-[1.5px] saturate-[0.85] hover:opacity-100 hover:blur-0 hover:border-(--brand-orange)/50"
+            : "border-(--border) hover:scale-[1.02] hover:border-(--brand-orange)/50"
       }`}
     >
       <video
@@ -444,15 +570,23 @@ function VideoCard({
         playsInline
         controls={playing}
         onPlay={() => {
+          // silent hover preview — don't promote it to the big hero screen
+          if (previewRef.current) return;
           setPlaying(true);
           onPlay(video);
         }}
         onPause={() => setPlaying(false)}
         onEnded={() => {
+          // a hover preview that ran to the end releases the backdrop too
+          if (previewRef.current) {
+            previewRef.current = false;
+            setPreviewing(false);
+            onPreviewEnd?.(video);
+          }
           setPlaying(false);
           onEnded(video);
         }}
-        className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] ease-out ${
+        className={`absolute inset-0 h-full w-full object-cover transition-[transform,filter] duration-[900ms] ease-out group-hover:brightness-110 ${
           playing ? "" : "group-hover:scale-[1.06]"
         }`}
       />
@@ -460,20 +594,38 @@ function VideoCard({
         <button
           type="button"
           aria-label={`Play: ${video.title}`}
-          onClick={() => ref.current?.play()}
+          onClick={() => {
+            const v = ref.current;
+            if (!v) return;
+            // real play: clear the preview flag and unmute
+            previewRef.current = false;
+            setPreviewing(false);
+            v.muted = false;
+            v.play();
+          }}
           className="absolute inset-0 flex flex-col items-center justify-center text-left"
         >
-          <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/15 transition-colors group-hover:from-black/95" />
-          {/* duration badge (top-right) once metadata is known */}
+          {/* scrim lightens on hover / while previewing so the footage reads through */}
+          <span
+            className={`pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/15 transition-opacity duration-500 group-hover:opacity-70 ${
+              previewing ? "opacity-40" : "opacity-100"
+            }`}
+          />
+          {/* duration badge — slides in from the right on hover */}
           {duration != null && (
-            <span className="pointer-events-none absolute right-3 top-3 flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+            <span className="pointer-events-none absolute right-3 top-3 flex translate-x-2 items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white opacity-0 backdrop-blur-sm transition-all duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100">
               <TbClock className="h-3 w-3" /> {fmtDuration(duration)}
             </span>
           )}
-          <span className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/25 bg-white/15 text-white backdrop-blur-md transition-all group-hover:scale-110 group-hover:border-(--brand-orange) group-hover:bg-(--brand-orange) group-hover:shadow-[0_0_28px_-4px_var(--glow-orange)]">
+          {/* play affordance — hidden by default, grows in on hover */}
+          <span
+            className={`relative flex h-11 w-11 scale-90 items-center justify-center rounded-full border border-white/25 bg-white/15 text-white opacity-0 backdrop-blur-md transition-all duration-300 ease-out group-hover:scale-100 group-hover:border-(--brand-orange) group-hover:bg-(--brand-orange) group-hover:opacity-100 group-hover:shadow-[0_0_26px_-4px_var(--glow-orange)] ${
+              previewing ? "opacity-70! scale-95!" : ""
+            }`}
+          >
             {/* soft pulse ring on hover */}
             <span className="pointer-events-none absolute inset-0 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-hover:animate-ping group-hover:bg-white/10" />
-            <TbPlayerPlayFilled className="relative ml-0.5 h-6 w-6" />
+            <TbPlayerPlayFilled className="relative ml-0.5 h-5 w-5" />
           </span>
           <span className="absolute inset-x-0 bottom-0 p-4">
             <span className="block text-sm font-bold text-white">{video.title}</span>
@@ -486,6 +638,9 @@ function VideoCard({
 }
 
 // Frosted circular button — the signature "play" affordance of the reference.
+// Glassmorphism (blur + inset highlight), orange hover, and a subtle magnetic
+// pull: the button eases toward the cursor while hovered, springing back on
+// exit. Disabled under reduced-motion.
 function GlassCircle({
   label,
   onClick,
@@ -501,20 +656,48 @@ function GlassCircle({
   onImage?: boolean; // white glass, for use over a dark image
   children: React.ReactNode;
 }) {
+  const reduced = useReducedMotion();
+  const ref = useRef<HTMLButtonElement>(null);
+  const [pull, setPull] = useState({ x: 0, y: 0 });
+
+  // Magnetic: translate a fraction of the cursor's offset from the button
+  // centre (capped) so it "reaches" toward the pointer without chasing it.
+  const onMove = (e: React.MouseEvent) => {
+    if (reduced) return;
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const dx = e.clientX - (r.left + r.width / 2);
+    const dy = e.clientY - (r.top + r.height / 2);
+    const cap = 8;
+    setPull({
+      x: Math.max(-cap, Math.min(cap, dx * 0.4)),
+      y: Math.max(-cap, Math.min(cap, dy * 0.4)),
+    });
+  };
+  const reset = () => setPull({ x: 0, y: 0 });
+
   const dim = size === "sm" ? "h-8 w-8" : "h-10 w-10";
   const rest = onImage
-    ? "border-white/25 bg-white/10 text-white hover:border-(--brand-orange)/60 hover:bg-(--brand-orange)"
-    : "border-(--border) bg-(--card)/70 text-(--foreground) hover:border-(--brand-orange)/50 hover:text-(--brand-orange)";
+    ? "border-white/20 bg-white/10 text-white ring-1 ring-inset ring-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.28)] hover:border-(--brand-orange)/60 hover:bg-(--brand-orange) hover:ring-(--brand-orange)/40"
+    : "border-(--border) bg-(--card)/70 text-(--foreground) ring-1 ring-inset ring-white/8 hover:border-(--brand-orange)/50 hover:text-(--brand-orange)";
   return (
     <button
+      ref={ref}
       type="button"
       aria-label={label}
       onClick={onClick}
-      className={`flex ${dim} shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all hover:scale-105 hover:shadow-[0_0_20px_-4px_var(--glow-orange)] ${
+      onMouseMove={onMove}
+      onMouseLeave={reset}
+      style={{ transform: `translate(${pull.x}px, ${pull.y}px)` }}
+      className={`group/glass flex ${dim} shrink-0 items-center justify-center rounded-full border backdrop-blur-xl transition-transform duration-300 ease-out hover:shadow-[0_0_22px_-4px_var(--glow-orange)] ${
         active ? "border-(--brand-orange)/50 bg-(--brand-orange)/15 text-(--brand-orange)" : rest
       }`}
     >
-      {children}
+      {/* icon scales on hover independently of the button's magnetic transform */}
+      <span className="transition-transform duration-300 ease-out group-hover/glass:scale-110">
+        {children}
+      </span>
     </button>
   );
 }
@@ -524,6 +707,9 @@ export default function ClientShowcase() {
   const [paused, setPaused] = useState(false); // manual pause button
   const [hovered, setHovered] = useState(false); // hover-to-pause
   const [activeVideo, setActiveVideo] = useState<Video | null>(null); // video whose story is on the big screen
+  // hover-previewing video — swaps ONLY the big screen's backdrop to its
+  // project image; the stars, quote, author and progress bars stay put
+  const [previewVideo, setPreviewVideo] = useState<Video | null>(null);
   const reduced = useReducedMotion();
   const n = CLIENTS.length;
   const client = CLIENTS[active];
@@ -541,13 +727,27 @@ export default function ClientShowcase() {
         quote: client.quote,
         author: client.author,
         role: client.role,
+        company: client.name,
         rating: client.rating,
         metric: METRIC[client.id],
       };
   const heroId = activeVideo ? activeVideo.src : client.id;
+  // The backdrop alone also follows a hover preview: while a card previews,
+  // its project image slides in behind the unchanged copy, and eases back out
+  // when the cursor leaves. A real (clicked) play still swaps the whole story.
+  const backdrop = activeVideo ?? previewVideo;
+  const backdropSrc = backdrop ? backdrop.related.image : hero.image;
+  const backdropId = backdrop ? backdrop.src : client.id;
   const playing = !paused && !hovered && !activeVideo;
 
   const next = () => setActive((a) => (a + 1) % n);
+  // A real play owns the screen — any lingering preview backdrop yields to it.
+  const playVideo = (v: Video) => {
+    setPreviewVideo(null);
+    setActiveVideo(v);
+  };
+  const endPreview = (vid: Video) =>
+    setPreviewVideo((cur) => (cur === vid ? null : cur));
   // Selecting a client clears any active video story and resumes the rotation.
   const selectClient = (i: number) => {
     setActiveVideo(null);
@@ -568,33 +768,10 @@ export default function ClientShowcase() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-[28px] border border-(--brand-orange)/25 bg-(--card) p-5 shadow-[0_50px_140px_-40px_var(--shadow-strong),0_0_100px_-18px_var(--glow-orange)] ring-1 ring-inset ring-white/8 backdrop-blur-2xl md:p-8 lg:p-10"
+      className="relative overflow-hidden"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* elevated surface: a top-lit sheen, a warm brand spotlight, and a
-          glass edge so the whole box clearly lifts off the page background */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent_34%)]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(130%_70%_at_50%_-12%,var(--glow-orange),transparent_60%)]"
-      />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-x-10 top-0 h-px bg-linear-to-r from-transparent via-white/25 to-transparent"
-      />
-      {/* warm cinematic glow anchored bottom-right, as in the reference */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-[radial-gradient(circle,var(--glow-orange),transparent_70%)] blur-3xl"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-[radial-gradient(circle,var(--glow-blue),transparent_70%)] blur-3xl"
-      />
       {/* faint particles drifting upward — a subtle "AI" ambience */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         {SHOWCASE_PARTICLES.map((p, i) => (
@@ -613,7 +790,7 @@ export default function ClientShowcase() {
       </div>
 
       {/* ── Body: aligned row-grid ── */}
-      <div className="relative mt-5 grid gap-4 lg:grid-cols-[300px_1fr] lg:items-stretch">
+      <div className="relative mt-5 grid gap-6 lg:grid-cols-[300px_1fr] lg:items-stretch lg:gap-10">
         {/* ── LEFT rail: featured video testimonials (no panel box, but the
             old p-4 inset kept so the videos stay their original size) ── */}
         <div className="flex flex-col gap-3 px-4">
@@ -621,25 +798,27 @@ export default function ClientShowcase() {
             <VideoCard
               key={v.src}
               video={v}
-              onPlay={setActiveVideo}
-              onEnded={(vid) => setActiveVideo((cur) => (cur?.src === vid.src ? null : cur))}
-              active={activeVideo?.src === v.src}
+              onPlay={playVideo}
+              onEnded={(vid) => setActiveVideo((cur) => (cur === vid ? null : cur))}
+              onPreviewStart={setPreviewVideo}
+              onPreviewEnd={endPreview}
+              active={activeVideo === v}
+              dimmed={activeVideo != null && activeVideo.src !== v.src}
             />
           ))}
         </div>
 
-        {/* ── RIGHT stage: Hero + Video Stories (natural height) ── */}
-        <div className="flex flex-col gap-4">
+        {/* ── RIGHT stage: Hero + Video Stories. The vertical gap matches the
+            grid's column gutter, so the space under the big screen equals the
+            space between the left rail and the big screen; the flex-1 hero
+            shrinks to absorb it. ── */}
+        <div className="flex flex-col gap-6 lg:gap-10">
           {/* Hero featured testimonial */}
           <div className="relative min-h-[400px] overflow-hidden rounded-3xl border border-(--border) bg-black shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] md:min-h-[440px] lg:min-h-0 lg:flex-1">
-            {/* project-UI backdrop, with scrims so the copy stays legible */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              key={`bg-${heroId}`}
-              src={hero.image}
-              alt=""
-              className="holo-img absolute inset-0 h-full w-full scale-105 object-cover"
-            />
+            {/* project-UI backdrop — shimmer skeleton → blurred → sharpens in.
+                Keyed by story (or previewing video) so the load cycle replays
+                on every change. Hover previews swap only this layer. */}
+            <HeroBackdrop key={`bg-${backdropId}`} src={backdropSrc} />
             {/* lighter scrims — the backdrop image stays clearly visible; only
                 the bottom is darkened enough to keep the small caption legible */}
             <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/30 to-transparent" />
@@ -664,32 +843,57 @@ export default function ClientShowcase() {
                 </button>
               </div>
             ) : (
-              <div className="absolute inset-x-6 top-5 z-10 flex gap-1.5 md:inset-x-9">
-                {CLIENTS.map((cl, i) => (
-                  <button
-                    key={cl.id}
-                    type="button"
-                    aria-label={`Show ${cl.name}`}
-                    onClick={() => selectClient(i)}
-                    className="group relative h-1 flex-1 overflow-hidden rounded-full bg-white/25"
-                  >
-                    {/* the active one fills over the hold duration; its
-                        animationend advances to the next story */}
+              <div className="absolute inset-x-6 top-5 z-10 md:inset-x-9">
+                {/* status line: live state + position counter, so it's obvious
+                    the reviews are auto-advancing */}
+                <div className="mb-2 flex items-center justify-between text-[11px] font-medium">
+                  <span className="inline-flex items-center gap-1.5 text-white/85 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
                     <span
-                      key={i === active ? `fill-${client.id}` : undefined}
-                      className={i === active ? "story-progress block h-full w-full bg-(--brand-orange)" : "block h-full bg-(--brand-orange)"}
-                      style={
-                        i === active
-                          ? {
-                              animationDuration: `${HOLD_MS}ms`,
-                              animationPlayState: playing ? "running" : "paused",
-                            }
-                          : { width: i < active ? "100%" : "0%" }
-                      }
-                      onAnimationEnd={i === active ? next : undefined}
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        playing
+                          ? "animate-pulse bg-(--brand-orange) shadow-[0_0_8px_var(--glow-orange)]"
+                          : "bg-white/50"
+                      }`}
                     />
-                  </button>
-                ))}
+                    {playing ? "Auto-playing stories" : "Paused"}
+                  </span>
+                  <span className="tabular-nums tracking-[0.2em] [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
+                    <span className="text-white">{String(active + 1).padStart(2, "0")}</span>
+                    <span className="text-white/45"> / {String(n).padStart(2, "0")}</span>
+                  </span>
+                </div>
+                {/* segmented progress — one bar per story */}
+                <div className="flex gap-1.5">
+                  {CLIENTS.map((cl, i) => (
+                    <button
+                      key={cl.id}
+                      type="button"
+                      aria-label={`Show ${cl.name}`}
+                      onClick={() => selectClient(i)}
+                      className="group relative h-1.5 flex-1 overflow-hidden rounded-full bg-white/20 transition-transform hover:scale-y-150"
+                    >
+                      {/* the active one fills over the hold duration; its
+                          animationend advances to the next story */}
+                      <span
+                        key={i === active ? `fill-${client.id}` : undefined}
+                        className={
+                          i === active
+                            ? "story-progress block h-full w-full rounded-full bg-(--brand-orange) shadow-[0_0_10px_var(--glow-orange)]"
+                            : "block h-full rounded-full bg-(--brand-orange)"
+                        }
+                        style={
+                          i === active
+                            ? {
+                                animationDuration: `${HOLD_MS}ms`,
+                                animationPlayState: playing ? "running" : "paused",
+                              }
+                            : { width: i < active ? "100%" : "0%" }
+                        }
+                        onAnimationEnd={i === active ? next : undefined}
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -697,31 +901,63 @@ export default function ClientShowcase() {
                 replays (fade-up) whenever the story or playing video changes */}
             <div
               key={`copy-${heroId}`}
-              className="absolute inset-x-6 bottom-20 z-10 max-w-xl animate-[fadeUp_0.6s_cubic-bezier(0.22,1,0.36,1)] md:inset-x-9 md:bottom-24"
+              className="absolute inset-x-6 bottom-20 z-10 max-w-2xl md:inset-x-9 md:bottom-24"
             >
-              <div className="flex items-center gap-3">
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-md"
-                  style={{ borderColor: `${hero.accent}66`, background: `${hero.accent}22` }}
-                >
-                  <hero.icon className="h-3.5 w-3.5" /> {hero.industry}
-                </span>
-                <span className="flex gap-0.5 text-(--brand-orange)">
-                  {Array.from({ length: hero.rating }).map((_, i) => (
-                    <TbStarFilled
-                      key={i}
-                      className="h-3.5 w-3.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]"
-                    />
-                  ))}
-                </span>
-              </div>
-              <p className="mt-2.5 line-clamp-3 text-sm font-semibold leading-snug text-white [text-shadow:0_2px_12px_rgba(0,0,0,0.95)] md:text-base">
+              {/* Cinematic staggered reveal — the image (holo-img Ken Burns)
+                  zooms first, then stars pop, quote fades up, and the
+                  attribution + company mark slide in, one beat after another. */}
+              {/* rating leads — pops in */}
+              <span
+                className="flex gap-1 text-(--brand-orange) [animation-fill-mode:both] animate-[csPop_0.5s_cubic-bezier(0.22,1,0.36,1)]"
+                style={{ animationDelay: "0.12s" }}
+              >
+                {Array.from({ length: hero.rating }).map((_, i) => (
+                  <TbStarFilled
+                    key={i}
+                    className="h-4 w-4 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] [animation-fill-mode:both] animate-[csPop_0.45s_cubic-bezier(0.22,1,0.36,1)]"
+                    style={{ animationDelay: `${0.14 + i * 0.06}s` }}
+                  />
+                ))}
+              </span>
+              {/* the quote IS the hero — largest, heaviest element in the block */}
+              <p
+                className="mt-3 line-clamp-4 text-lg font-semibold leading-snug tracking-tight text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.95)] [animation-fill-mode:both] animate-[fadeUp_0.6s_cubic-bezier(0.22,1,0.36,1)] md:text-2xl md:leading-[1.3]"
+                style={{ animationDelay: "0.24s" }}
+              >
                 &ldquo;{hero.quote}&rdquo;
               </p>
-              <p className="mt-2 text-[13px] text-white/85">
-                <span className="font-semibold text-white">{hero.author}</span>
-                <span className="text-white/60"> · {hero.role}</span>
-              </p>
+              {/* attribution + industry badge — slide in last */}
+              <div
+                className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 [animation-fill-mode:both] animate-[csSlideIn_0.55s_cubic-bezier(0.22,1,0.36,1)]"
+                style={{ animationDelay: "0.44s" }}
+              >
+                {/* company monogram beside the reviewer — an instant trust cue */}
+                <div className="flex items-center gap-2.5">
+                  <CompanyMark name={hero.company} accent={hero.accent} />
+                  <span className="text-sm leading-tight">
+                    <span className="block font-semibold text-white">{hero.author}</span>
+                    <span className="block text-[12px] text-white/55">{hero.role}</span>
+                  </span>
+                </div>
+                {/* category pill — gradient border, tinted glass, accent icon */}
+                <span
+                  className="inline-flex rounded-full p-px backdrop-blur-md"
+                  style={{
+                    background: `linear-gradient(135deg, ${hero.accent}, ${hero.accent}33 55%, rgba(255,255,255,0.14))`,
+                    boxShadow: `0 4px 16px -8px ${hero.accent}`,
+                  }}
+                >
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
+                    style={{
+                      background: `linear-gradient(135deg, ${hero.accent}26, rgba(10,10,12,0.72))`,
+                    }}
+                  >
+                    <hero.icon className="h-3.5 w-3.5" style={{ color: hero.accent }} />
+                    {hero.industry}
+                  </span>
+                </span>
+              </div>
             </div>
 
             {/* prev / next / pause — circular glass controls, bottom-right */}
@@ -750,9 +986,12 @@ export default function ClientShowcase() {
                 <VideoCard
                   key={v.src}
                   video={v}
-                  onPlay={setActiveVideo}
-                  onEnded={(vid) => setActiveVideo((cur) => (cur?.src === vid.src ? null : cur))}
-                  active={activeVideo?.src === v.src}
+                  onPlay={playVideo}
+                  onEnded={(vid) => setActiveVideo((cur) => (cur === vid ? null : cur))}
+                  onPreviewStart={setPreviewVideo}
+                  onPreviewEnd={endPreview}
+                  active={activeVideo === v}
+                  dimmed={activeVideo != null && activeVideo.src !== v.src}
                 />
               ))}
             </div>

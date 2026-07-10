@@ -1,15 +1,19 @@
 "use client";
 
 import {
+  Component,
   Suspense,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
+  type ReactNode,
 } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import GlobeFallback from "@/components/dom/GlobeFallback";
 
 // Photoreal cinematic Earth for the hero — live 3D, continuously rotating.
 //
@@ -124,10 +128,36 @@ const CITIES: [number, number][] = [
   [32.72, -117.16], // San Diego, USA
   [52.37, 4.9], // Amsterdam, Netherlands
 ];
-// Hub-and-spoke: every tech hub links straight to Chennai (index 0).
-const LINKS: [number, number][] = CITIES.slice(1).map(
+// Hub-and-spoke: every tech hub links straight to Chennai (index 0)…
+const SPOKES: [number, number][] = CITIES.slice(1).map(
   (_, i) => [0, i + 1] as [number, number],
 );
+// …PLUS a regional mesh between the hubs themselves, so veins wrap the whole
+// planet — whichever hemisphere faces the camera has arcs flowing across it,
+// instead of every line bunching out of the Chennai side. Indices reference
+// the CITIES list above.
+const MESH: [number, number][] = [
+  // Americas
+  [1, 2], // San Francisco – New York
+  [1, 4], // San Francisco – Seattle
+  [2, 15], // New York – Toronto
+  [7, 25], // Los Angeles – Dallas
+  [23, 20], // Chicago – Washington, D.C.
+  [21, 2], // São Paulo – New York
+  [26, 5], // San Diego – Austin
+  // transatlantic + Europe
+  [2, 6], // New York – London
+  [6, 14], // London – Paris
+  [19, 27], // Berlin – Amsterdam
+  [14, 17], // Paris – Tel Aviv
+  // Asia + transpacific
+  [18, 16], // Tokyo – Seoul
+  [9, 3], // Shanghai – Beijing
+  [10, 12], // Shenzhen – Singapore
+  [22, 24], // Mumbai – New Delhi
+  [18, 4], // Tokyo – Seattle
+];
+const LINKS: [number, number][] = [...SPOKES, ...MESH];
 
 // ---------------------------------------------------------------------
 // Shaders
@@ -345,17 +375,28 @@ const FLASH_DUR = 1.1; // seconds a hub node takes to flash orange -> white -> o
 // limb catches the sunrise, exactly like the reference.
 const SUN_DIR = new THREE.Vector3(0.42, 0.3, -0.86).normalize();
 
+// Shared by Earth (rendering) and WarmUp (staggered GPU upload) — same URLs
+// hit the same useLoader cache entries, so the textures load exactly once.
+const TEXTURE_URLS = [
+  "/textures/earth_day.jpg",
+  "/textures/earth_lights.jpg",
+  "/textures/earth_clouds.jpg",
+];
+
 function Earth({ animate }: { animate: boolean }) {
   const group = useRef<THREE.Group>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
   const pulsesGeo = useRef<THREE.BufferGeometry>(null);
   const hubsGeo = useRef<THREE.BufferGeometry>(null);
+  // Accumulated animation time — only advances while `animate` is true, so
+  // the staged hero reveal (globe held still + hidden during the text's
+  // entrance) starts every motion from zero with no visible jump.
+  const tAcc = useRef(0);
 
-  const [dayMap, nightMap, cloudMap] = useLoader(THREE.TextureLoader, [
-    "/textures/earth_day.jpg",
-    "/textures/earth_lights.jpg",
-    "/textures/earth_clouds.jpg",
-  ]);
+  const [dayMap, nightMap, cloudMap] = useLoader(
+    THREE.TextureLoader,
+    TEXTURE_URLS,
+  );
   useMemo(() => {
     for (const t of [dayMap, nightMap, cloudMap]) {
       t.anisotropy = 16;
@@ -417,11 +458,12 @@ function Earth({ animate }: { animate: boolean }) {
     const pulsePhase = new Float32Array(pulseCount);
     const pulseSpeed = new Float32Array(pulseCount);
     const pulseColor = new Float32Array(pulseCount * 3);
-    const pulseSize = new Float32Array(pulseCount).fill(2.0);
+    const pulseSize = new Float32Array(pulseCount).fill(1.5);
     const tmpColor = new THREE.Color();
     for (let p = 0; p < pulseCount; p++) {
       pulsePhase[p] = rand();
-      pulseSpeed[p] = 1 / (2.4 + rand() * 1.8);
+      // slower drift along the veins — a calm ~5.5–8.5s per arc (was 2.4–4.2s)
+      pulseSpeed[p] = 1 / (5.5 + rand() * 3);
       tmpColor.set(PULSE_COLORS[Math.floor(rand() * PULSE_COLORS.length)]);
       pulseColor.set([tmpColor.r, tmpColor.g, tmpColor.b], p * 3);
     }
@@ -481,20 +523,21 @@ function Earth({ animate }: { animate: boolean }) {
     [cloudMap],
   );
 
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
+  useFrame((_, delta) => {
+    if (animate) tAcc.current += Math.min(delta, 0.1);
+    const t = tAcc.current;
     if (group.current) {
       // frames Europe / Africa / Middle East / India toward the camera
       // (~35°E at centre, India to the right toward the sunrise limb) then
       // spins slowly — one revolution every 120s
-      group.current.rotation.y = -2.2 + (animate ? t * SPIN : 0);
+      group.current.rotation.y = -2.2 + t * SPIN;
       group.current.rotation.x = -0.18;
       // gentle breathing zoom: 100% -> 102% -> 100% every 8s
-      const zoom = animate ? 1 + 0.01 * (1 - Math.cos((t / 8) * Math.PI * 2)) : 1;
+      const zoom = 1 + 0.01 * (1 - Math.cos((t / 8) * Math.PI * 2));
       group.current.scale.setScalar(zoom);
     }
     // clouds drift slowly relative to the ground — weather, not paint
-    if (cloudsRef.current) cloudsRef.current.rotation.y = animate ? t * 0.007 : 0;
+    if (cloudsRef.current) cloudsRef.current.rotation.y = t * 0.007;
     if (!animate) return;
 
     for (let p = 0; p < pulseCount; p++) {
@@ -508,7 +551,8 @@ function Earth({ animate }: { animate: boolean }) {
       pulsePosBuf[p3] = arc[o] + (arc[o + 3] - arc[o]) * frac;
       pulsePosBuf[p3 + 1] = arc[o + 1] + (arc[o + 4] - arc[o + 1]) * frac;
       pulsePosBuf[p3 + 2] = arc[o + 2] + (arc[o + 5] - arc[o + 2]) * frac;
-      pulseBrightBuf[p] = Math.sin(prog * Math.PI);
+      // dimmer pulses — softer, less saturated glow along the veins
+      pulseBrightBuf[p] = Math.sin(prog * Math.PI) * 0.5;
     }
     if (pulsesGeo.current) {
       pulsesGeo.current.attributes.position.needsUpdate = true;
@@ -949,10 +993,91 @@ function usePrefersReducedMotion() {
   );
 }
 
-export default function GlobeScene() {
+// Mounts only once the surrounding <Suspense> boundary resolves — i.e. the
+// Earth's NASA textures have loaded and decoded — then spreads the remaining
+// one-time GPU cost across invisible warm-up frames before reporting ready:
+//   frames 0..2  upload ONE texture per frame (three ~2.5MB JPEGs in a single
+//                frame is exactly the stall that used to land on the reveal)
+//   frame  3     onVisible() — the scene renders next frame, paying its
+//                shader-compile cost while the canvas is still at opacity 0
+//   frame  5     onReady() — everything is compiled, uploaded and settled,
+//                so the fade-in starts on a clean frame instead of a hitch.
+function WarmUp({
+  onVisible,
+  onReady,
+}: {
+  onVisible: () => void;
+  onReady: () => void;
+}) {
+  const maps = useLoader(THREE.TextureLoader, TEXTURE_URLS);
+  const frame = useRef(0);
+  useFrame(({ gl }) => {
+    const f = frame.current;
+    if (f > maps.length + 2) return;
+    frame.current = f + 1;
+    if (f < maps.length) gl.initTexture(maps[f]);
+    else if (f === maps.length) onVisible();
+    else if (f === maps.length + 2) onReady();
+  });
+  return null;
+}
+
+// Catches a hard failure inside the Canvas subtree — most importantly a WebGL
+// context that can't be created at all (per-process cap reached) — and swaps in
+// the static fallback instead of letting the error blank the hero.
+class GLErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+export default function GlobeScene({
+  onRevealed,
+}: {
+  // fired once, the moment the staged entrance begins — HeroGlobe uses it to
+  // cross-fade its static placeholder planet out under the live globe
+  onRevealed?: () => void;
+}) {
   const wrap = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(true);
+  // true once the GL context is lost and the browser hasn't handed it back
+  // within a short grace window — flips the live canvas out for the fallback.
+  const [glDown, setGlDown] = useState(false);
+  // STAGED HERO REVEAL — the canvas mounts (already idle-delayed by
+  // HeroGlobe) but stays invisible while the hero text animates in
+  // (min-delay) AND the textures/shaders finish initializing (texReady).
+  // WarmUp holds the scene hidden and spends a few opacity-0 frames on
+  // texture upload + shader compile, then the globe fades in with its camera
+  // dolly as the entrance move — so the hero never shows a stuttering
+  // half-loaded planet competing with the text.
+  const [texReady, setTexReady] = useState(false);
+  // scene stays out of the render list until its textures are on the GPU, so
+  // the shader-compile frame is as small as possible
+  const [sceneVisible, setSceneVisible] = useState(false);
+  const [minDelayDone, setMinDelayDone] = useState(false);
   const reduced = usePrefersReducedMotion();
+  const lostTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    // text runs ~0.05–0.55s; the globe enters just after it settles
+    const t = window.setTimeout(() => setMinDelayDone(true), 750);
+    return () => window.clearTimeout(t);
+  }, []);
+  const onTexturesReady = useCallback(() => setTexReady(true), []);
+  const onSceneVisible = useCallback(() => setSceneVisible(true), []);
+  // reduced motion skips the choreography — show the (static) globe at once
+  const revealed = reduced || (texReady && minDelayDone);
+
+  useEffect(() => {
+    if (revealed) onRevealed?.();
+  }, [revealed, onRevealed]);
 
   useEffect(() => {
     const el = wrap.current;
@@ -965,45 +1090,111 @@ export default function GlobeScene() {
     return () => io.disconnect();
   }, []);
 
+  useEffect(
+    () => () => {
+      if (lostTimer.current) window.clearTimeout(lostTimer.current);
+    },
+    [],
+  );
+
+  // Watch the real GL context. A lost context often comes straight back (the
+  // browser reclaimed the GPU for a moment) and three.js re-uploads on its own,
+  // so we wait out a short grace period before falling back; if it's restored
+  // we drop the fallback and force a repaint.
+  const handleCreated = useCallback(
+    (state: { gl: THREE.WebGLRenderer; invalidate: () => void }) => {
+      const canvas = state.gl.domElement;
+      const onLost = (e: Event) => {
+        e.preventDefault(); // required so the browser will fire "restored"
+        if (lostTimer.current) window.clearTimeout(lostTimer.current);
+        lostTimer.current = window.setTimeout(() => setGlDown(true), 1200);
+      };
+      const onRestored = () => {
+        if (lostTimer.current) window.clearTimeout(lostTimer.current);
+        setGlDown(false);
+        state.invalidate();
+      };
+      canvas.addEventListener("webglcontextlost", onLost as EventListener);
+      canvas.addEventListener(
+        "webglcontextrestored",
+        onRestored as EventListener,
+      );
+    },
+    [],
+  );
+
   const animate = !reduced;
+  // motion only begins once the globe is revealed — before that the frames
+  // are silent warm-up renders (shader compile, texture upload) at opacity 0
+  const live = animate && revealed;
   const frameloop = reduced ? "demand" : inView ? "always" : "never";
 
   // The Canvas is client-only (HeroGlobe imports this with ssr:false), so it
   // always mounts here — three.js manages its own WebGL context. No support
   // gate: probing a throwaway context false-negatived under the browser's
-  // per-process context cap and hid the globe.
+  // per-process context cap and hid the globe. If the real context is lost or
+  // can't be created, GlobeFallback stands in for it (see below).
   return (
-    <div ref={wrap} className="pointer-events-auto h-full w-full">
-      <Canvas
-        frameloop={frameloop}
-        camera={{ fov: 45, near: 0.1, far: 50, position: [0, 0.1, 3.8] }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-        style={{ background: "transparent" }}
-      >
-        <CameraDolly enabled={animate} />
+    <div
+      ref={wrap}
+      className="pointer-events-auto relative h-full w-full"
+      style={{
+        // staged entrance: soft fade + settle-in scale once ready
+        opacity: revealed ? 1 : 0,
+        transform: revealed ? "scale(1)" : "scale(0.975)",
+        transition: reduced
+          ? undefined
+          : "opacity 1000ms ease, transform 1200ms cubic-bezier(0.22, 1, 0.36, 1)",
+        willChange: revealed ? undefined : "opacity, transform",
+      }}
+    >
+      <GLErrorBoundary fallback={<GlobeFallback />}>
+        <Canvas
+          frameloop={frameloop}
+          camera={{ fov: 45, near: 0.1, far: 50, position: [0, 0.1, 3.8] }}
+          dpr={[1, 2]}
+          gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+          onCreated={handleCreated}
+          style={{
+            background: "transparent",
+            opacity: glDown ? 0 : 1,
+            transition: "opacity 300ms ease",
+          }}
+        >
+        {/* keyed on the reveal so the dolly's clock restarts right as the
+            globe fades in — the camera move IS the entrance */}
+        <CameraDolly key={revealed ? "live" : "warmup"} enabled={live} />
         <Suspense fallback={null}>
-          <ParallaxRig enabled={animate}>
-            {/* volumetric sunrise back-glow, behind the upper-right shoulder */}
-            <mesh position={[0.55, 0.35, -0.9]} renderOrder={-1}>
-              <planeGeometry args={[6.4, 6.4]} />
-              <shaderMaterial
-                vertexShader={volumeVertex}
-                fragmentShader={volumeFragment}
-                transparent
-                depthWrite={false}
-                blending={THREE.AdditiveBlending}
-              />
-            </mesh>
-            {/* Drag to rotate + page-scroll to rotate the whole globe */}
-            <GlobeControls enabled={animate}>
-              <Earth animate={animate} />
-              {RING_DEFS.map((def, i) => (
-                <OrbitalRing key={i} def={def} animate={animate} />
-              ))}
-              <FloatingSparks animate={animate} />
-            </GlobeControls>
-          </ParallaxRig>
+          {/* staggers texture upload + shader compile across invisible
+              frames, then flips texReady */}
+          <WarmUp onVisible={onSceneVisible} onReady={onTexturesReady} />
+          {/* hidden until the textures are on the GPU — an invisible group
+              never enters the render list, so nothing compiles early.
+              (reduced motion runs frameloop="demand", where the warm-up
+              frames may never tick — show the scene at once instead.) */}
+          <group visible={reduced || sceneVisible}>
+            <ParallaxRig enabled={live}>
+              {/* volumetric sunrise back-glow, behind the upper-right shoulder */}
+              <mesh position={[0.55, 0.35, -0.9]} renderOrder={-1}>
+                <planeGeometry args={[6.4, 6.4]} />
+                <shaderMaterial
+                  vertexShader={volumeVertex}
+                  fragmentShader={volumeFragment}
+                  transparent
+                  depthWrite={false}
+                  blending={THREE.AdditiveBlending}
+                />
+              </mesh>
+              {/* Drag to rotate + page-scroll to rotate the whole globe */}
+              <GlobeControls enabled={live}>
+                <Earth animate={live} />
+                {RING_DEFS.map((def, i) => (
+                  <OrbitalRing key={i} def={def} animate={live} />
+                ))}
+                <FloatingSparks animate={live} />
+              </GlobeControls>
+            </ParallaxRig>
+          </group>
         </Suspense>
 
         {/* No post-processing: an EffectComposer renders into an opaque
@@ -1011,6 +1202,9 @@ export default function GlobeScene() {
             background. The glow sprites carry their own soft falloff, so
             bloom isn't needed — and the canvas stays truly transparent. */}
       </Canvas>
+      </GLErrorBoundary>
+      {/* stand-in shown when the live context drops and doesn't come back */}
+      {glDown && <GlobeFallback />}
     </div>
   );
 }

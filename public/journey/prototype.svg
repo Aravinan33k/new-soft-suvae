@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0c1526"/><stop offset="0.55" stop-color="#0a1020"/><stop offset="1" stop-color="#080a12"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff9440"/><stop offset="1" stop-color="#f9436b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.1" r="0.7">
+      <stop offset="0" stop-color="#ff8a3d" stop-opacity="0.22"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect width="1280" height="720" fill="url(#glow)"/>
+  <text x="56" y="78" font-family="Segoe UI, system-ui, sans-serif" font-size="30" font-weight="700" fill="#e8eefb">Prototype — v0.1</text>
+  <text x="56" y="106" font-family="Segoe UI, system-ui, sans-serif" font-size="15" fill="#8ea0bd">Working proof-of-concept in weeks, not quarters</text>
+  <rect x="1024" y="52" width="200" height="40" rx="20" fill="#2ed3b7" fill-opacity="0.12" stroke="#2ed3b7" stroke-opacity="0.45"/>
+  <circle cx="1048" cy="72" r="5" fill="#2ed3b7"/>
+  <text x="1062" y="77" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="600" fill="#7fe8d4">POC validated</text>
+  <!-- code editor -->
+  <rect x="56" y="140" width="640" height="524" rx="22" fill="#070b15" stroke="#ffffff" stroke-opacity="0.08"/>
+  <circle cx="92" cy="176" r="6" fill="#f9436b" opacity="0.8"/><circle cx="114" cy="176" r="6" fill="#ffb057" opacity="0.8"/><circle cx="136" cy="176" r="6" fill="#2ed3b7" opacity="0.8"/>
+  <text x="620" y="181" text-anchor="end" font-family="Consolas, monospace" font-size="13" fill="#8ea0bd">triage_agent.py</text>
+  <g font-family="Consolas, monospace" font-size="14">
+    <text x="92" y="228" fill="#8ea0bd">1</text><text x="124" y="228" fill="#c586d6">from</text><text x="176" y="228" fill="#e8eefb">agents</text><text x="248" y="228" fill="#c586d6">import</text><text x="318" y="228" fill="#7fd4ff">Pipeline</text>
+    <text x="92" y="260" fill="#8ea0bd">2</text>
+    <text x="92" y="292" fill="#8ea0bd">3</text><text x="124" y="292" fill="#7fd4ff">pipeline</text><text x="206" y="292" fill="#e8eefb">=</text><text x="224" y="292" fill="#7fd4ff">Pipeline</text><text x="302" y="292" fill="#e8eefb">(</text>
+    <text x="92" y="324" fill="#8ea0bd">4</text><text x="152" y="324" fill="#ffb057">extract</text><text x="222" y="324" fill="#e8eefb">=</text><text x="240" y="324" fill="#a5e88a">"invoice-fields"</text><text x="388" y="324" fill="#e8eefb">,</text>
+    <text x="92" y="356" fill="#8ea0bd">5</text><text x="152" y="356" fill="#ffb057">classify</text><text x="232" y="356" fill="#e8eefb">=</text><text x="250" y="356" fill="#a5e88a">"approve | review"</text><text x="416" y="356" fill="#e8eefb">,</text>
+    <text x="92" y="388" fill="#8ea0bd">6</text><text x="152" y="388" fill="#ffb057">route_to</text><text x="232" y="388" fill="#e8eefb">=</text><text x="250" y="388" fill="#a5e88a">"erp.queue"</text>
+    <text x="92" y="420" fill="#8ea0bd">7</text><text x="124" y="420" fill="#e8eefb">)</text>
+    <text x="92" y="452" fill="#8ea0bd">8</text>
+    <text x="92" y="484" fill="#8ea0bd">9</text><text x="124" y="484" fill="#7fd4ff">result</text><text x="188" y="484" fill="#e8eefb">=</text><text x="206" y="484" fill="#7fd4ff">pipeline</text><text x="284" y="484" fill="#e8eefb">.run(batch)</text>
+  </g>
+  <rect x="92" y="516" width="568" height="112" rx="12" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+  <g font-family="Consolas, monospace" font-size="13">
+    <text x="112" y="548" fill="#2ed3b7">✓ 200 invoices processed in 41s</text>
+    <text x="112" y="576" fill="#2ed3b7">✓ extraction accuracy 96.4%</text>
+    <text x="112" y="604" fill="#ffb057">→ 12 routed to human review</text>
+  </g>
+  <!-- live preview panel -->
+  <rect x="728" y="140" width="496" height="332" rx="22" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+  <text x="756" y="186" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="600" fill="#cbd5e1">Live Preview</text>
+  <rect x="756" y="208" width="440" height="56" rx="12" fill="#ffffff" fill-opacity="0.05"/>
+  <rect x="772" y="222" width="28" height="28" rx="9" fill="url(#acc)"/>
+  <text x="816" y="234" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#e8eefb">INV-2041 · Acme Corp · $12,400</text>
+  <text x="816" y="252" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#2ed3b7">Auto-approved · 98% confidence</text>
+  <rect x="756" y="276" width="440" height="56" rx="12" fill="#ffffff" fill-opacity="0.05"/>
+  <rect x="772" y="290" width="28" height="28" rx="9" fill="url(#acc)" opacity="0.8"/>
+  <text x="816" y="302" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#e8eefb">INV-2042 · Nova Ltd · $86,900</text>
+  <text x="816" y="320" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#ffb057">Routed to review · amount threshold</text>
+  <rect x="756" y="344" width="440" height="56" rx="12" fill="#ffffff" fill-opacity="0.05"/>
+  <rect x="772" y="358" width="28" height="28" rx="9" fill="url(#acc)" opacity="0.6"/>
+  <text x="816" y="370" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#e8eefb">INV-2043 · Kite GmbH · €4,180</text>
+  <text x="816" y="388" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#2ed3b7">Auto-approved · 97% confidence</text>
+  <text x="756" y="444" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8ea0bd">Stakeholders click through the real thing — not slides</text>
+  <!-- validation checklist -->
+  <rect x="728" y="496" width="496" height="168" rx="22" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+  <text x="756" y="540" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="600" fill="#cbd5e1">Validation</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="14">
+    <circle cx="768" cy="572" r="9" fill="#2ed3b7" fill-opacity="0.18" stroke="#2ed3b7"/><path d="M764 572l3 3 6-6" stroke="#2ed3b7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="792" y="577" fill="#e8eefb">Accuracy beats manual baseline</text>
+    <circle cx="768" cy="604" r="9" fill="#2ed3b7" fill-opacity="0.18" stroke="#2ed3b7"/><path d="M764 604l3 3 6-6" stroke="#2ed3b7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="792" y="609" fill="#e8eefb">Runs on real production data</text>
+    <circle cx="768" cy="636" r="9" fill="#2ed3b7" fill-opacity="0.18" stroke="#2ed3b7"/><path d="M764 636l3 3 6-6" stroke="#2ed3b7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="792" y="641" fill="#e8eefb">ROI case signed off by finance</text>
+  </g>
+</svg>

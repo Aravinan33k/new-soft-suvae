@@ -14,7 +14,8 @@ import SectionHeading from "@/components/dom/SectionHeading";
 import TechEcosystemFlow from "@/components/dom/TechEcosystemFlow";
 import IndustriesShowcase from "@/components/dom/IndustriesShowcase";
 import ClientShowcase from "@/components/dom/ClientShowcase";
-import ChoosePath from "@/components/dom/ChoosePath";
+import CtaScrollStory from "@/components/dom/CtaScrollStory";
+import TransformationJourney from "@/components/dom/TransformationJourney";
 
 const HERO_FEATURES = [
   "AI Agents",
@@ -145,7 +146,21 @@ export default function Home() {
 
       {/* ── The experience: grows to full screen as you scroll in ───── */}
       <div id="experience" className="relative z-10 pt-24 lg:pt-30">
-        <ExperienceStage />
+        <div className="mx-auto max-w-[85rem] px-6 md:px-10 lg:px-20">
+          <SectionHeading
+            eyebrow="Our Services"
+            title="AI & Software Services Built for Businesses of All Sizes"
+            body="Whether you are a startup, SMB, or enterprise, Soft Suave helps you build AI solutions, develop software, automate workflows, and scale digital products with confidence."
+          />
+        </div>
+        <div className="mt-14 lg:mt-16">
+          <ExperienceStage />
+        </div>
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-[85rem] px-6 md:px-10 lg:px-20">
+        {/* ── AI Transformation Journey: idea → business impact ─────── */}
+        <TransformationJourney />
       </div>
 
       <div className="relative z-10 mx-auto max-w-[85rem] px-6 md:px-10 lg:px-20">
@@ -153,10 +168,18 @@ export default function Home() {
         {/* (The services grid that used to sit here was removed — the eight
             services now live as chapters inside the ExperienceStage above.) */}
         <section id="industries" className="relative pt-24 lg:pt-30">
-          {/* full-bleed alternating band (#F1F5F9 in light) for section rhythm */}
+          {/* full-bleed alternating band for section rhythm — masked so it
+              melts in and out of the page background instead of starting and
+              ending on a hard horizontal edge */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-y-0 left-1/2 -z-20 w-screen -translate-x-1/2 bg-(--section-alt)"
+            style={{
+              WebkitMaskImage:
+                "linear-gradient(to bottom, transparent, black 10rem, black calc(100% - 10rem), transparent)",
+              maskImage:
+                "linear-gradient(to bottom, transparent, black 10rem, black calc(100% - 10rem), transparent)",
+            }}
           />
           {/* Subtle ambient depth: soft orange glow behind the heading + a
               faint dot grid across the section */}
@@ -203,37 +226,19 @@ export default function Home() {
           <TechEcosystemFlow />
         </section>
 
-        {/* ── CTA — a living card: animated light-border, drifting glow,
-            grid, rising particles, gradient "AI", pulsing button ────────── */}
-        <section id="contact" className="pt-24 lg:pt-30">
-          <div className="relative px-6 py-16" data-parallax="3">
-            {/* ── heading on top (centred), choose-your-path cards below ──── */}
-            <div className="relative z-10 mx-auto max-w-4xl text-center">
-              <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-(--brand-orange)">
-                Let&rsquo;s build together
-              </p>
-              <h2 className="mx-auto max-w-2xl text-3xl font-extrabold leading-[1.15] tracking-tight text-(--heading) md:text-4xl">
-                Ready to Transform Your Business with{" "}
-                <span className="bg-gradient-to-r from-(--grad-1) via-(--grad-2) to-(--grad-3) bg-clip-text text-transparent drop-shadow-[0_0_20px_var(--glow-orange)]">
-                  AI
-                </span>
-                ?
-              </h2>
-              <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-(--foreground)">
-                Book a free AI strategy session with our experts and discover
-                where AI can create the biggest impact in your organization.
-              </p>
-
-              {/* choose-your-path cards, centred under the heading */}
-              <ChoosePath className="mx-auto mt-12 w-full max-w-4xl" />
-            </div>
-          </div>
+        {/* ── CTA — pinned scroll story: AI lines flow in, the cards dock,
+            two holographic fists travel together and gently bump (glow +
+            particle burst), the heading turns "Let's Build Together." and
+            the CTAs light up. Owns its own heading — it crossfades mid-story.
+            (ChoosePath.tsx is superseded by this but kept for reference.) */}
+        <section id="contact" className="pt-24 lg:pt-10">
+          <CtaScrollStory />
         </section>
 
         {/* ── Testimonials / Reviews ────────────────────────────────── */}
         {/* mt gap leaves clean page background between the CTA card and the
             testimonials dashboard so they don't butt together */}
-        <section id="testimonials" className="relative mt-20 lg:mt-28">
+        <section id="testimonials" className="relative mt-16 lg:mt-20">
           <SectionHeading
             eyebrow="Testimonials"
             title="What Our Clients Say About Us"

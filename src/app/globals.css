@@ -36,6 +36,17 @@
   --shadow-strong: rgba(28, 25, 23, 0.16);
   --glow-orange: rgba(234, 88, 12, 0.13);
   --glow-blue: rgba(37, 99, 235, 0.09);
+  /* Richer, non-uniform glow — a flame ramp: hot soft-yellow core →
+     golden → orange → dark orange edge → transparent. Reads far warmer
+     and deeper than a single flat orange. */
+  --glow-flame: radial-gradient(
+    circle,
+    rgba(253, 224, 138, 0.85) 0%,
+    rgba(251, 191, 36, 0.6) 20%,
+    rgba(249, 115, 22, 0.42) 42%,
+    rgba(194, 65, 12, 0.28) 62%,
+    transparent 75%
+  );
   --btn-a: #f97316;
   --btn-b: #ea580c;
   --btn-glow: rgba(234, 88, 12, 0.22);
@@ -86,6 +97,15 @@
   --shadow-strong: rgba(0, 0, 0, 0.65);
   --glow-orange: rgba(255, 138, 61, 0.3);
   --glow-blue: rgba(79, 163, 255, 0.09);
+  /* Flame ramp (dark) — brighter core to carry over the dark backdrop. */
+  --glow-flame: radial-gradient(
+    circle,
+    rgba(254, 234, 170, 0.95) 0%,
+    rgba(251, 191, 36, 0.72) 20%,
+    rgba(255, 122, 46, 0.5) 42%,
+    rgba(194, 65, 12, 0.34) 62%,
+    transparent 76%
+  );
   --btn-a: #ff9440;
   --btn-b: #f92b4e;
   --btn-glow: rgba(255, 106, 61, 0.5);
@@ -129,8 +149,236 @@
   box-shadow: 0 8px 22px -8px var(--btn-glow);
 }
 
+/* Sliding glass highlight beneath the desktop nav links — a frosted pill
+   with a warm accent underline that glides to whichever item is hovered.
+   Position (translateX) + width + opacity are set inline from JS. */
+.nav-hi {
+  position: absolute;
+  top: 50%;
+  height: 2rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--brand-orange) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-orange) 24%, transparent);
+  box-shadow:
+    0 6px 18px -10px var(--btn-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  transition:
+    transform 0.34s cubic-bezier(0.3, 1, 0.4, 1),
+    width 0.34s cubic-bezier(0.3, 1, 0.4, 1),
+    opacity 0.25s ease;
+  will-change: transform, width;
+}
+/* the animated underline that rides along under the pill */
+.nav-hi::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--brand-orange),
+    transparent
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-hi {
+    transition: opacity 0.2s ease;
+  }
+}
+
+/* ══ Site card treatments — distinct identity per card family ══════
+   Every section used the same border+bg card, so nothing had hierarchy.
+   These give each family its own material. Theme-aware via color-mix over
+   the existing --card / --border / --brand-orange tokens. */
+
+/* ── STATISTICS → neon dashboard: dark instrument panel, faint accent
+   grid, a glowing neon top-edge, numbers that read like live readouts ── */
+.card-neon {
+  position: relative;
+  border-radius: 1rem;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--brand-orange) 6%, transparent),
+      transparent 42%
+    ),
+    var(--card);
+  border: 1px solid color-mix(in srgb, var(--brand-orange) 18%, var(--border));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 10px 30px -18px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+}
+/* faint accent instrument grid, fading toward the bottom */
+.card-neon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--brand-orange) 26%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--brand-orange) 26%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 22px 22px;
+  opacity: 0.14;
+  -webkit-mask-image: radial-gradient(ellipse at 72% 0%, #000, transparent 72%);
+  mask-image: radial-gradient(ellipse at 72% 0%, #000, transparent 72%);
+  pointer-events: none;
+}
+/* glowing neon top edge */
+.card-neon::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 0;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--brand-orange),
+    transparent
+  );
+  box-shadow: 0 0 12px var(--brand-orange);
+  opacity: 0.85;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.card-neon:hover {
+  border-color: color-mix(in srgb, var(--brand-orange) 45%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 26px -6px var(--glow-orange),
+    0 16px 40px -20px rgba(0, 0, 0, 0.7);
+  transform: translateY(-3px);
+}
+
+/* ── FEATURE / PATH → frosted glass with a lit orange edge ring ────── */
+.card-frosted {
+  position: relative;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.25);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  border: 1px solid color-mix(in srgb, var(--brand-orange) 15%, var(--border));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 20px 50px -28px rgba(0, 0, 0, 0.6);
+  transition:
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    transform 0.35s ease;
+}
+/* orange edge-glow ring (masked so only the border lights) */
+.card-frosted::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand-orange) 60%, transparent),
+    transparent 38%,
+    transparent 62%,
+    color-mix(in srgb, var(--brand-orange) 45%, transparent)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.45;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.card-frosted:hover {
+  border-color: color-mix(in srgb, var(--brand-orange) 40%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 0 34px -8px var(--glow-orange),
+    0 26px 60px -30px rgba(0, 0, 0, 0.7);
+  transform: translateY(-4px);
+}
+.card-frosted:hover::after {
+  opacity: 1;
+}
+/* Glassier variant for cards sitting ON the CTA photo: a barely-there white
+   fill (the image reads through), stronger backdrop blur, and a crisp white
+   sheen along the top edge — true glassmorphism instead of a dark slab. */
+.card-frosted--glass {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.11),
+    rgba(255, 255, 255, 0.035) 40%,
+    rgba(255, 255, 255, 0.02)
+  );
+  backdrop-filter: blur(22px) saturate(1.45);
+  -webkit-backdrop-filter: blur(22px) saturate(1.45);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 50px -20px rgba(0, 0, 0, 0.55),
+    0 0 30px -14px var(--glow-orange);
+}
+.card-frosted--glass:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 0 38px -8px var(--glow-orange),
+    0 24px 56px -26px rgba(0, 0, 0, 0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-neon:hover,
+  .card-frosted:hover {
+    transform: none;
+  }
+}
+
 html {
   scroll-behavior: smooth;
+}
+
+/* ── Lenis momentum smooth-scroll (see SmoothScroll.tsx) ──────────
+   When Lenis is active it interpolates scroll itself, so native
+   scroll-behavior must yield to it; when it's off (reduced-motion, no JS)
+   the rule above still applies as a graceful fallback. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
 }
 
 /* Satoshi is the site-wide default face; the mono utility (Geist Mono) still
@@ -150,6 +398,59 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Cinematic staggered reveal for the ClientShowcase featured testimonial:
+   stars pop, the attribution slides in from the left. */
+@keyframes csPop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes csSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Skeleton shimmer shown while a featured-review backdrop loads — a soft
+   light sweep over a dark base, so each story "renders in" rather than
+   snapping in. */
+@keyframes csShimmer {
+  0% {
+    background-position: -160% 0;
+  }
+  100% {
+    background-position: 260% 0;
+  }
+}
+.cs-shimmer {
+  background-color: #101014;
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 255, 255, 0.07) 40%,
+    rgba(255, 138, 61, 0.06) 50%,
+    rgba(255, 255, 255, 0.07) 60%,
+    rgba(255, 255, 255, 0) 80%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: csShimmer 1.4s linear infinite;
 }
 
 /* ── Floating glass problem cards ─────────────────────────────── */
@@ -250,24 +551,55 @@ body {
   will-change: transform;
 }
 
-/* ── Scroll-in reveal for cards (Services) ───────────────────── */
-/* Toggled by the <Reveal> wrapper when it enters the viewport;
-   transition-delay is set inline per-card to stagger the cascade. */
-.reveal-card {
-  opacity: 0;
-  transform: translateY(40px) scale(0.96);
-  filter: blur(10px);
-  transition:
-    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+/* ── Scroll-linked reveal ─────────────────────────────────────── */
+/* Driven by the shared `--rv` (0→1) controller (src/lib/scrollReveal.ts): the
+   value is tied continuously to the element's scroll position, so content rises,
+   de-blurs and settles in lock-step with the scroll instead of popping on at a
+   threshold. No CSS transition — the per-frame `--rv` update IS the animation. */
+.rv-item {
+  opacity: var(--rv, 0);
+  transform: translateY(calc((1 - var(--rv, 0)) * 40px))
+    scale(calc(0.96 + var(--rv, 0) * 0.04));
+  filter: blur(calc((1 - var(--rv, 0)) * 10px));
   will-change: opacity, transform, filter;
 }
 
-.reveal-card.is-visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  filter: blur(0);
+/* ── Seam connector: a thread that bridges two sections ───────── */
+/* A glowing line draws downward (scaleY = --rv) with a bright node travelling
+   along it, carrying the eye from the section above into the one below. */
+.seam {
+  position: relative;
+  margin-inline: auto;
+  width: 2px;
+  pointer-events: none;
+}
+.seam-line {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--brand-orange) 45%,
+    var(--brand-orange) 55%,
+    transparent
+  );
+  transform: scaleY(var(--rv, 0));
+  transform-origin: top center;
+  opacity: calc(0.12 + var(--rv, 0) * 0.5);
+  filter: drop-shadow(0 0 6px var(--glow-orange));
+}
+.seam-node {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--rv, 0) * 100%);
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 9999px;
+  background: var(--brand-orange);
+  box-shadow: 0 0 12px 3px var(--glow-orange);
+  opacity: calc(var(--rv, 0) * (1 - var(--rv, 0)) * 4);
 }
 
 /* ── Hero: slow up/down drift for the neural brain ────────────── */
@@ -283,6 +615,10 @@ body {
 
 .hero-float {
   animation: heroFloat 8s ease-in-out infinite;
+  /* keep the floating globe container on its own GPU layer so the drift
+     never re-rasterizes the WebGL canvas + overlays during busy first paint */
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 /* Floating service chips orbiting the hero Earth */
@@ -628,11 +964,14 @@ main svg {
   main svg {
     animation: none;
   }
-  .reveal-card {
+  .rv-item {
+    --rv: 1;
     opacity: 1;
     transform: none;
     filter: none;
-    transition: none;
+  }
+  .seam {
+    --rv: 1;
   }
 }
 
@@ -996,6 +1335,625 @@ body {
   .flow-particle {
     display: none;
   }
+}
+
+/* ── Ecosystem rail: living progress fill + traveling pulses ─────
+   The base rail is a dim glowing line. A brighter FILL segment tracks
+   the traveling dot (its scaleY is set per-frame in JS from the dot's
+   position), so the line visibly fills downward as the flow rides it.
+   Extra pulse dots ride the rail on their own cadence so the line
+   always reads as data in motion, not a static slideshow backbone. */
+.eco-rail-fill {
+  transform-origin: top;
+  transform: scaleY(0);
+  will-change: transform;
+}
+
+@keyframes ecoRailPulse {
+  0% {
+    top: -2%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+.eco-rail-pulse {
+  top: 0;
+  animation: ecoRailPulse 4.5s linear infinite;
+  will-change: top;
+}
+
+/* active node — the tile the dot is currently nearest brightens and
+   glows so it clearly "lights up" as the flow arrives (paired with the
+   row's scale-in). No transform here, so tile hover/hit scaling wins. */
+.eco-tile.eco-active {
+  border-color: color-mix(in srgb, var(--eco-accent, #ff8a3d) 80%, transparent);
+  background: color-mix(in srgb, var(--eco-accent, #ff8a3d) 14%, var(--card));
+  color: color-mix(in srgb, var(--eco-accent, #ff8a3d) 88%, #fff);
+  box-shadow:
+    0 0 30px -4px color-mix(in srgb, var(--eco-accent, #ff8a3d) 70%, transparent),
+    0 0 10px -2px color-mix(in srgb, var(--eco-accent, #ff8a3d) 52%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eco-rail-pulse {
+    display: none;
+    animation: none;
+  }
+}
+
+/* ── Ecosystem left-card: WIPE-REVEAL layer transition ──────────
+   When the active layer changes, the incoming photo wipes in top → bottom
+   via clip-path (echoing the rail's downward flow) while settling from a
+   deeper zoom, and an accent light beam (keyed, so it remounts and replays
+   per swap) sweeps down the frame in sync with the wipe edge. The outgoing
+   photo holds beneath the wipe, then quietly fades. */
+.eco-img-in {
+  animation: ecoImgWipe 0.8s cubic-bezier(0.5, 0, 0.15, 1) both;
+  will-change: clip-path, transform;
+}
+@keyframes ecoImgWipe {
+  0% {
+    clip-path: inset(0 0 100% 0);
+    transform: scale(1.12);
+  }
+  100% {
+    clip-path: inset(0 0 0% 0);
+    transform: scale(1.05);
+  }
+}
+
+.eco-wipe {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.eco-wipe-beam {
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  top: -12%;
+  height: 12%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 40%, #fff) 55%,
+    transparent
+  );
+  filter: blur(6px);
+  mix-blend-mode: screen;
+  animation: ecoWipeBeam 0.8s cubic-bezier(0.5, 0, 0.15, 1) both;
+}
+@keyframes ecoWipeBeam {
+  0% {
+    top: -12%;
+    opacity: 0.85;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    top: 104%;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eco-img-in {
+    animation: none;
+  }
+  .eco-wipe {
+    display: none;
+  }
+}
+
+/* ── Ecosystem layer cards: active raised, inactive flat ────────
+   Kills the "every card looks identical" repetition. The active layer
+   earns a raised orange-gradient surface behind its copy — brighter
+   border, warm gradient, floating shadow + glow. Inactive layers keep
+   this transparent and lean on the inline dim (opacity + scale-down),
+   so the eye is always pulled to the live layer. */
+.eco-card-surface {
+  position: absolute;
+  inset: -0.85rem -1.1rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  background: transparent;
+  box-shadow: none;
+  opacity: 0;
+  transition:
+    opacity 0.5s ease,
+    background 0.5s ease,
+    box-shadow 0.5s ease,
+    border-color 0.5s ease;
+}
+.eco-card-surface.is-active {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--eco-accent, #ff8a3d) 45%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 18%, transparent),
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 6%, transparent) 55%,
+    transparent 85%
+  );
+  box-shadow:
+    0 20px 44px -20px color-mix(in srgb, var(--eco-accent, #ff8a3d) 60%, transparent),
+    0 0 28px -6px color-mix(in srgb, var(--eco-accent, #ff8a3d) 42%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* pills on the active layer pick up a warm border + faint fill, so the
+   cluster reads as part of the lit card rather than the same grey chips */
+.eco-pill-active {
+  border-color: color-mix(in srgb, var(--eco-accent, #ff8a3d) 42%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 12%, transparent),
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 4%, transparent)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eco-card-surface {
+    transition: none;
+  }
+}
+
+/* ── Ecosystem: staged card entrance (fade → scale → glow) ──────
+   Enterprise cadence instead of an instant pop. Each layer, staggered
+   down the stack, plays three overlapping beats: fade up (~0.4s), then
+   scale + settle into place (~0.3s), then a one-shot warm glow blooms
+   around its icon tile (~0.2s). backwards/both fill holds the card
+   hidden through its stagger delay so nothing flashes early. */
+.eco-layer-enter {
+  animation: ecoLayerEnter 0.78s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+@keyframes ecoLayerEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.93);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(12px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* one-shot POWER-UP pulse on the ecosystem brain card: right after the card
+   settles, a warm ring swells off its frame and dissolves — the "brain
+   lights up" beat that cues the right column's assembly. */
+.eco-card-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 1.5rem; /* matches the card's rounded-3xl */
+  pointer-events: none;
+  opacity: 0;
+  border: 1.5px solid color-mix(in srgb, var(--brand-orange) 80%, transparent);
+  box-shadow:
+    0 0 36px 8px color-mix(in srgb, var(--brand-orange) 26%, transparent),
+    inset 0 0 22px 2px color-mix(in srgb, var(--brand-orange) 14%, transparent);
+  animation: ecoCardPulse 0.95s ease-out both;
+  z-index: 20;
+}
+@keyframes ecoCardPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+
+/* the GLOW beat — a warm bloom flashes around the tile as the card lands.
+   Isolated overlay (shadow only, transparent interior) so it never fights
+   the tile's own hover / active / hit box-shadow states. */
+.eco-tile-glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: 0.75rem;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow:
+    0 0 30px 2px color-mix(in srgb, var(--eco-accent, #ff8a3d) 72%, transparent),
+    0 0 12px 0 color-mix(in srgb, var(--eco-accent, #ff8a3d) 52%, transparent);
+  animation: ecoTileGlow 0.5s ease-out both;
+}
+@keyframes ecoTileGlow {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.35;
+  }
+  75% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* card internals cascade in as the card lands: icon rotates in, title +
+   number slide from the left, copy fades up, then sparks burst. Each uses
+   backwards fill (hidden through its delay, natural state after) so nothing
+   holds a transform that would fight later hover / hit states. */
+.eco-in-icon {
+  animation: ecoInIcon 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+@keyframes ecoInIcon {
+  0% {
+    opacity: 0;
+    transform: rotate(-120deg) scale(0.3);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+
+.eco-in-title {
+  animation: ecoInTitle 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes ecoInTitle {
+  0% {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.eco-in-desc {
+  animation: ecoInDesc 0.55s ease-out backwards;
+}
+@keyframes ecoInDesc {
+  0% {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* the sparks — small particles flying outward from the tile centre */
+.eco-spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 4px;
+  width: 4px;
+  border-radius: 9999px;
+  opacity: 0;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--eco-accent, #ff8a3d) 80%, #fff);
+  box-shadow: 0 0 6px 1px
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 70%, transparent);
+  animation: ecoSpark 0.7s ease-out backwards;
+}
+@keyframes ecoSpark {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(
+        calc(-50% + var(--sx, 0px)),
+        calc(-50% + var(--sy, 0px))
+      )
+      scale(0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eco-layer-enter,
+  .eco-in-icon,
+  .eco-in-title,
+  .eco-in-desc {
+    animation: none;
+  }
+  .eco-tile-glow,
+  .eco-spark {
+    display: none;
+  }
+}
+
+/* ── Ecosystem hand-off: the transition story between layers ─────
+   As the flow moves from one layer to the next, the node just left
+   "completes" (a ring pulse), an energy packet surges along the rail
+   (JS positions its top), and the arriving node lights up with a ring +
+   fresh sparks + a title re-slide — so a layer change reads like a
+   workflow step executing rather than a silent swap. */
+
+/* energy packet riding the rail between nodes — refined: a small precise
+   light with one tight, low-alpha halo, not a neon comet */
+.eco-energy {
+  height: 7px;
+  width: 7px;
+  border-radius: 9999px;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    #fff,
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 55%, #fff) 55%,
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 80%, transparent)
+  );
+  box-shadow: 0 0 8px 2px
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 45%, transparent);
+  will-change: top, opacity;
+}
+/* short subtle wake trailing the packet */
+.eco-energy::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 16px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 40%, transparent),
+    transparent
+  );
+  filter: blur(1px);
+}
+
+/* node ring — dormant until the flow arrives (expands out) or leaves
+   (a quick completion double-tick) */
+.eco-node-ring {
+  border: 2px solid
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 80%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+.eco-arrive .eco-node-ring {
+  animation: ecoNodeArrive 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes ecoNodeArrive {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.65);
+  }
+}
+.eco-complete .eco-node-ring {
+  animation: ecoNodeComplete 0.6s ease-out both;
+}
+@keyframes ecoNodeComplete {
+  0% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  25% {
+    opacity: 0.9;
+    transform: scale(1.12);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.98);
+  }
+  70% {
+    opacity: 0.7;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+/* arrival sparks — replay every time the node is reached (class toggles) */
+.eco-arrive-spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 4px;
+  width: 4px;
+  border-radius: 9999px;
+  opacity: 0;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--eco-accent, #ff8a3d) 82%, #fff);
+  box-shadow: 0 0 6px 1px
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 70%, transparent);
+}
+.eco-arrive .eco-arrive-spark {
+  animation: ecoSpark 0.7s ease-out both;
+  animation-delay: var(--ad, 0ms);
+}
+
+/* arrival title re-slide — an inner span so it never fights the h3's own
+   entrance animation */
+.eco-arrive .eco-arrive-title {
+  animation: ecoArriveTitle 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes ecoArriveTitle {
+  0% {
+    opacity: 0.25;
+    transform: translateX(-12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eco-energy,
+  .eco-node-ring,
+  .eco-arrive-spark {
+    display: none;
+  }
+  .eco-arrive .eco-arrive-title {
+    animation: none;
+  }
+}
+
+/* ── Ecosystem completion terminus ─────────────────────────────
+   The rail flows into a check node that softly pulses, so the timeline
+   resolves to "pipeline complete" rather than ending abruptly. */
+.eco-finish {
+  box-shadow: 0 0 26px -6px rgba(84, 192, 138, 0.6);
+}
+.eco-finish-ring {
+  opacity: 0;
+  animation: ecoFinishPulse 2.8s ease-in-out infinite;
+}
+@keyframes ecoFinishPulse {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.12);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eco-finish-ring {
+    animation: none;
+  }
+}
+
+/* ── Ecosystem card hover feedback ─────────────────────────────
+   Enterprise-grade hover on each layer card: the surface lifts + glows
+   with a brighter accent border, the icon tile brightens, and an animated
+   gradient ring sweeps around the tile. (Icon rotation, content lift and
+   the arrow slide are handled with group-hover utilities in the markup.) */
+.group:hover .eco-card-surface {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--eco-accent, #ff8a3d) 40%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 11%, transparent),
+    transparent 72%
+  );
+  box-shadow:
+    0 18px 40px -20px
+      color-mix(in srgb, var(--eco-accent, #ff8a3d) 55%, transparent),
+    0 0 24px -8px color-mix(in srgb, var(--eco-accent, #ff8a3d) 42%, transparent);
+}
+.group:hover .eco-tile {
+  border-color: color-mix(in srgb, var(--eco-accent, #ff8a3d) 70%, transparent);
+  box-shadow:
+    0 0 30px -6px color-mix(in srgb, var(--eco-accent, #ff8a3d) 65%, transparent),
+    0 10px 22px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* animated gradient border ring that sweeps around the tile on hover */
+.eco-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--eco-frame-angle),
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 90%, transparent),
+    transparent 30%,
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 55%, transparent) 55%,
+    transparent 80%,
+    color-mix(in srgb, var(--eco-accent, #ff8a3d) 90%, transparent)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.group:hover .eco-tile::after {
+  opacity: 1;
+  animation: ecoFrameSpin 3s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .eco-tile::after {
+    animation: none;
+  }
+}
+
+/* ── Ecosystem left card: premium glass frame ──────────────────
+   Lifts the stats card off the page as a floating glass panel: a soft
+   drop shadow + warm outer glow, and an animated conic-gradient ring
+   running slowly around the rounded edge so the border reads as a lit
+   frame rather than a hard 1px cut. The inner card keeps its own
+   backdrop-blur + inset highlight for the glass surface. */
+@property --eco-frame-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.eco-frame {
+  position: relative;
+  border-radius: 1.5rem; /* 24px */
+  /* Soft depth shadow ONLY — no coloured glow. Reads as a subtle glass panel
+     that belongs in the page, not a cyan-bordered card pasted on top. */
+  box-shadow:
+    0 30px 60px -26px rgba(0, 0, 0, 0.55),
+    0 12px 26px -18px rgba(0, 0, 0, 0.45);
+}
+/* a very thin, static glass outline (≈1px white) — no accent, no spin */
+.eco-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 /* ── Ecosystem stat-card landing pulse ──────────────────────────

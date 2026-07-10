@@ -55,15 +55,24 @@ const MAX_LINKS_PER_NODE = 3;
 const DRIFT_END = 0.9; // pure particle field, no shape yet
 const FORM_DUR = 2.4; // staggered flight into the mark
 
-// Red-dominant two-tone: a hot red-orange crown fading to a deep crimson base.
-// The green channel is kept LOW on purpose — under additive blending ~11k
-// overlapping particles sum their channels, and a high green (gold) drives the
-// dense crown toward yellow-white. Low green means the sum saturates to a rich
-// RED instead. A rare, restrained ember accent adds a touch of warmth.
-const GOLD = new THREE.Color("#FF4A22"); // crown — hot red-orange (low green)
-const RED = new THREE.Color("#CE1526"); // base — deep crimson
+// REDDISH-GOLD two-tone: a molten-gold crown fading to a deep red-gold base.
+// The BLUE channel is pinned near zero on purpose — under additive blending
+// ~11k overlapping particles sum their channels, and any blue is what lets the
+// dense crown clip all the way to WHITE. With blue ~0 the sum can only
+// saturate toward gold (r+g), and the capped alpha below keeps green from
+// fully clipping, so the hottest core reads golden over a red body.
+// Matched to the BRAND MARK gradient (#FF9440 orange → #FB5A38 → #F92B4E
+// red-pink). The dense strokes stack ~4x under additive blending, so each
+// per-particle channel is set to roughly (target ÷ 4) — the summed, clamped
+// result in the thick strokes lands on the real logo colours: an orange
+// crown rolling to the brand's red-pink base.
+// Blue is pinned ~0 and green low enough that even an 8-deep stack in the
+// hottest cluster tops out at ORANGE (#FF9440-ish) — it can never reach
+// white, and the body reads the brand's reddish orange.
+const GOLD = new THREE.Color("#FF2208"); // crown — sums to brand orange
+const RED = new THREE.Color("#C80F08"); // base — sums to deep brand red
 const rampColor = (t: number, gold: boolean, out: THREE.Color) => {
-  if (gold) return out.set("#FF6A36"); // ember accent — warm but still red-orange
+  if (gold) return out.set("#FF3A08"); // ember accent — brand mid-tone
   // sharpen the transition around the middle so the top half reads clearly
   // red-orange and the bottom half clearly crimson — one continuous red mark
   const u = Math.min(1, Math.max(0, (t - 0.28) / 0.44));
@@ -182,23 +191,21 @@ const pointsFragment = /* glsl */ `
     float d = length(c);
     if (d > 0.5) discard;
     float soft = smoothstep(0.5, 0.0, d);
-    // core alpha capped lower than before (was 0.95) — with ~11k densely
-    // overlapping particles under additive blending, a near-opaque core let
-    // clustered fragments stack past white regardless of the assigned hue.
-    // Capping it keeps the sum saturating toward reddish-gold instead of
-    // clipping every channel to 1.0.
+    // core alpha capped LOW — with ~11k densely overlapping particles under
+    // additive blending, an opaque core lets clustered fragments stack every
+    // channel to 1.0 (white). The cap keeps green summing to ~0.8 in the
+    // hottest cluster, so the centre saturates to reddish GOLD, never white.
     float core = smoothstep(0.18, 0.0, d);
     // gentle per-particle twinkle keeps the formed mark alive
     float tw = 0.85 + 0.15 * sin(uTime * 2.1 + vColor.g * 40.0);
-    float a = (soft * 0.28 + core * 0.46) * (0.55 + 0.45 * vLp) * tw;
+    float a = (soft * 0.16 + core * 0.22) * (0.55 + 0.45 * vLp) * tw;
     vec3 col = vColor;
-    // polished-metal sweep: a reflection band travels across the formed mark
-    // (top-left -> bottom-right). Kept a saturated RED-orange (not cream/amber)
-    // and low strength so the "shine" catches light without washing the mark
-    // toward white every ~5s.
+    // polished-metal sweep: a warm reflection band travels across the formed
+    // mark (top-left -> bottom-right). Blue stays ~0 and strength low so the
+    // "shine" catches light without washing the mark toward white every ~5s.
     float band = smoothstep(0.10, 0.0, abs(vDiag - uSweep)) * vLp;
-    col += vec3(1.0, 0.34, 0.12) * band * 0.4;
-    a += band * 0.18 * (soft * 0.28 + core * 0.46);
+    col += vec3(1.0, 0.3, 0.05) * band * 0.4;
+    a += band * 0.18 * (soft * 0.16 + core * 0.22);
     gl_FragColor = vec4(col, a);
   }
 `;
@@ -230,9 +237,9 @@ const linesFragment = /* glsl */ `
   precision highp float;
   varying float vAlpha;
   void main() {
-    // red to match the particle ramp so the web reads as one colour with the
-    // mark rather than a separate highlight
-    gl_FragColor = vec4(1.0, 0.34, 0.24, vAlpha * 0.34);
+    // brand mid-tone (#FB5A38) — the web is a single sparse layer, so it can
+    // carry the real logo colour without stacking toward white
+    gl_FragColor = vec4(0.98, 0.35, 0.22, vAlpha * 0.34);
   }
 `;
 
@@ -252,8 +259,8 @@ const glowFragment = /* glsl */ `
     float d = length(vUv - 0.5) * 2.0;
     float fall = smoothstep(1.0, 0.0, d);
     // cubed falloff keeps the glow tight to the mark so it doesn't spill a
-    // haze below/around it; warm red tint blends with the mark
-    gl_FragColor = vec4(vec3(1.0, 0.32, 0.2), fall * fall * fall * 0.18 * uGlow);
+    // haze below/around it; brand orange-red tint blends with the mark
+    gl_FragColor = vec4(vec3(0.98, 0.35, 0.22), fall * fall * fall * 0.18 * uGlow);
   }
 `;
 
@@ -279,7 +286,7 @@ function Swarm({ active, reduced, center, onFormed }: SwarmProps) {
       uProgress: { value: reduced ? 1 : 0 },
       uDpr: { value: dpr },
       // forge: deep-copper ember the particles glow with before they lock in
-      uEmber: { value: new THREE.Color("#6E341E") },
+      uEmber: { value: new THREE.Color("#6E2C0C") },
       uSweep: { value: -1 }, // gold sweep position (-1 = off)
       uBounce: { value: 1 }, // settle-bounce scale
       uCenter: { value: new THREE.Vector2(0, 0) }, // mark centre (world)
