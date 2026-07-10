@@ -137,7 +137,8 @@ export default function Preloader() {
             />
           </g>
 
-          {/* City lights */}
+          {/* City lights — a warm brand orange, not the near-white cream
+              this used to be (it read as stray white dots around the mark) */}
           {CITIES.map((c, i) => (
             <circle
               key={`c${i}`}
@@ -145,7 +146,7 @@ export default function Preloader() {
               cx={c[0]}
               cy={c[1]}
               r="2"
-              fill="#ffd6a0"
+              fill="#FF9440"
               style={{ animationDelay: `${1.4 + i * 0.05}s` }}
             />
           ))}

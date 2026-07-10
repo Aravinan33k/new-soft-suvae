@@ -151,28 +151,37 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-center">
+      {/* Standard bar in every state — no condensing/shrinking on scroll.
+          Scrolling only fades in a backdrop blur + soft shadow so the links
+          stay legible over content passing underneath. */}
       <nav
-        className={`flex items-center backdrop-blur-xl transition-all duration-300 ease-out ${
+        className={`flex h-16 w-full items-center transition-all duration-300 ease-out ${
           scrolled
-            ? "h-11 w-[min(92%,72rem)] rounded-full border shadow-[0_8px_32px_-10px_var(--shadow-strong)]"
-            : "h-16 w-full rounded-none border-x-0 border-t-0 border-b"
+            ? "shadow-[0_8px_32px_-10px_var(--shadow-strong)] backdrop-blur-xl"
+            : ""
         }`}
-        style={{ backgroundColor: "var(--nav-surface)", borderColor: "var(--border)" }}
       >
-        <div className="mx-auto flex w-full max-w-[90rem] items-center px-5 md:px-8 lg:px-10">
+        {/* same container as the page sections (max-w-[85rem] + px-20), so the
+            logo's left edge lines up exactly with the content text below */}
+        <div className="mx-auto flex w-full max-w-[85rem] items-center px-6 md:px-10 lg:px-20">
           {/* ── Wordmark ─────────────────────────────────────────────── */}
           <a href="#top" className="group flex shrink-0 items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* scroll choreography: on scroll the mark tips ~35° and the
+                company name slides back into the logo and tucks away; both
+                ease back out when returning to the top */}
             <img
               src="/softsuave-mark.svg"
               alt=""
-              className={`w-auto transition-all duration-300 group-hover:-translate-y-0.5 ${
-                scrolled ? "h-6" : "h-7"
+              className={`h-8 w-auto transition-all duration-500 ease-out group-hover:-translate-y-0.5 ${
+                scrolled ? "rotate-114" : "rotate-0"
               }`}
             />
             <span
-              className={`font-bold tracking-tight text-(--heading) transition-all duration-300 ${
-                scrolled ? "text-base" : "text-lg"
+              className={`overflow-hidden whitespace-nowrap text-xl font-bold tracking-tight text-(--heading) transition-all duration-500 ease-out ${
+                scrolled
+                  ? "max-w-0 -translate-x-3 opacity-0"
+                  : "max-w-40 translate-x-0 opacity-100"
               }`}
             >
               Soft Suave

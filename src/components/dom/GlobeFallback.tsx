@@ -1,5 +1,10 @@
-// Static, on-brand stand-in for the live globe — a CSS-only night-Earth disc
-// with a warm sunrise rim. Pulls double duty:
+// Static, on-brand stand-in for the live globe — a night-Earth disc built
+// from the SAME NASA city-lights texture the 3D scene loads (preloaded in
+// layout.tsx and shared via the browser cache, so it costs nothing extra).
+// The flat equirectangular map is wrapped into the disc with heavy limb
+// shading, which reads as a real planet at a glance — so the load-wait
+// state shows golden city lights from the first paint instead of an empty
+// navy ball. Pulls double duty:
 //  1. HeroGlobe paints it at first load as the placeholder the live globe
 //     cross-fades over, so the hero never shows an empty column while the
 //     three.js scene initializes off-screen.
@@ -19,16 +24,43 @@ export default function GlobeFallback() {
             "radial-gradient(circle at 62% 34%, rgba(255,150,70,0.16), transparent 62%)",
         }}
       />
-      {/* the planet disc: dark navy night side, sunrise on the upper-right limb */}
+      {/* the planet disc: night side with real city lights, sunrise on the
+          upper-right limb */}
       <div
-        className="relative aspect-square w-[76%] rounded-full"
+        className="relative aspect-square w-[76%] overflow-hidden rounded-full"
         style={{
           background:
             "radial-gradient(circle at 62% 32%, #16233f 0%, #0c1428 46%, #070c1a 72%, #04060f 100%)",
-          boxShadow:
-            "inset -22px -26px 60px rgba(0,0,0,0.72), inset 30px 26px 70px rgba(255,150,70,0.05)",
         }}
       >
+        {/* real night-lights map wrapped into the disc — centred on the
+            India/Asia region (Chennai HQ side) to echo the live scene's
+            opening view. Oversized so the circle shows ~a hemisphere. */}
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            backgroundImage: "url(/textures/earth_lights.jpg)",
+            backgroundSize: "230% 118%",
+            backgroundPosition: "72% 42%",
+            opacity: 0.95,
+          }}
+        />
+        {/* limb shading over the map — sells the sphere: dark falloff toward
+            the edges with the light source biased to the upper-right */}
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle at 62% 32%, transparent 38%, rgba(4,6,15,0.55) 74%, rgba(4,6,15,0.92) 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            boxShadow:
+              "inset -22px -26px 60px rgba(0,0,0,0.72), inset 30px 26px 70px rgba(255,150,70,0.05)",
+          }}
+        />
         {/* warm sunrise crescent hugging the upper-right rim */}
         <div
           className="absolute inset-0 rounded-full"

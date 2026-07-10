@@ -54,6 +54,30 @@ export default function RootLayout({
       className={`${satoshi.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        {/* Start the hero globe's NASA textures downloading with the page
+            itself, instead of waiting for the three.js chunk to mount and
+            request them — on slow connections this runs both downloads in
+            parallel and all but closes the placeholder→globe gap. React
+            hoists these into <head>; media-gated off on mobile, where the
+            hero globe never renders. */}
+        <link
+          rel="preload"
+          as="image"
+          href="/textures/earth_day.jpg"
+          media="(min-width: 768px)"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="/textures/earth_lights.jpg"
+          media="(min-width: 768px)"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="/textures/earth_clouds.jpg"
+          media="(min-width: 768px)"
+        />
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <SmoothScroll />
         <Preloader />

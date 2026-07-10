@@ -34,9 +34,8 @@ const SERVICES: Service[] = [
   { label: "AI Chatbots", icon: TbMessageChatbot },
 ];
 
-// node ring radius + globe rim, both as a fraction of the (square) container
+// node ring radius as a fraction of the (square) container
 const RING_FR = 0.455;
-const GLOBE_FR = 0.38;
 const N = SERVICES.length;
 
 // screen angle for node i — start at the top (-90°), go clockwise
@@ -52,6 +51,10 @@ export default function HeroServiceNetwork({
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chipRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // the icon + label inside each chip — tinted toward gold on proximity
+  // instead of the chip growing a bright border/glow box
+  const chipIconRefs = useRef<(HTMLElement | null)[]>([]);
+  const chipLabelRefs = useRef<(HTMLElement | null)[]>([]);
   const reduced = useReducedMotion();
   // STAGED HERO LOAD: this whole layer (connectors, particles, chips) holds
   // back until the text has landed and the globe has begun fading in, then
@@ -154,56 +157,13 @@ export default function HeroServiceNetwork({
 
     const draw = (dt: number, t: number) => {
       ctx.clearRect(0, 0, w, h);
-      const cx = w / 2;
-      const cy = h / 2;
-      const globeR = Math.min(w, h) * GLOBE_FR;
       const nodes = SERVICES.map((_, i) => nodeAt(i));
 
-      // ── service connectors: node → globe core, brightened near the cursor ──
-      ctx.lineWidth = 1;
-      for (let i = 0; i < N; i++) {
-        const n = nodes[i];
-        // point where the connector meets the rim (so it visibly "plugs in")
-        const ang = Math.atan2(n.y - cy, n.x - cx);
-        const rimX = cx + Math.cos(ang) * globeR;
-        const rimY = cy + Math.sin(ang) * globeR;
-
-        let boost = 0;
-        if (mouse.active) {
-          const md = Math.hypot(mouse.x - n.x, mouse.y - n.y);
-          boost = Math.max(0, 1 - md / 180);
-        }
-        const base = 0.1 + 0.14 * (0.5 + 0.5 * Math.sin(t * 1.3 + i));
-        const alpha = Math.min(0.6, base + boost * 0.5);
-        const grad = ctx.createLinearGradient(rimX, rimY, n.x, n.y);
-        grad.addColorStop(0, `rgba(255,154,60,${alpha * 0.25})`);
-        grad.addColorStop(1, `rgba(255,180,90,${alpha})`);
-        ctx.strokeStyle = grad;
-        ctx.beginPath();
-        ctx.moveTo(rimX, rimY);
-        ctx.lineTo(n.x, n.y);
-        ctx.stroke();
-
-        // a data pip travelling the connector inward
-        const pp = ((t * 0.32 + i * 0.16) % 1);
-        const px = n.x + (rimX - n.x) * pp;
-        const py = n.y + (rimY - n.y) * pp;
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(255,220,160,${0.5 + boost * 0.4})`;
-        ctx.arc(px, py, 1.6, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // ── ring links between adjacent service nodes ──
-      ctx.strokeStyle = "rgba(255,170,80,0.12)";
-      ctx.beginPath();
-      for (let i = 0; i < N; i++) {
-        const a = nodes[i];
-        const b = nodes[(i + 1) % N];
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-      }
-      ctx.stroke();
+      // (ALL straight line-work removed per design feedback — the chip→globe
+      // connectors + their traveling pips and the chip-to-chip hexagon links
+      // were reading as clutter over the planet. The curved 3D arcs +
+      // orbital rings in GlobeScene are the only line elements; this layer
+      // keeps the node glows, chips, and ambient particles.)
 
       // ── floating particles: drift, thread into the globe, react to cursor ──
       for (const p of particles) {
@@ -235,42 +195,13 @@ export default function HeroServiceNetwork({
 
         const tw = 0.5 + 0.5 * Math.sin(t * 2 + p.tw);
 
-        // thread a faint line into the globe when close enough to the rim
-        const dc = Math.hypot(sx - cx, sy - cy);
-        if (dc < globeR * 1.7) {
-          const ang = Math.atan2(sy - cy, sx - cx);
-          const rimX = cx + Math.cos(ang) * globeR;
-          const rimY = cy + Math.sin(ang) * globeR;
-          const la = Math.max(0, 0.22 * (1 - dc / (globeR * 1.7)));
-          ctx.strokeStyle = `rgba(255,175,90,${la})`;
-          ctx.beginPath();
-          ctx.moveTo(sx, sy);
-          ctx.lineTo(rimX, rimY);
-          ctx.stroke();
-        }
-
+        // (the faint particle→globe threads and particle-to-particle web
+        // lines were removed per design feedback — they read as stray "nerve
+        // lines" over the planet. The particles now just drift + twinkle.)
         ctx.beginPath();
         ctx.fillStyle = `rgba(255,206,138,${0.25 + tw * 0.5})`;
         ctx.arc(sx, sy, p.r, 0, Math.PI * 2);
         ctx.fill();
-      }
-
-      // particle-to-particle links (near neighbours only)
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const ax = particles[i].x * w;
-          const ay = particles[i].y * h;
-          const bx = particles[j].x * w;
-          const by = particles[j].y * h;
-          const d = Math.hypot(ax - bx, ay - by);
-          if (d < 90) {
-            ctx.strokeStyle = `rgba(255,160,80,${0.12 * (1 - d / 90)})`;
-            ctx.beginPath();
-            ctx.moveTo(ax, ay);
-            ctx.lineTo(bx, by);
-            ctx.stroke();
-          }
-        }
       }
 
       // ── node glow dots + cursor-driven chip lift ──
@@ -289,13 +220,20 @@ export default function HeroServiceNetwork({
         ctx.arc(n.x, n.y, 16 + boost * 10, 0, Math.PI * 2);
         ctx.fill();
 
-        // lift + glow the matching HTML chip
+        // matching HTML chip: a light gold tint on the icon + label plus a
+        // small zoom on approach — no bright border box, no outer glow
         const chip = chipRefs.current[i];
         if (chip) {
           const lift = boost;
-          chip.style.transform = `translate(-50%, -50%) scale(${1 + lift * 0.12})`;
-          chip.style.borderColor = `color-mix(in srgb, var(--brand-orange) ${18 + lift * 60}%, transparent)`;
-          chip.style.boxShadow = lift > 0.02 ? `0 0 ${10 + lift * 22}px rgba(255,150,70,${0.12 + lift * 0.3})` : "none";
+          chip.style.transform = `translate(-50%, -50%) scale(${1 + lift * 0.045})`;
+          const icon = chipIconRefs.current[i];
+          const label = chipLabelRefs.current[i];
+          if (icon) {
+            icon.style.color = `color-mix(in srgb, #FFD37A ${lift * 70}%, var(--brand-orange))`;
+          }
+          if (label) {
+            label.style.color = `color-mix(in srgb, #FFD37A ${lift * 55}%, var(--heading))`;
+          }
         }
       }
     };
@@ -355,8 +293,20 @@ export default function HeroServiceNetwork({
               animationDelay: `-${i * 0.9}s`,
             }}
           >
-            <s.icon className="h-3.5 w-3.5 shrink-0 text-(--brand-orange)" />
-            <span className="whitespace-nowrap text-[11px] font-medium tracking-tight text-(--heading) [text-shadow:0_1px_8px_rgba(0,0,0,0.6)]">
+            <span
+              ref={(el) => {
+                chipIconRefs.current[i] = el;
+              }}
+              className="flex shrink-0 text-(--brand-orange) transition-colors duration-300"
+            >
+              <s.icon className="h-3.5 w-3.5" />
+            </span>
+            <span
+              ref={(el) => {
+                chipLabelRefs.current[i] = el;
+              }}
+              className="whitespace-nowrap text-[11px] font-medium tracking-tight text-(--heading) [text-shadow:0_1px_8px_rgba(0,0,0,0.6)] transition-colors duration-300"
+            >
               {s.label}
             </span>
           </div>

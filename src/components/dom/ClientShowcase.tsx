@@ -617,10 +617,13 @@ function VideoCard({
               <TbClock className="h-3 w-3" /> {fmtDuration(duration)}
             </span>
           )}
-          {/* play affordance — hidden by default, grows in on hover */}
+          {/* play affordance — hidden by default, grows in on hover; once the
+              muted preview actually starts playing, the icon itself gets out
+              of the way (footage reads through) even though the card is
+              still hovered — only the title/subtitle stay visible */}
           <span
             className={`relative flex h-11 w-11 scale-90 items-center justify-center rounded-full border border-white/25 bg-white/15 text-white opacity-0 backdrop-blur-md transition-all duration-300 ease-out group-hover:scale-100 group-hover:border-(--brand-orange) group-hover:bg-(--brand-orange) group-hover:opacity-100 group-hover:shadow-[0_0_26px_-4px_var(--glow-orange)] ${
-              previewing ? "opacity-70! scale-95!" : ""
+              previewing ? "opacity-0! scale-75!" : ""
             }`}
           >
             {/* soft pulse ring on hover */}

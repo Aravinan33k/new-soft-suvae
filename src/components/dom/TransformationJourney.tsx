@@ -559,16 +559,18 @@ export default function TransformationJourney() {
                     style={{ left: `${4 + (i / (N - 1)) * 92}%` }}
                   >
                     {/* focus treatment: the active step enlarges ~18% under the
-                        spotlight while every other step softly blurs + dims.
-                        Dimming uses brightness/saturation (not opacity) so the
-                        nodes stay opaque and the rail line passes UNDER them. */}
+                        spotlight while every other step recedes just a touch —
+                        still clearly readable, so users always see all six
+                        stages. Dimming uses brightness/saturation (not opacity)
+                        so the nodes stay opaque and the rail line passes UNDER
+                        them. */}
                     <div
                       className={`flex flex-col items-center transition-all duration-500 ease-out ${
                         status === "active"
                           ? "scale-[1.18]"
                           : status === "done"
-                            ? "blur-[1px] brightness-[0.85] saturate-[0.8]"
-                            : "blur-[1.5px] brightness-[0.6] saturate-[0.55]"
+                            ? "blur-[0.5px] brightness-[0.92] saturate-[0.85]"
+                            : "blur-[0.8px] brightness-[0.82] saturate-[0.75]"
                       }`}
                     >
                       <StepNode icon={step.icon} index={i} status={status} big={false} />

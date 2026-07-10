@@ -179,9 +179,14 @@ export default function ExperienceStage() {
         ...CARD_FULL,
         ease: "power2.out",
         scrollTrigger: {
-          trigger: section,
-          start: "center 72%",
-          end: "center 36%",
+          // keyed to the CARD itself. Sweet-spot timing for this pattern:
+          // starts the moment the card peeks in at the bottom and completes
+          // by the time its top reaches ~60% of the viewport — ~300px of
+          // scroll (2-3 wheel ticks), so the expansion is SEEN as a moment
+          // but is fully open well before the card hits reading position.
+          trigger: card,
+          start: "top 95%",
+          end: "top 60%",
           scrub: 1,
           invalidateOnRefresh: true,
         },
@@ -339,16 +344,6 @@ export default function ExperienceStage() {
                     style={{ height: "0%" }}
                   />
 
-                  {/* active state: frosted glass pill with a soft orange
-                      glow behind the label */}
-                  <span
-                    aria-hidden
-                    className={`absolute inset-y-1 left-2.5 right-0 rounded-lg border backdrop-blur-md transition-all duration-500 ease-out ${
-                      isActive
-                        ? "border-[#FF8A3D]/25 bg-[#FF8A3D]/[0.08] opacity-100 shadow-[0_0_26px_-6px_rgba(255,138,61,0.55),inset_0_1px_10px_rgba(255,138,61,0.08)]"
-                        : "border-transparent bg-transparent opacity-0"
-                    }`}
-                  />
                   {/* vertical accent line on the pill's edge */}
                   <span
                     aria-hidden
@@ -365,10 +360,10 @@ export default function ExperienceStage() {
                   />
 
                   <span
-                    className={`relative inline-block text-base font-medium transition-all duration-300 ease-out md:text-lg ${
+                    className={`relative inline-block text-base font-semibold transition-all duration-300 ease-out md:text-lg ${
                       isActive
-                        ? "translate-x-[5px] text-white [text-shadow:0_0_14px_rgba(255,138,61,0.55)]"
-                        : "translate-x-0 text-zinc-400 group-hover:text-zinc-200"
+                        ? "translate-x-[5px] text-[#FF8A3D] [text-shadow:0_0_14px_rgba(255,138,61,0.55)]"
+                        : "translate-x-0 font-medium text-zinc-400 group-hover:text-zinc-200"
                     }`}
                   >
                     {s.label}

@@ -336,13 +336,13 @@ const SPARKS: [number, number][] = [
 // echoing the dot's direction), so the intro card "reacts" to where the flow
 // currently is.
 const LAYER_BG = [
-  // Real photography/art matched to each heading (all from the existing
-  // Canva-sourced asset pool — the old /eco renders read generic):
-  "/carousel/03-ai-data-interface.jpg", // 01 Foundation Models — holographic AI chip + data streams
-  "/services/software.jpg", // 02 AI Frameworks — code editor close-up (the tools)
-  "/services/modernization.jpg", // 03 Vector Databases — server racks, stored data at scale
-  "/carousel/06-cloud-computing.jpg", // 04 Cloud Infrastructure — glowing cloud over racks
-  "/carousel/04-cross-platform-software.jpg", // 05 Deployment & DevOps — apps live across devices
+  // FRESH photography per heading — free-license Unsplash downloads, none
+  // reused from elsewhere on the site (see public/eco/new-*.jpg):
+  "/eco/new-01-foundation.jpg", // 01 Foundation Models — glowing circuit blueprint
+  "/eco/new-02-frameworks.jpg", // 02 AI Frameworks — code close-up, blue/magenta
+  "/eco/new-03-vector.jpg", // 03 Vector Databases — digital data rain
+  "/eco/new-04-cloud.jpg", // 04 Cloud Infrastructure — Earth's city lights from orbit
+  "/eco/new-05-deploy.jpg", // 05 Deployment & DevOps — live monitoring dashboard
 ];
 
 // Assembly timing (ms). ONE choreographed sequence, not a pile-up:

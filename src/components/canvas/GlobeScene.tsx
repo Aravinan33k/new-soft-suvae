@@ -636,7 +636,10 @@ function Earth({ animate }: { animate: boolean }) {
         />
       </lineSegments>
 
-      {/* network arcs between real cities */}
+      {/* the CURVED connecting arcs — hub-and-spoke into Chennai plus the
+          regional mesh between hubs — with their traveling pulses. These are
+          the one line element kept on the planet (the straight overlay
+          line-work lives in HeroServiceNetwork and stays removed). */}
       <lineSegments renderOrder={2}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[data.linePos, 3]} />
@@ -650,8 +653,6 @@ function Earth({ animate }: { animate: boolean }) {
           blending={THREE.AdditiveBlending}
         />
       </lineSegments>
-
-      {/* data pulses riding the arcs */}
       <points renderOrder={3}>
         <bufferGeometry ref={pulsesGeo}>
           <bufferAttribute attach="attributes-position" args={[pulsePosBuf, 3]} />
@@ -1072,8 +1073,17 @@ export default function GlobeScene({
   }, []);
   const onTexturesReady = useCallback(() => setTexReady(true), []);
   const onSceneVisible = useCallback(() => setSceneVisible(true), []);
-  // reduced motion skips the choreography — show the (static) globe at once
-  const revealed = reduced || (texReady && minDelayDone);
+  // Reduced motion only skips the artificial hero-choreography pause
+  // (minDelay) — it must NOT skip waiting for the real NASA textures to
+  // finish loading (texReady). The previous `reduced || (texReady && ...)`
+  // let reduced-motion clients (and slow/remote connections — devtunnels,
+  // throttled networks — commonly report reduced motion) flip `revealed`
+  // true the instant the component mounted, well before the ~7.5MB of
+  // texture JPEGs had actually downloaded. That fired onRevealed() early,
+  // starting the fallback's 1s CSS fade-out with nothing finished loading
+  // underneath it yet — the flat, textureless placeholder sphere caught
+  // mid-fade with no real globe to replace it.
+  const revealed = texReady && (reduced || minDelayDone);
 
   useEffect(() => {
     if (revealed) onRevealed?.();
