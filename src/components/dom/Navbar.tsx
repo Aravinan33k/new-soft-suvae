@@ -82,6 +82,8 @@ export default function Navbar() {
   const [ctaOpen, setCtaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  // pointer/focus is somewhere inside the nav strip → reveal the full menu
+  const [navHover, setNavHover] = useState(false);
   // the sliding glass highlight that tracks the hovered nav item
   const [hi, setHi] = useState({ left: 0, width: 0, opacity: 0 });
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -149,14 +151,29 @@ export default function Navbar() {
     closeTimer.current = setTimeout(() => setOpen(null), 120);
   };
 
+  // Auto-hiding nav: at the very top of the page the full menu shows. Once
+  // scrolled, only the Soft Suave logo remains — links, CTA and all bar
+  // chrome (blur/shadow) hide until the nav strip is hovered (or tabbed
+  // into). It also stays revealed while any dropdown / the mobile drawer is
+  // open, so panels can't vanish under the cursor mid-use.
+  const revealed =
+    !scrolled || navHover || mobileOpen || ctaOpen || open !== null;
+
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-center">
       {/* Standard bar in every state — no condensing/shrinking on scroll.
-          Scrolling only fades in a backdrop blur + soft shadow so the links
-          stay legible over content passing underneath. */}
+          Bar chrome (blur + shadow) only appears when scrolled AND revealed,
+          so the resting state is a bare floating logo. */}
       <nav
-        className={`flex h-16 w-full items-center transition-all duration-300 ease-out ${
-          scrolled
+        onMouseEnter={() => setNavHover(true)}
+        onMouseLeave={() => setNavHover(false)}
+        onFocus={() => setNavHover(true)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node))
+            setNavHover(false);
+        }}
+        className={`relative flex h-16 w-full items-center transition-all duration-300 ease-out ${
+          scrolled && revealed
             ? "shadow-[0_8px_32px_-10px_var(--shadow-strong)] backdrop-blur-xl"
             : ""
         }`}
@@ -164,12 +181,19 @@ export default function Navbar() {
         {/* same container as the page sections (max-w-[85rem] + px-20), so the
             logo's left edge lines up exactly with the content text below */}
         <div className="mx-auto flex w-full max-w-[85rem] items-center px-6 md:px-10 lg:px-20">
-          {/* ── Wordmark ─────────────────────────────────────────────── */}
-          <a href="#top" className="group flex shrink-0 items-center gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* ── Wordmark ─────────────────────────────────────────────────
+              Pinned to the viewport's LEFT CORNER (absolute against the
+              full-width nav, outside the centered content container) so the
+              floating resting-state logo never overlays the content column
+              scrolling beneath it. */}
+          <a
+            href="#top"
+            className="group absolute left-4 top-1/2 flex shrink-0 -translate-y-1/2 items-center gap-2.5 md:left-6"
+          >
             {/* scroll choreography: on scroll the mark tips ~35° and the
                 company name slides back into the logo and tucks away; both
                 ease back out when returning to the top */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/softsuave-mark.svg"
               alt=""
@@ -188,12 +212,17 @@ export default function Navbar() {
             </span>
           </a>
 
-          {/* ── Right cluster: links + split CTA + toggle ─────────────── */}
-          <div className="ml-auto flex items-center gap-5 lg:gap-7">
+          {/* ── Links: dead-centre of the bar, between the corner-pinned
+              logo (left) and CTA (right). Hidden at rest once scrolled —
+              drops in when the nav is hovered or focused. */}
             <ul
               ref={navListRef}
               onMouseLeave={hideHi}
-              className="relative hidden items-center gap-7 xl:flex"
+              className={`relative mx-auto hidden items-center gap-8 transition-all duration-300 ease-out xl:flex ${
+                revealed
+                  ? "translate-y-0 opacity-100"
+                  : "xl:pointer-events-none xl:-translate-y-1.5 xl:opacity-0"
+              }`}
             >
               {/* sliding glass highlight that follows the hovered menu item */}
               <span
@@ -272,6 +301,17 @@ export default function Navbar() {
               )}
             </ul>
 
+          {/* ── Right-corner cluster: CTA + hamburger — pinned to the
+              viewport's right edge, mirroring the corner-pinned logo.
+              Hidden at rest once scrolled (xl+); the hamburger below xl
+              stays visible since touch devices can't hover to reveal. */}
+          <div
+            className={`absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-4 transition-all duration-300 ease-out md:right-6 ${
+              revealed
+                ? "translate-x-0 opacity-100"
+                : "xl:pointer-events-none xl:translate-x-3 xl:opacity-0"
+            }`}
+          >
             {/* ── CTA with a built-in dropdown of contact options ──────── */}
             <div ref={ctaRef} className="relative hidden sm:block">
               <button
@@ -451,3 +491,4 @@ export default function Navbar() {
     </header>
   );
 }
+
