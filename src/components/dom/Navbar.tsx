@@ -82,17 +82,53 @@ export default function Navbar() {
   const [ctaOpen, setCtaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  // pointer/focus is somewhere inside the nav strip → reveal the full menu
+  const [navHover, setNavHover] = useState(false);
+  // the sliding glass highlight that tracks the hovered nav item
+  const [hi, setHi] = useState({ left: 0, width: 0, opacity: 0 });
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
+  const navListRef = useRef<HTMLUListElement>(null);
   const { dark, toggle, setDark } = useTheme();
 
+  // slide the glass highlight to sit behind the hovered nav item (measured
+  // relative to the list, with a little breathing room on each side)
+  const moveHi = (el: HTMLElement) => {
+    const ul = navListRef.current;
+    if (!ul) return;
+    const ur = ul.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const pad = 14;
+    setHi({ left: r.left - ur.left - pad, width: r.width + pad * 2, opacity: 1 });
+  };
+  const hideHi = () => setHi((h) => ({ ...h, opacity: 0 }));
+
+  // magnetic pull: nudge an element toward the cursor, spring back on leave
+  const magnet = {
+    onMouseMove: (e: React.MouseEvent<HTMLElement>) => {
+      const el = e.currentTarget;
+      const r = el.getBoundingClientRect();
+      const dx = (e.clientX - (r.left + r.width / 2)) * 0.25;
+      const dy = (e.clientY - (r.top + r.height / 2)) * 0.35;
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+    },
+    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+      e.currentTarget.style.transform = "";
+    },
+  };
+
   useEffect(() => {
-    // Hysteresis: condense into the floating pill past 48px, expand back under 12px
-    const onScroll = () =>
+    // Hysteresis: condense into the floating pill past 48px, expand back under 12px.
+    const onScroll = () => {
       setScrolled((prev) => (prev ? window.scrollY > 12 : window.scrollY > 48));
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   // close the split-button menu on an outside click
@@ -115,51 +151,104 @@ export default function Navbar() {
     closeTimer.current = setTimeout(() => setOpen(null), 120);
   };
 
+  // Auto-hiding nav: at the very top of the page the full menu shows. Once
+  // scrolled, only the Soft Suave logo remains — links, CTA and all bar
+  // chrome (blur/shadow) hide until the nav strip is hovered (or tabbed
+  // into). It also stays revealed while any dropdown / the mobile drawer is
+  // open, so panels can't vanish under the cursor mid-use.
+  const revealed =
+    !scrolled || navHover || mobileOpen || ctaOpen || open !== null;
+
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-center">
+      {/* Standard bar in every state — no condensing/shrinking on scroll.
+          Bar chrome (blur + shadow) only appears when scrolled AND revealed,
+          so the resting state is a bare floating logo. */}
       <nav
-        className={`flex items-center backdrop-blur-xl transition-all duration-300 ease-out ${
-          scrolled
-            ? "h-11 w-[min(92%,72rem)] rounded-full border shadow-[0_8px_32px_-10px_var(--shadow-strong)]"
-            : "h-16 w-full rounded-none border-x-0 border-t-0 border-b"
+        onMouseEnter={() => setNavHover(true)}
+        onMouseLeave={() => setNavHover(false)}
+        onFocus={() => setNavHover(true)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node))
+            setNavHover(false);
+        }}
+        className={`relative flex h-16 w-full items-center transition-all duration-300 ease-out ${
+          scrolled && revealed
+            ? "shadow-[0_8px_32px_-10px_var(--shadow-strong)] backdrop-blur-xl"
+            : ""
         }`}
-        style={{ backgroundColor: "var(--nav-surface)", borderColor: "var(--border)" }}
       >
-        <div className="mx-auto flex w-full max-w-[90rem] items-center px-5 md:px-8 lg:px-10">
-          {/* ── Wordmark ─────────────────────────────────────────────── */}
-          <a href="#top" className="group flex shrink-0 items-center gap-2.5">
+        {/* same container as the page sections (max-w-[85rem] + px-20), so the
+            logo's left edge lines up exactly with the content text below */}
+        <div className="mx-auto flex w-full max-w-[85rem] items-center px-6 md:px-10 lg:px-20">
+          {/* ── Wordmark ─────────────────────────────────────────────────
+              Pinned to the viewport's LEFT CORNER (absolute against the
+              full-width nav, outside the centered content container) so the
+              floating resting-state logo never overlays the content column
+              scrolling beneath it. */}
+          <a
+            href="#top"
+            className="group absolute left-4 top-1/2 flex shrink-0 -translate-y-1/2 items-center gap-2.5 md:left-6"
+          >
+            {/* scroll choreography: on scroll the mark tips ~35° and the
+                company name slides back into the logo and tucks away; both
+                ease back out when returning to the top */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/softsuave-mark.svg"
               alt=""
-              className={`w-auto transition-all duration-300 group-hover:-translate-y-0.5 ${
-                scrolled ? "h-6" : "h-7"
+              className={`h-8 w-auto transition-all duration-500 ease-out group-hover:-translate-y-0.5 ${
+                scrolled ? "rotate-114" : "rotate-0"
               }`}
             />
             <span
-              className={`font-bold tracking-tight text-(--heading) transition-all duration-300 ${
-                scrolled ? "text-base" : "text-lg"
+              className={`overflow-hidden whitespace-nowrap text-xl font-bold tracking-tight text-(--heading) transition-all duration-500 ease-out ${
+                scrolled
+                  ? "max-w-0 -translate-x-3 opacity-0"
+                  : "max-w-40 translate-x-0 opacity-100"
               }`}
             >
               Soft Suave
             </span>
           </a>
 
-          {/* ── Right cluster: links + split CTA + toggle ─────────────── */}
-          <div className="ml-auto flex items-center gap-5 lg:gap-7">
-            <ul className="hidden items-center gap-7 xl:flex">
+          {/* ── Links: dead-centre of the bar, between the corner-pinned
+              logo (left) and CTA (right). Hidden at rest once scrolled —
+              drops in when the nav is hovered or focused. */}
+            <ul
+              ref={navListRef}
+              onMouseLeave={hideHi}
+              className={`relative mx-auto hidden items-center gap-8 transition-all duration-300 ease-out xl:flex ${
+                revealed
+                  ? "translate-y-0 opacity-100"
+                  : "xl:pointer-events-none xl:-translate-y-1.5 xl:opacity-0"
+              }`}
+            >
+              {/* sliding glass highlight that follows the hovered menu item */}
+              <span
+                aria-hidden
+                className="nav-hi"
+                style={{
+                  transform: `translate(${hi.left}px, -50%)`,
+                  width: `${hi.width}px`,
+                  opacity: hi.opacity,
+                }}
+              />
               {NAV.map((item) =>
                 item.items ? (
                   <li
                     key={item.label}
                     className="relative"
-                    onMouseEnter={() => openMenu(item.label)}
+                    onMouseEnter={(e) => {
+                      openMenu(item.label);
+                      moveHi(e.currentTarget);
+                    }}
                     onMouseLeave={scheduleClose}
                   >
                     <button
                       type="button"
                       aria-expanded={open === item.label}
-                      className={`flex items-center gap-1 text-sm font-medium transition-colors ${
+                      className={`relative z-10 flex items-center gap-1 text-sm font-medium transition-colors ${
                         open === item.label
                           ? "text-(--heading)"
                           : "text-(--foreground) hover:text-(--heading)"
@@ -196,10 +285,14 @@ export default function Navbar() {
                     </div>
                   </li>
                 ) : (
-                  <li key={item.label}>
+                  <li
+                    key={item.label}
+                    className="relative"
+                    onMouseEnter={(e) => moveHi(e.currentTarget)}
+                  >
                     <a
                       href={item.href}
-                      className="text-sm font-medium text-(--foreground) transition-colors hover:text-(--heading)"
+                      className="relative z-10 text-sm font-medium text-(--foreground) transition-colors hover:text-(--heading)"
                     >
                       {item.label}
                     </a>
@@ -208,6 +301,17 @@ export default function Navbar() {
               )}
             </ul>
 
+          {/* ── Right-corner cluster: CTA + hamburger — pinned to the
+              viewport's right edge, mirroring the corner-pinned logo.
+              Hidden at rest once scrolled (xl+); the hamburger below xl
+              stays visible since touch devices can't hover to reveal. */}
+          <div
+            className={`absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-4 transition-all duration-300 ease-out md:right-6 ${
+              revealed
+                ? "translate-x-0 opacity-100"
+                : "xl:pointer-events-none xl:translate-x-3 xl:opacity-0"
+            }`}
+          >
             {/* ── CTA with a built-in dropdown of contact options ──────── */}
             <div ref={ctaRef} className="relative hidden sm:block">
               <button
@@ -215,6 +319,8 @@ export default function Navbar() {
                 aria-label="Contact us"
                 aria-expanded={ctaOpen}
                 onClick={() => setCtaOpen((v) => !v)}
+                onMouseMove={magnet.onMouseMove}
+                onMouseLeave={magnet.onMouseLeave}
                 className="nav-cta flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium"
               >
                 Contact Us
@@ -307,7 +413,10 @@ export default function Navbar() {
             : "pointer-events-none scale-95 opacity-0"
         }`}
       >
-        <div className="mx-auto max-h-[80vh] w-full max-w-md overflow-y-auto rounded-2xl border border-(--border) bg-(--panel) p-3 shadow-[0_24px_64px_-16px_var(--shadow-strong)] backdrop-blur-xl">
+        <div
+          data-lenis-prevent
+          className="mx-auto max-h-[80vh] w-full max-w-md overflow-y-auto rounded-2xl border border-(--border) bg-(--panel) p-3 shadow-[0_24px_64px_-16px_var(--shadow-strong)] backdrop-blur-xl"
+        >
           {NAV.map((item) =>
             item.items ? (
               <div key={item.label} className="border-b border-(--border) last:border-0">
@@ -382,3 +491,4 @@ export default function Navbar() {
     </header>
   );
 }
+

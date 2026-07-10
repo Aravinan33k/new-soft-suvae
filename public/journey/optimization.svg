@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0c1526"/><stop offset="0.55" stop-color="#0a1020"/><stop offset="1" stop-color="#080a12"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff9440"/><stop offset="1" stop-color="#f9436b"/>
+    </linearGradient>
+    <linearGradient id="up" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8a3d" stop-opacity="0.5"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.75" cy="0.25" r="0.65">
+      <stop offset="0" stop-color="#ff8a3d" stop-opacity="0.26"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect width="1280" height="720" fill="url(#glow)"/>
+  <text x="56" y="78" font-family="Segoe UI, system-ui, sans-serif" font-size="30" font-weight="700" fill="#e8eefb">Compounding Performance</text>
+  <text x="56" y="106" font-family="Segoe UI, system-ui, sans-serif" font-size="15" fill="#8ea0bd">Monitor → learn → refine, on a loop</text>
+  <rect x="1004" y="52" width="220" height="40" rx="20" fill="#ff8a3d" fill-opacity="0.12" stroke="#ff8a3d" stroke-opacity="0.45"/>
+  <circle cx="1028" cy="72" r="5" fill="#ffb057"/>
+  <text x="1042" y="77" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="600" fill="#ffc08a">Week 12 of learning</text>
+  <!-- big compounding chart -->
+  <rect x="56" y="140" width="768" height="380" rx="22" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+  <text x="84" y="186" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="600" fill="#cbd5e1">Value Delivered / Week</text>
+  <g stroke="#ffffff" stroke-opacity="0.06">
+    <line x1="84" y1="250" x2="796" y2="250"/><line x1="84" y1="330" x2="796" y2="330"/><line x1="84" y1="410" x2="796" y2="410"/>
+  </g>
+  <polyline points="84,468 174,458 264,452 354,436 444,410 534,368 624,312 714,244 796,196"
+    stroke="url(#acc)" stroke-width="3.5" stroke-linecap="round"/>
+  <polygon points="84,468 174,458 264,452 354,436 444,410 534,368 624,312 714,244 796,196 796,488 84,488" fill="url(#up)"/>
+  <g fill="#ffb057">
+    <circle cx="444" cy="410" r="5"/><circle cx="624" cy="312" r="5"/><circle cx="796" cy="196" r="6" stroke="#fff" stroke-width="2"/>
+  </g>
+  <rect x="612" y="216" width="180" height="52" rx="12" fill="#0a1020" stroke="#ff8a3d" stroke-opacity="0.5"/>
+  <text x="632" y="238" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8ea0bd">vs. launch</text>
+  <text x="632" y="258" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="700" fill="#ffc08a">+240% throughput</text>
+  <!-- learn loop -->
+  <rect x="856" y="140" width="368" height="380" rx="22" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+  <text x="884" y="186" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="600" fill="#cbd5e1">Improvement Loop</text>
+  <circle cx="1040" cy="340" r="92" stroke="url(#acc)" stroke-width="2.5" stroke-dasharray="430 146" stroke-linecap="round" transform="rotate(-64 1040 340)"/>
+  <path d="M1092 258l20 -4 -6 20z" fill="#ffb057"/>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="600" text-anchor="middle">
+    <rect x="988" y="216" width="104" height="34" rx="17" fill="#ff8a3d" fill-opacity="0.14" stroke="#ff8a3d" stroke-opacity="0.5"/>
+    <text x="1040" y="238" fill="#ffc08a">Monitor</text>
+    <rect x="1112" y="376" width="96" height="34" rx="17" fill="#ff8a3d" fill-opacity="0.14" stroke="#ff8a3d" stroke-opacity="0.5"/>
+    <text x="1160" y="398" fill="#ffc08a">Learn</text>
+    <rect x="880" y="376" width="96" height="34" rx="17" fill="#ff8a3d" fill-opacity="0.14" stroke="#ff8a3d" stroke-opacity="0.5"/>
+    <text x="928" y="398" fill="#ffc08a">Refine</text>
+  </g>
+  <text x="1040" y="334" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="30" font-weight="700" fill="#e8eefb">v1.7</text>
+  <text x="1040" y="358" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#8ea0bd">17 releases shipped</text>
+  <text x="1040" y="486" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8ea0bd">Every cycle makes the system smarter</text>
+  <!-- bottom metric cards -->
+  <g font-family="Segoe UI, system-ui, sans-serif">
+    <rect x="56" y="552" width="368" height="112" rx="20" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+    <text x="84" y="592" font-size="13" fill="#8ea0bd">Cost per Task</text>
+    <text x="84" y="634" font-size="32" font-weight="700" fill="#e8eefb">↓ 38%</text>
+    <text x="196" y="634" font-size="13" fill="#7fe8d4">and falling</text>
+    <rect x="456" y="552" width="368" height="112" rx="20" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+    <text x="484" y="592" font-size="13" fill="#8ea0bd">Model Accuracy</text>
+    <text x="484" y="634" font-size="32" font-weight="700" fill="#e8eefb">98.1%</text>
+    <text x="600" y="634" font-size="13" fill="#7fe8d4">+1.7 since launch</text>
+    <rect x="856" y="552" width="368" height="112" rx="20" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+    <text x="884" y="592" font-size="13" fill="#8ea0bd">Hours Returned / Month</text>
+    <text x="884" y="634" font-size="32" font-weight="700" fill="#e8eefb">1,240h</text>
+    <text x="1010" y="634" font-size="13" fill="#7fe8d4">compounding</text>
+  </g>
+</svg>

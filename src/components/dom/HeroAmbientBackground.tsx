@@ -160,6 +160,19 @@ export default function HeroAmbientBackground() {
     <div
       className="pointer-events-none absolute inset-0 -z-20 overflow-hidden"
       data-parallax="-5"
+      style={{
+        // ONE shared edge fade for the whole ambient stack (grid + particle
+        // canvas + drifting wash + noise). Only the grid layer used to carry
+        // its own mask; the particle canvas drew stars/links uniformly right
+        // up to its hard rectangular edge with no fade, so where it met the
+        // page's own continuous background the density drop-off read as a
+        // faint box outline around the hero copy. Masking the whole group
+        // here makes every layer dissolve together at the same soft edge.
+        maskImage:
+          "radial-gradient(ellipse 85% 78% at 50% 32%, black, transparent 78%)",
+        WebkitMaskImage:
+          "radial-gradient(ellipse 85% 78% at 50% 32%, black, transparent 78%)",
+      }}
     >
       <div
         className="absolute inset-0 opacity-[0.05]"
@@ -167,10 +180,6 @@ export default function HeroAmbientBackground() {
           backgroundImage:
             "linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px)",
           backgroundSize: "64px 64px",
-          maskImage:
-            "radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent 75%)",
-          WebkitMaskImage:
-            "radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent 75%)",
         }}
       />
       {/* Slowly drifting warm gradient — theme-tinted, barely perceptible */}

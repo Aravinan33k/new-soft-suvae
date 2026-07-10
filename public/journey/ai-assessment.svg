@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0c1526"/><stop offset="0.55" stop-color="#0a1020"/><stop offset="1" stop-color="#080a12"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff9440"/><stop offset="1" stop-color="#f9436b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.8" cy="0.2" r="0.65">
+      <stop offset="0" stop-color="#ff8a3d" stop-opacity="0.24"/><stop offset="1" stop-color="#ff8a3d" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect width="1280" height="720" fill="url(#glow)"/>
+  <text x="56" y="78" font-family="Segoe UI, system-ui, sans-serif" font-size="30" font-weight="700" fill="#e8eefb">AI Opportunity Map</text>
+  <text x="56" y="106" font-family="Segoe UI, system-ui, sans-serif" font-size="15" fill="#8ea0bd">Data, systems &amp; workflows — scored for impact</text>
+  <rect x="1030" y="52" width="194" height="40" rx="20" fill="#ff8a3d" fill-opacity="0.12" stroke="#ff8a3d" stroke-opacity="0.45"/>
+  <circle cx="1054" cy="72" r="5" fill="#ffb057"/>
+  <text x="1068" y="77" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="600" fill="#ffc08a">Scanning systems…</text>
+  <!-- systems inventory -->
+  <rect x="56" y="140" width="352" height="524" rx="22" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+  <text x="84" y="186" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="600" fill="#cbd5e1">Connected Systems</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="15">
+    <rect x="84" y="212" width="296" height="58" rx="12" fill="#ffffff" fill-opacity="0.05"/>
+    <rect x="100" y="228" width="26" height="26" rx="8" fill="url(#acc)"/>
+    <text x="142" y="246" fill="#e8eefb" font-weight="600">CRM</text><text x="142" y="262" font-size="12" fill="#8ea0bd">84k records · clean</text>
+    <rect x="84" y="282" width="296" height="58" rx="12" fill="#ffffff" fill-opacity="0.05"/>
+    <rect x="100" y="298" width="26" height="26" rx="8" fill="#8ea0bd" fill-opacity="0.5"/>
+    <text x="142" y="316" fill="#e8eefb" font-weight="600">ERP</text><text x="142" y="332" font-size="12" fill="#8ea0bd">12 modules · mapped</text>
+    <rect x="84" y="352" width="296" height="58" rx="12" fill="#ffffff" fill-opacity="0.05"/>
+    <rect x="100" y="368" width="26" height="26" rx="8" fill="#8ea0bd" fill-opacity="0.5"/>
+    <text x="142" y="386" fill="#e8eefb" font-weight="600">Helpdesk</text><text x="142" y="402" font-size="12" fill="#8ea0bd">31k tickets / yr</text>
+    <rect x="84" y="422" width="296" height="58" rx="12" fill="#ffffff" fill-opacity="0.05"/>
+    <rect x="100" y="438" width="26" height="26" rx="8" fill="#8ea0bd" fill-opacity="0.5"/>
+    <text x="142" y="456" fill="#e8eefb" font-weight="600">Documents</text><text x="142" y="472" font-size="12" fill="#8ea0bd">PDF · email · scans</text>
+    <rect x="84" y="492" width="296" height="58" rx="12" fill="#ffffff" fill-opacity="0.05"/>
+    <rect x="100" y="508" width="26" height="26" rx="8" fill="#8ea0bd" fill-opacity="0.5"/>
+    <text x="142" y="526" fill="#e8eefb" font-weight="600">Data Warehouse</text><text x="142" y="542" font-size="12" fill="#8ea0bd">6 pipelines · daily</text>
+  </g>
+  <!-- opportunity scores -->
+  <rect x="440" y="140" width="500" height="524" rx="22" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+  <text x="468" y="186" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="600" fill="#cbd5e1">Use-Case Impact Score</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="14">
+    <text x="468" y="238" fill="#e8eefb">Invoice triage</text>
+    <rect x="468" y="250" width="404" height="12" rx="6" fill="#ffffff" fill-opacity="0.06"/>
+    <rect x="468" y="250" width="352" height="12" rx="6" fill="url(#acc)"/>
+    <text x="872" y="240" text-anchor="end" fill="#ffc08a" font-weight="700">87</text>
+    <text x="468" y="310" fill="#e8eefb">Support auto-answers</text>
+    <rect x="468" y="322" width="404" height="12" rx="6" fill="#ffffff" fill-opacity="0.06"/>
+    <rect x="468" y="322" width="315" height="12" rx="6" fill="url(#acc)" opacity="0.85"/>
+    <text x="872" y="312" text-anchor="end" fill="#ffc08a" font-weight="700">78</text>
+    <text x="468" y="382" fill="#e8eefb">Demand forecasting</text>
+    <rect x="468" y="394" width="404" height="12" rx="6" fill="#ffffff" fill-opacity="0.06"/>
+    <rect x="468" y="394" width="283" height="12" rx="6" fill="url(#acc)" opacity="0.7"/>
+    <text x="872" y="384" text-anchor="end" fill="#ffc08a" font-weight="700">70</text>
+    <text x="468" y="454" fill="#e8eefb">Contract extraction</text>
+    <rect x="468" y="466" width="404" height="12" rx="6" fill="#ffffff" fill-opacity="0.06"/>
+    <rect x="468" y="466" width="242" height="12" rx="6" fill="url(#acc)" opacity="0.55"/>
+    <text x="872" y="456" text-anchor="end" fill="#ffc08a" font-weight="700">60</text>
+    <text x="468" y="526" fill="#e8eefb">Churn prediction</text>
+    <rect x="468" y="538" width="404" height="12" rx="6" fill="#ffffff" fill-opacity="0.06"/>
+    <rect x="468" y="538" width="198" height="12" rx="6" fill="url(#acc)" opacity="0.45"/>
+    <text x="872" y="528" text-anchor="end" fill="#ffc08a" font-weight="700">49</text>
+  </g>
+  <text x="468" y="620" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8ea0bd">Scored on value, data readiness &amp; time-to-ship</text>
+  <!-- readiness gauge -->
+  <rect x="972" y="140" width="252" height="524" rx="22" fill="#ffffff" fill-opacity="0.04" stroke="#ffffff" stroke-opacity="0.07"/>
+  <text x="1098" y="186" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="600" fill="#cbd5e1">AI Readiness</text>
+  <circle cx="1098" cy="330" r="86" stroke="#ffffff" stroke-opacity="0.08" stroke-width="14"/>
+  <path d="M 1098 244 A 86 86 0 1 1 1022 372" stroke="url(#acc)" stroke-width="14" stroke-linecap="round"/>
+  <text x="1098" y="340" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="44" font-weight="700" fill="#e8eefb">72</text>
+  <text x="1098" y="366" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#8ea0bd">of 100</text>
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13">
+    <text x="1014" y="470" fill="#8ea0bd">Data quality</text><text x="1182" y="470" text-anchor="end" fill="#ffc08a" font-weight="600">High</text>
+    <text x="1014" y="506" fill="#8ea0bd">Integrations</text><text x="1182" y="506" text-anchor="end" fill="#ffc08a" font-weight="600">Ready</text>
+    <text x="1014" y="542" fill="#8ea0bd">Compliance</text><text x="1182" y="542" text-anchor="end" fill="#ffc08a" font-weight="600">Clear</text>
+    <text x="1014" y="578" fill="#8ea0bd">Team buy-in</text><text x="1182" y="578" text-anchor="end" fill="#ffc08a" font-weight="600">Strong</text>
+  </g>
+</svg>

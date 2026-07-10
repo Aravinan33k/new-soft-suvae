@@ -357,19 +357,23 @@ function StatDial({ value, suffix, label, icon: Icon, charge, delay }: StatDialP
       <svg viewBox="0 0 170 170" className="absolute inset-0 h-full w-full" fill="none" aria-hidden>
         {/* faint full track */}
         <circle cx={C} cy={C} r={R - 3} stroke="#FF8A3D" strokeOpacity="0.12" strokeWidth="1" />
-        {/* charging ticks — lit up to the current level */}
+        {/* charging ticks — lit up to the current level. Coordinates are
+            rounded to 2dp: Math.cos/sin can differ in the last float digit
+            between Node's V8 and the browser's, and the unrounded values
+            caused a React hydration mismatch on these lines. */}
         {Array.from({ length: N }).map((_, i) => {
           const frac = i / N;
           const ang = (-90 + frac * 360) * (Math.PI / 180);
           const lit = frac <= level + 1e-4;
           const ri = lit ? R - 9 : R - 6;
+          const r2 = (v: number) => Math.round(v * 100) / 100;
           return (
             <line
               key={i}
-              x1={C + ri * Math.cos(ang)}
-              y1={C + ri * Math.sin(ang)}
-              x2={C + R * Math.cos(ang)}
-              y2={C + R * Math.sin(ang)}
+              x1={r2(C + ri * Math.cos(ang))}
+              y1={r2(C + ri * Math.sin(ang))}
+              x2={r2(C + R * Math.cos(ang))}
+              y2={r2(C + R * Math.sin(ang))}
               stroke={lit ? "#FFB057" : "#FF8A3D"}
               strokeOpacity={lit ? 0.95 : 0.18}
               strokeWidth={lit ? 2 : 1.4}
@@ -454,9 +458,9 @@ export default function EcosystemSection() {
           variants={headingReveal}
           className="text-3xl font-extrabold text-(--heading) md:text-4xl"
         >
-          We connect it all into one{" "}
+          Your AI Growth Partner,{" "}
           <span className="bg-gradient-to-r from-(--brand-orange) via-(--brand-orange-soft) to-(--heading) bg-clip-text text-transparent">
-            intelligent ecosystem
+            From Idea to Launch
           </span>
         </motion.h2>
         <motion.p
@@ -501,10 +505,13 @@ export default function EcosystemSection() {
       </motion.div>
 
       <div className="relative mx-auto mt-10 max-w-5xl lg:-mt-2">
-        {/* bottom glow behind the cards */}
+        {/* bottom glow behind the cards — the ellipse is centred INSIDE the
+            box (not on its bottom edge) so it fades out on all sides instead
+            of being hard-clipped at its brightest line, which used to read
+            as a background cut above the next section */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -inset-x-12 -bottom-20 h-64 bg-[radial-gradient(ellipse_55%_90%_at_50%_100%,rgba(255,106,61,0.1),transparent_70%)]"
+          className="pointer-events-none absolute -inset-x-12 -bottom-40 h-80 bg-[radial-gradient(ellipse_50%_42%_at_50%_45%,rgba(255,106,61,0.09),transparent_72%)]"
         />
         <div className="relative grid grid-cols-3 justify-items-center gap-x-3 gap-y-10 sm:gap-x-4 lg:grid-cols-6">
           {STATS.map((stat, i) => (

@@ -145,7 +145,11 @@ export default function AiAssistant() {
   const showQuickQuestions = messages.length <= 1;
 
   return (
-    <div className="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-4 md:bottom-6 md:right-6">
+    // pointer-events-none on the wrapper: the (invisible) closed chat panel
+    // still occupies layout space, so the wrapper's hit-box stretches far up
+    // the page — it was swallowing drags/hover over the hero globe's right
+    // side. Interactive children re-enable their own pointer events.
+    <div className="pointer-events-none fixed bottom-5 right-5 z-60 flex flex-col items-end gap-4 md:bottom-6 md:right-6">
       {/* ── Chat panel ─────────────────────────────────────────────── */}
       <div
         className={`flex w-[calc(100vw-2.5rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-(--border) bg-(--panel) shadow-[0_24px_64px_-12px_var(--shadow-strong),0_0_48px_-12px_var(--glow-orange)] backdrop-blur-xl transition-all duration-300 ease-out ${
@@ -253,7 +257,7 @@ export default function AiAssistant() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close AI assistant" : "Open AI assistant"}
-        className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#FF9440] to-[#F92B4E] text-[#1a0a04] shadow-[0_12px_32px_-8px_rgba(249,43,78,0.6),0_0_28px_-6px_rgba(255,138,61,0.5)] transition-transform duration-300 hover:scale-105 active:scale-95"
+        className="group pointer-events-auto relative flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-[#FF9440] to-[#F92B4E] text-[#1a0a04] shadow-[0_12px_32px_-8px_rgba(249,43,78,0.6),0_0_28px_-6px_rgba(255,138,61,0.5)] transition-transform duration-300 hover:scale-105 active:scale-95"
       >
         {/* Idle pulse ring to draw the eye */}
         {!open && (

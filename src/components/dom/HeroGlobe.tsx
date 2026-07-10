@@ -1,11 +1,25 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useCallback, useEffect, useState } from "react";
 import CountUp from "@/components/dom/CountUp";
+import GlobeFallback from "@/components/dom/GlobeFallback";
+import HeroServiceNetwork from "@/components/dom/HeroServiceNetwork";
 
 // Client wrapper so the three.js globe never blocks first paint, plus the four
 // headline company stats floating as minimal text labels spread radially around
 // the Earth (HTML for crisp text), echoing the globe's faint orbital rings.
+//
+// LOAD CHOREOGRAPHY (the hero builds in deliberate stages instead of everything
+// fighting for the main thread on first paint):
+//   0ms      static placeholder planet rises in with the text — the globe's
+//            column is never empty and never shows a half-initialized canvas
+//   ~idle    the three.js chunk mounts, parses and warms up at opacity 0,
+//            AFTER the browser has painted the text's entrance frames
+//   reveal   GlobeScene reports in (textures uploaded, shaders compiled,
+//            min-delay elapsed) → live globe dollies in while the placeholder
+//            cross-fades out beneath it
+//   +after   the service network layer draws in last, keyed off the reveal
 const GlobeScene = dynamic(() => import("@/components/canvas/GlobeScene"), {
   ssr: false,
   loading: () => null,
@@ -38,86 +52,77 @@ const STATS: Stat[] = [
 const ORBIT_R = 46;
 
 export default function HeroGlobe() {
+  // three.js only mounts once the browser goes idle after first paint, so the
+  // chunk parse + WebGL context creation can't stutter the text's entrance
+  const [mountScene, setMountScene] = useState(false);
+  // flipped by GlobeScene the moment its staged entrance begins
+  const [revealed, setRevealed] = useState(false);
+
+  useEffect(() => {
+    const start = () => setMountScene(true);
+    let idle: number | null = null;
+    let timer: number | null = null;
+    // Safari has no requestIdleCallback; either way a timeout backstop makes
+    // sure the globe is never held past the text's entrance
+    if (typeof window.requestIdleCallback === "function") {
+      idle = window.requestIdleCallback(start, { timeout: 600 });
+    } else {
+      timer = window.setTimeout(start, 350);
+    }
+    return () => {
+      if (idle !== null) window.cancelIdleCallback(idle);
+      if (timer !== null) window.clearTimeout(timer);
+    };
+  }, []);
+
+  const handleRevealed = useCallback(() => setRevealed(true), []);
+
   return (
     <div className="relative h-full w-full">
-      <GlobeScene />
-
-      {/* faint dashed orbit tracks + a lone comet, behind the floating metrics */}
-      <svg
+      {/* static planet placeholder: paints with the page (rising in alongside
+          the text via hero-reveal on the INNER div), then the OUTER div
+          cross-fades it out as the live globe dollies in over it. If WebGL
+          never comes up, the reveal never fires and this simply stays — the
+          graceful-degradation path for free. */}
+      <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-[1] hidden h-full w-full md:block"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
+        className="absolute inset-0 transition-opacity duration-1000 ease-out"
+        style={{ opacity: revealed ? 0 : 1 }}
       >
-        {/* dashed orbit tracks — the path the tech icons ride, plus a wider
-            counter-rotating guide with a lone comet for parallax depth */}
-        <circle
-          cx={GLOBE.cx}
-          cy={GLOBE.cy}
-          r={ORBIT_R}
-          fill="none"
-          stroke="#FF9A3C"
-          strokeOpacity="0.13"
-          strokeWidth="1"
-          vectorEffect="non-scaling-stroke"
-          strokeDasharray="0.6 2.2"
-        >
-          <animateTransform
-            attributeName="transform"
-            type="rotate"
-            from={`0 ${GLOBE.cx} ${GLOBE.cy}`}
-            to={`-360 ${GLOBE.cx} ${GLOBE.cy}`}
-            dur="90s"
-            repeatCount="indefinite"
-          />
-        </circle>
-        <circle
-          cx={GLOBE.cx}
-          cy={GLOBE.cy}
-          r={49}
-          fill="none"
-          stroke="#FFC76A"
-          strokeOpacity="0.07"
-          strokeWidth="1"
-          vectorEffect="non-scaling-stroke"
-          strokeDasharray="0.3 3"
-        >
-          <animateTransform
-            attributeName="transform"
-            type="rotate"
-            from={`0 ${GLOBE.cx} ${GLOBE.cy}`}
-            to={`360 ${GLOBE.cx} ${GLOBE.cy}`}
-            dur="140s"
-            repeatCount="indefinite"
-          />
-        </circle>
-        <g>
-          <animateTransform
-            attributeName="transform"
-            type="rotate"
-            from={`0 ${GLOBE.cx} ${GLOBE.cy}`}
-            to={`360 ${GLOBE.cx} ${GLOBE.cy}`}
-            dur="34s"
-            repeatCount="indefinite"
-          />
-          <circle cx={GLOBE.cx + 49} cy={GLOBE.cy} r="1.6" fill="#FFC76A" fillOpacity="0.18" />
-          <circle cx={GLOBE.cx + 49} cy={GLOBE.cy} r="0.6" fill="#FFF7E6" fillOpacity="0.9" />
-        </g>
-      </svg>
+        <div className="hero-reveal h-full w-full" style={{ animationDelay: "0.3s" }}>
+          <GlobeFallback />
+        </div>
+      </div>
 
-      {/* four headline stats as minimal floating text, spread around the globe */}
-      {STATS.map((s) => (
+      {mountScene && <GlobeScene onRevealed={handleRevealed} />}
+
+      {/* interactive AI service-node network — communicates WHAT we build,
+          reacts to the cursor, threads particles into the globe, and sweeps a
+          scanning beam. Sits above the globe but is pointer-transparent, so the
+          globe's own drag/rotate still works underneath. Enters last, keyed
+          off the globe's reveal, so its canvas loop never competes with the
+          globe's warm-up. */}
+      <HeroServiceNetwork active={revealed} />
+
+      {/* four headline stats as minimal floating text, spread around the
+          globe. STAGED LOAD: each fades in via hero-reveal on the OUTER
+          (positioned) wrapper after the globe has entered, while the INNER
+          div carries the infinite chip-float — two animations, two elements,
+          no conflict. */}
+      {STATS.map((s, i) => (
         <div
           key={s.label}
-          className={`chip-float absolute z-[2] w-max max-w-[40%] ${s.pos} ${s.align}`}
-          style={{ animationDelay: `-${s.delay}s` }}
+          className={`hero-reveal absolute z-2 w-max max-w-[40%] ${s.pos} ${s.align}`}
+          style={{ animationDelay: `${1.15 + i * 0.12}s` }}
         >
-          <div className="text-2xl font-extrabold leading-none tracking-tight text-(--heading) [text-shadow:0_2px_18px_rgba(0,0,0,0.45)] md:text-[1.7rem]">
-            <CountUp value={s.value} />
+          <div className="chip-float" style={{ animationDelay: `-${s.delay}s` }}>
+            <div className="text-2xl font-extrabold leading-none tracking-tight text-(--heading) [text-shadow:0_2px_18px_rgba(0,0,0,0.45)] md:text-[1.7rem]">
+              <CountUp value={s.value} />
+            </div>
+            <p className="mt-1.5 text-[11px] font-medium uppercase leading-tight tracking-[0.14em] text-(--text-secondary) [text-shadow:0_1px_10px_rgba(0,0,0,0.55)]">
+              {s.label}
+            </p>
           </div>
-          <p className="mt-1.5 text-[11px] font-medium uppercase leading-tight tracking-[0.14em] text-(--text-secondary) [text-shadow:0_1px_10px_rgba(0,0,0,0.55)]">
-            {s.label}
-          </p>
         </div>
       ))}
     </div>

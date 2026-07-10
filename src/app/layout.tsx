@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Preloader from "@/components/dom/Preloader";
 import AiAssistant from "@/components/dom/AiAssistant";
+import SmoothScroll from "@/components/dom/SmoothScroll";
 
 // Satoshi — the site's primary typeface (self-hosted variable font, all
 // weights 300–900). Exposed as --font-satoshi and mapped to --font-sans in
@@ -53,7 +54,32 @@ export default function RootLayout({
       className={`${satoshi.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        {/* Start the hero globe's NASA textures downloading with the page
+            itself, instead of waiting for the three.js chunk to mount and
+            request them — on slow connections this runs both downloads in
+            parallel and all but closes the placeholder→globe gap. React
+            hoists these into <head>; media-gated off on mobile, where the
+            hero globe never renders. */}
+        <link
+          rel="preload"
+          as="image"
+          href="/textures/earth_day.jpg"
+          media="(min-width: 768px)"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="/textures/earth_lights.jpg"
+          media="(min-width: 768px)"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="/textures/earth_clouds.jpg"
+          media="(min-width: 768px)"
+        />
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        <SmoothScroll />
         <Preloader />
         {children}
         <AiAssistant />
