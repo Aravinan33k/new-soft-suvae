@@ -193,12 +193,22 @@ export default function Navbar() {
             {/* scroll choreography: on scroll the mark tips ~35° and the
                 company name slides back into the logo and tucks away; both
                 ease back out when returning to the top */}
+            {/* soft orange aura behind the mark — fades in once scrolled so
+                the lone resting-state logo reads lit, not stranded */}
+            <span
+              aria-hidden
+              className={`absolute -left-3 top-1/2 h-14 w-14 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,var(--glow-orange),transparent_70%)] blur-md transition-opacity duration-500 ${
+                scrolled ? "opacity-90" : "opacity-0"
+              }`}
+            />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/softsuave-mark.svg"
               alt=""
-              className={`h-8 w-auto transition-all duration-500 ease-out group-hover:-translate-y-0.5 ${
-                scrolled ? "rotate-114" : "rotate-0"
+              className={`relative h-8 w-auto transition-all duration-500 ease-out group-hover:-translate-y-0.5 ${
+                scrolled
+                  ? "rotate-118 drop-shadow-[0_0_8px_rgba(255,138,61,0.7)]"
+                  : "rotate-0"
               }`}
             />
             <span
